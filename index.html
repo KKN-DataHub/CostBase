@@ -296,6 +296,23 @@ input:focus,select:focus{outline:none;border-color:var(--teal);box-shadow:0 0 0 
 #tblFull tr.hit td{background:rgba(217,164,65,.22)!important;font-weight:700}
 .fullbar{display:flex;gap:10px;align-items:end;flex-wrap:wrap}
 .fullbar>div{min-width:150px}
+/* ── แถบเครดิตแบบ BIG DATA ── */
+.kgroup{margin-bottom:12px}
+.kg-lab{font-size:12px;font-weight:700;color:var(--teal);letter-spacing:.3px;margin:0 0 6px 2px;
+  display:flex;align-items:center;gap:8px}
+.kg-lab::after{content:'';flex:1;height:1px;background:var(--grid)}
+.credit{margin-top:16px;background:var(--navy);border-radius:14px;padding:20px 18px;text-align:center;
+  box-shadow:0 8px 24px rgba(27,42,74,.16)}
+.credit .c-top{font-size:11.5px;letter-spacing:.4px;color:#93A4C4;margin-bottom:6px}
+.credit .c-name{font-size:16.5px;font-weight:700;color:#fff;line-height:1.5}
+.credit .c-unit{font-size:12.5px;color:#C7D2E6;margin-top:3px}
+.credit .c-meta{font-size:11px;color:#8FA2C2;margin-top:9px}
+@media print{.credit{background:none;box-shadow:none;color:#000}
+  .credit .c-name,.credit .c-unit,.credit .c-top,.credit .c-meta{color:#000}}
+.ic{display:inline-flex;width:17px;height:17px;vertical-align:-3px;margin-right:7px;color:var(--teal)}
+.ic svg{width:100%;height:100%}
+.pghead .ph-ico .ic{width:20px;height:20px;margin:0;color:#fff}
+h2 .ic{color:var(--teal)}
 .frow{display:grid;gap:10px;align-items:end}
 .frow.ymc{grid-template-columns:96px 150px minmax(160px,1fr)}
 .frow.cm{grid-template-columns:minmax(150px,.8fr) minmax(220px,2fr)}
@@ -423,7 +440,7 @@ canvas{max-width:100%}
   <div class="brand">
     <h1>ระบบฐานข้อมูลวัสดุ</h1>
     <div class="sub">แขวงทางหลวงชนบทขอนแก่น</div>
-    <div class="chips"><span class="chip" id="bLatest">—</span><span class="chip">v3.5</span></div>
+    <div class="chips"><span class="chip" id="bLatest">—</span><span class="chip">v3.7</span></div>
   </div>
   <nav class="nav" id="nav">
     <button data-p="sum" class="active"><span class="ico">▦</span>หน้าสรุป</button>
@@ -440,7 +457,7 @@ canvas{max-width:100%}
 
 <!-- ================= หน้าสรุป ================= -->
 <section class="page active" id="pg-sum">
-  <div class="pghead"><div class="ph-ico">▦</div>
+  <div class="pghead"><div class="ph-ico" data-ic="table"></div>
     <div><h1>ภาพรวมราคาวัสดุ</h1>
       <div class="ph-sub">คลังราคากลางวัสดุก่อสร้าง · ราคาทุกรายการไม่รวมค่าขนส่ง</div>
       <div class="ph-chips" id="hcSum"></div>
@@ -448,7 +465,7 @@ canvas{max-width:100%}
   </div>
   <div class="kpis" id="sumKpis"></div>
   <div class="card" style="margin-bottom:12px">
-    <h2>หลักเกณฑ์ราคากลางที่ระบบใช้อ้างอิง <span class="pill ok" style="margin-left:6px">ฝังในระบบ · ใช้ได้แม้ไม่ต่อเน็ต</span></h2>
+    <h2><span class="ic">${ICON.law}</span>หลักเกณฑ์ราคากลางที่ระบบใช้อ้างอิง</h2>
     <div class="lawgrid" id="lawGrid"></div>
   </div>
   <div class="grid2">
@@ -470,14 +487,14 @@ canvas{max-width:100%}
     <div class="cap">ชุดข่าวอัปเดตพร้อมรอบข้อมูลรายเดือน · แหล่งข่าวหลัก: tpso.go.th (แถลงดัชนีทุกต้นเดือน) และหนังสือเวียนกรมบัญชีกลาง gprocurement.go.th</div>
   </div>
   <h2 class="sec">สรุปราคาวัสดุหลักประจำเดือน — เอาแหล่งที่ถูกสุดขึ้นก่อน</h2>
-  <div class="kcards" id="keyCards"></div>
+  <div id="keyCards"></div>
   <h2 class="sec">ภาพรวมตามประเภท</h2>
   <div class="card"><div class="tw" style="max-height:420px"><table id="tblTypes"></table></div></div>
 </section>
 
 <!-- ================= คำนวณระยะขนส่ง ================= -->
 <section class="page" id="pg-dist">
-  <div class="pghead"><div class="ph-ico">⇄</div>
+  <div class="pghead"><div class="ph-ico" data-ic="truck"></div>
     <div><h1>คำนวณระยะขนส่ง</h1>
       <div class="ph-sub">ค่าขนส่งตาม ว 477 · เอกสารแนบตามระเบียบ</div>
       <div class="ph-chips" id="hcDist"></div>
@@ -507,7 +524,7 @@ canvas{max-width:100%}
         <div class="hint" id="dStatus1" style="margin-top:6px"></div>
       </div>
       <div class="card" style="margin-top:12px">
-        <h2>2 · ราคาน้ำมันดีเซล ที่ อ.เมือง</h2>
+        <h2 data-ic="fuel">2 · ราคาน้ำมันดีเซล ที่ อ.เมือง</h2>
         <label class="f">จังหวัดที่ก่อสร้าง</label>
         <select id="dProv"></select>
         <label class="f">ราคาดีเซล (บาท/ลิตร)</label>
@@ -548,7 +565,7 @@ canvas{max-width:100%}
       </div>
       <div id="viewFull" style="display:none">
         <div class="card">
-          <h2>ตารางค่าขนส่งวัสดุก่อสร้าง ตาม ว 477</h2>
+          <h2 data-ic="truck">ตารางค่าขนส่งวัสดุก่อสร้าง ตาม ว 477</h2>
           <div class="fullbar no-print">
             <div style="flex:1.4"><label class="f">ชนิดรถ</label><select id="fTruck">
               <option value="6">รถบรรทุก 6 ล้อ (น้ำหนักรวมไม่เกิน 15 ตัน)</option>
@@ -577,7 +594,7 @@ canvas{max-width:100%}
 
 <!-- ================= สถิติราคา ================= -->
 <section class="page" id="pg-stat">
-  <div class="pghead"><div class="ph-ico">📈</div>
+  <div class="pghead"><div class="ph-ico" data-ic="chart"></div>
     <div><h1>สถิติราคา</h1>
       <div class="ph-sub">เทรนด์ราคารายเดือน เทียบข้ามแหล่ง และรายการที่ราคาขยับ</div>
       <div class="ph-chips" id="hcStat"></div>
@@ -610,7 +627,7 @@ canvas{max-width:100%}
 
 <!-- ================= นำเข้าข้อมูล ================= -->
 <section class="page" id="pg-imp">
-  <div class="pghead"><div class="ph-ico">⬇</div>
+  <div class="pghead"><div class="ph-ico" data-ic="cloud"></div>
     <div><h1>นำเข้าข้อมูล</h1>
       <div class="ph-sub">กรอกราคาสืบจากหน่วยงานรัฐและแหล่งภายนอก · ชื่อจะถูกเทียบกับบัญชีคุมอัตโนมัติ</div>
       <div class="ph-chips" id="hcImp"></div>
@@ -664,7 +681,7 @@ canvas{max-width:100%}
 
 <!-- ================= ส่งออกข้อมูล ================= -->
 <section class="page" id="pg-exp">
-  <div class="pghead"><div class="ph-ico">⬆</div>
+  <div class="pghead"><div class="ph-ico" data-ic="up"></div>
     <div><h1>ส่งออกข้อมูล</h1>
       <div class="ph-sub">รวมราคาทุกช่องทางจากคลังข้อมูล · สร้างไฟล์ราคาประจำเดือน 5 คอลัมน์ (Sheet1) สำหรับ DRR_KK Estimate</div>
       <div class="ph-chips" id="hcExp"></div>
@@ -682,7 +699,7 @@ canvas{max-width:100%}
         <button class="btn ghost" id="eCsv">.csv</button>
       </div>
       <div class="hint" id="eInfo" style="margin-top:10px">—</div>
-      <div class="notebox teal" style="font-size:11.5px">ไฟล์ที่ได้เป็นชีตชื่อ Sheet1 หัวตาราง 5 คอลัมน์ตรงตามที่ไฟล์ประมาณราคาต้องการ ปุ่มแรกได้ชื่อไฟล์คงที่ <b>ราคาวัสดุ_ล่าสุด.xlsx</b> — เซฟทับไฟล์เดิมในโฟลเดอร์ ราคาวัสดุรายเดือน แล้วกด Refresh ใน Estimate ได้เลยโดยไม่ต้องลิงก์ใหม่ (ลิงก์ครั้งเดียวจบ) · ปุ่มสำเนารายเดือนได้ชื่อ ราคาวัสดุ_พศXXXXXX.xlsx ไว้เก็บเข้าแฟ้ม · รายการที่ยกยอดจะแนบชีต "หมายเหตุยกยอด" ไว้ในไฟล์เดียวกัน (ไฟล์ประมาณราคาอ่านเฉพาะ Sheet1 จึงไม่กระทบ)</div>
+      <div class="notebox teal" style="font-size:11.5px">Sheet1 · 5 คอลัมน์ · ยกยอดแนบชีต "หมายเหตุยกยอด"</div>
     </div>
     <div class="card">
       <h2>ตัวอย่างข้อมูลที่จะส่งออก</h2>
@@ -693,7 +710,7 @@ canvas{max-width:100%}
 
 <!-- ================= ระบบ ================= -->
 <section class="page" id="pg-sys">
-  <div class="pghead"><div class="ph-ico">⚙</div>
+  <div class="pghead"><div class="ph-ico" data-ic="gear"></div>
     <div><h1>ระบบ</h1>
       <div class="ph-sub">แหล่งที่มาของข้อมูลทุกส่วน สถิติการเก็บ และการตั้งค่า</div>
       <div class="ph-chips" id="hcSys"></div>
@@ -701,30 +718,26 @@ canvas{max-width:100%}
   </div>
   <div class="grid2">
     <div class="card">
-      <h2>แหล่งที่มาของข้อมูลทุกส่วนในระบบ</h2>
+      <h2 data-ic="book">แหล่งที่มาของข้อมูลทุกส่วนในระบบ</h2>
       <div id="sysSrc" style="display:grid;gap:10px"></div>
     </div>
     <div>
       <div class="card">
-        <h2>สถิติการเก็บข้อมูล</h2>
+        <h2 data-ic="chart">สถิติการเก็บข้อมูล</h2>
         <div class="tw" style="max-height:230px"><table id="tblSysStat"></table></div>
       </div>
       <div class="card" style="margin-top:12px">
-        <h2>ข้อมูลระบบ</h2>
+        <h2 data-ic="table">ข้อมูลระบบ</h2>
         <div id="sysInfo" style="font-size:12.5px;line-height:1.8"></div>
-        <div style="margin-top:14px;border-top:1px solid var(--grid);padding-top:10px;font-size:12px;color:var(--ink2);line-height:1.7">
-          คิดค้นและพัฒนาโดย นายสิษฐ์ชกรณ์ ซึ้งสัมปทาน กลุ่มวิชาการ แขวงทางหลวงชนบทขอนแก่น · กรมทางหลวงชนบท<br>
-          เริ่มพัฒนา สิงหาคม 2569 <span class="pill info" style="margin-left:6px">v3.5</span>
-        </div>
       </div>
     </div>
   </div>
   <div class="card" style="margin-top:12px">
-    <h2>คำอธิบายการทำงานของแต่ละหน้า</h2>
+    <h2 data-ic="book">คำอธิบายการทำงานของแต่ละหน้า</h2>
     <div id="sysHelp" style="font-size:12.5px;line-height:1.75"></div>
   </div>
   <div class="card" style="margin-top:12px">
-    <h2>การเชื่อมต่อคลังข้อมูล (Google Sheet)</h2>
+    <h2 data-ic="link">การเชื่อมต่อคลังข้อมูล (Google Sheet)</h2>
     <div class="grid2">
       <div><label class="f">Google Sheet ID (01.0 คลังข้อมูลวัสดุก่อสร้าง)</label><input type="text" id="cfgSheet" value="1jhyW18mC-0MlpG96vd2qevIWNPSA6GIWStfZzm0FYZo"></div>
       <div><label class="f">Apps Script WebApp URL (ตัวรับข้อมูล)</label><input type="text" id="cfgUrl" value="https://script.google.com/macros/s/AKfycbwvthYmoWcY6UUrm_rAzn7bJf7jw_jurSDSCWZOJjjACdPPTzk6MYjds52DEjOs8oQI/exec"></div>
@@ -736,7 +749,7 @@ canvas{max-width:100%}
     <div class="tw" style="margin-top:12px"><table id="tblConn"></table></div>
   </div>
   <div class="card" style="margin-top:12px">
-    <h2>ล้างข้อมูลในคลัง <span class="pill warn" style="margin-left:6px">สำรองอัตโนมัติก่อนล้างทุกครั้ง</span></h2>
+    <h2 data-ic="trash">ล้างข้อมูลในคลัง</h2>
     <div class="frow ymc">
       <div style="grid-column:1/3"><label class="f">ขอบเขตที่จะล้าง</label><select id="clScope">
         <option value="prices_month">ราคา — เฉพาะเดือนที่ระบุ</option>
@@ -751,15 +764,21 @@ canvas{max-width:100%}
       <div><label class="f">พิมพ์คำว่า <b>ล้าง</b> เพื่อยืนยัน</label><input type="text" id="clYes" placeholder="ล้าง"></div>
       <div style="align-self:end"><button class="btn" id="clGo" style="background:#a33">ล้างข้อมูลตามที่เลือก</button></div>
     </div>
-    <div class="hint" id="clStat" style="margin-top:8px">ข้อมูลที่ล้างจะถูกสำรองเป็นแท็บซ่อนชื่อขึ้นต้น "สำรอง_" ในชีทเดียวกัน (เก็บล่าสุด 5 ชุด) · กู้คืนได้จากเมนู ระบบวัสดุ → กู้คืนจากไฟล์สำรอง</div>
+    <div class="hint" id="clStat" style="margin-top:8px">สำรองอัตโนมัติก่อนล้างทุกครั้ง</div>
   </div>
   <div class="card" style="margin-top:12px">
-    <h2>อัปโหลดบัญชีคุม (REGISTRY) ขึ้นคลัง</h2>
+    <h2 data-ic="cloud">อัปโหลดบัญชีคุม (REGISTRY) ขึ้นคลัง</h2>
     <div class="statusline">
       <input type="file" id="regFile" accept=".xlsx">
       <button class="btn" id="regUp">อัปโหลดขึ้นแท็บ REGISTRY</button>
     </div>
-    <div class="hint" id="regStat" style="margin-top:8px">เลือกไฟล์ บัญชีคุมวัสดุ.xlsx แล้วกดอัปโหลด — ระบบแทนที่แท็บ REGISTRY ทั้งแท็บให้ตรงกับไฟล์ (ต้องใช้ Code.gs รุ่น 4 ขึ้นไป)</div>
+    <div class="hint" id="regStat" style="margin-top:8px">เลือกไฟล์ บัญชีคุมวัสดุ.xlsx แล้วกดอัปโหลด</div>
+  </div>
+  <div class="credit">
+    <div class="c-top">ระบบฐานข้อมูลวัสดุ — แขวงทางหลวงชนบทขอนแก่น</div>
+    <div class="c-name">คิดค้นและพัฒนาโดย นายสิษฐ์ชกรณ์ ซึ้งสัมปทาน</div>
+    <div class="c-unit">กลุ่มวิชาการ แขวงทางหลวงชนบทขอนแก่น · กรมทางหลวงชนบท</div>
+    <div class="c-meta" id="cMeta"></div>
   </div>
 </section>
 
@@ -853,7 +872,9 @@ function mergeLive(rows){
           src=String(r[5]||'').trim(), typ=String(r[6]||'').trim();
     if(!y||y<2500||!m||m<1||m>12||!name||!(price>0)) return;
     const mi=ensureMonth(y,m);
-    const a=idxOf(P.mats,name), b=idxOf(P.srcs,src);
+    /* ถ้าอ่านบัญชีคุมแล้ว ใช้ชื่อมาตรฐานตั้งแต่ตอนรวมข้อมูล */
+    const std=REG.on?regStd(name):null;
+    const a=idxOf(P.mats,std||name), b=idxOf(P.srcs,src);
     let si=serIdx[a+'|'+b];
     if(si==null){ P.series.push([a,b,idxOf(P.units,unit),idxOf(P.types,typ),Array(NM).fill(null)]); si=P.series.length-1; serIdx[a+'|'+b]=si; }
     const s=P.series[si];
@@ -862,7 +883,20 @@ function mergeLive(rows){
   });
   return added;
 }
-let REG={on:false, map:{}, cat:{}, n:0};
+let REG={on:false, map:{}, cat:{}, n:0, nmap:{}, tmap:{}, ncat:{}, tcat:{}};
+/* ทำความสะอาดชื่อก่อนเทียบ — ชื่อจากพาณิชย์มีช่องว่างซ้อน/NBSP ปนมาเยอะ */
+const rNorm = s => String(s==null?'':s)
+  .replace(/[\u00A0\u200B\u200C\u200D\uFEFF]/g,' ').replace(/\s+/g,' ').trim();
+const rTight = s => kNorm(rNorm(s));
+/* หาชื่อมาตรฐาน/หมวดของชื่อดิบ: ตรงเป๊ะ → ยุบช่องว่าง → ตัดวรรณยุกต์ */
+function regStd(name){
+  const raw=String(name==null?'':name).trim();
+  return REG.map[raw] || REG.nmap[rNorm(raw)] || REG.tmap[rTight(raw)] || null;
+}
+function regCat(name){
+  const raw=String(name==null?'':name).trim();
+  return REG.cat[raw] || REG.ncat[rNorm(raw)] || REG.tcat[rTight(raw)] || null;
+}
 let CONN={sheet:null, web:null, ver:0, prices:0, reg:0, src:0, oil:null, at:''};
 function drawConn(){
   const el=$('tblConn'); if(!el) return;
@@ -885,17 +919,18 @@ function drawConn(){
 }
 function applyRegistry(rows){
   /* rows: [ลำดับ, ชื่อเดิม, หมวด, หน่วย, ชื่อมาตรฐาน] — ชื่อมาตรฐานว่าง = ใช้ชื่อเดิม */
-  REG.map={}; REG.cat={};
+  REG.map={}; REG.cat={}; REG.nmap={}; REG.tmap={}; REG.ncat={}; REG.tcat={};
   rows.forEach(r=>{
     const old=String(r[1]||'').trim(); if(!old) return;
     const std=String(r[4]||'').trim()||old;
-    REG.map[old]=std;
-    const c=String(r[2]||'').trim(); if(c&&!REG.cat[std]) REG.cat[std]=c;
+    REG.map[old]=std; REG.nmap[rNorm(old)]=std; REG.tmap[rTight(old)]=std;
+    const c=String(r[2]||'').trim();
+    if(c&&!REG.cat[std]){ REG.cat[std]=c; REG.ncat[rNorm(std)]=c; REG.tcat[rTight(std)]=c; }
   });
   REG.n=Object.keys(REG.map).length;
   if(!REG.n) return;
   /* เปลี่ยนชื่อทุกวัสดุเป็นชื่อมาตรฐาน แล้วยุบรายการที่ชี้ชื่อเดียวกัน */
-  const newNames=P.mats.map(m=>REG.map[String(m).trim()]||m);
+  const newNames=P.mats.map(m=>regStd(m)||m);
   const idxByName={}, remap=[], mats2=[];
   newNames.forEach((nm,i)=>{
     if(idxByName[nm]==null){ idxByName[nm]=mats2.length; mats2.push(nm); }
@@ -910,7 +945,7 @@ function applyRegistry(rows){
     else sr[4].forEach((v,i)=>{ if(v!=null&&t[4][i]==null) t[4][i]=v; });
   });
   P.series=out;
-  P.matCat={}; P.mats.forEach((m,i)=>{ if(REG.cat[m]) P.matCat[i]=REG.cat[m]; });
+  P.matCat={}; P.mats.forEach((m,i)=>{ const c=regCat(m); if(c) P.matCat[i]=c; });
   /* ปรับตัวชี้ที่ผู้ใช้เลือกไว้ให้ตามดัชนีใหม่ */
   matSel=matSel.map(i=>remap[i]??i);
   if(matActive!=null) matActive=remap[matActive]??matActive;
@@ -977,7 +1012,34 @@ async function loadLive(){
 function rerender(){
   [buildSummary, matInit, statInit, buildMovers, impInit, expInit, sysInit, drawMatChips]
     .forEach(f=>{ try{ f(); }catch(e){ console.error('rerender:', f.name, e); } });
-  kddAll(); drawConn();
+  kddAll(); paintIcons(); drawConn();
+}
+
+/* ============ ไอคอน (SVG เส้นบาง ชุดเดียวกันทั้งระบบ) ============ */
+const _sv = d => `<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8"
+  stroke-linecap="round" stroke-linejoin="round">${d}</svg>`;
+const ICON = {
+  law:   _sv('<path d="M12 3v18M5 7h14M7 7l-3 6a3 3 0 0 0 6 0zM17 7l3 6a3 3 0 0 1-6 0z"/>'),
+  cloud: _sv('<path d="M17.5 19a4.5 4.5 0 0 0 .5-8.97A6 6 0 0 0 6.1 11.1 3.5 3.5 0 0 0 6.5 19z"/>'),
+  book:  _sv('<path d="M4 5a2 2 0 0 1 2-2h12v18H6a2 2 0 0 1-2-2z"/><path d="M8 7h7M8 11h7"/>'),
+  pin:   _sv('<path d="M12 21s7-6.4 7-11a7 7 0 1 0-14 0c0 4.6 7 11 7 11z"/><circle cx="12" cy="10" r="2.5"/>'),
+  fuel:  _sv('<path d="M4 21V5a2 2 0 0 1 2-2h6a2 2 0 0 1 2 2v16M3 21h13M7 8h6"/><path d="M17 9l2.5 2.5V17a1.8 1.8 0 1 0 3.5 0V9.5L20 6"/>'),
+  trash: _sv('<path d="M4 7h16M9 7V5a1 1 0 0 1 1-1h4a1 1 0 0 1 1 1v2M6 7l1 13a1 1 0 0 0 1 1h8a1 1 0 0 0 1-1l1-13"/>'),
+  up:    _sv('<path d="M12 19V5M6 11l6-6 6 6M4 21h16"/>'),
+  chart: _sv('<path d="M4 20V10M10 20V4M16 20v-7M22 20H2"/>'),
+  gear:  _sv('<circle cx="12" cy="12" r="3.2"/><path d="M19.4 15a1.6 1.6 0 0 0 .3 1.8l.1.1a2 2 0 1 1-2.8 2.8l-.1-.1a1.6 1.6 0 0 0-2.7 1.1V21a2 2 0 1 1-4 0v-.2A1.6 1.6 0 0 0 7.9 19l-.1.1A2 2 0 1 1 5 16.3l.1-.1A1.6 1.6 0 0 0 3.9 13.5H3.7a2 2 0 1 1 0-4h.2A1.6 1.6 0 0 0 5 6.8l-.1-.1A2 2 0 1 1 7.7 3.9l.1.1a1.6 1.6 0 0 0 1.8.3H9.7a1.6 1.6 0 0 0 1-1.5V2.6a2 2 0 1 1 4 0v.2a1.6 1.6 0 0 0 2.7 1.1l.1-.1A2 2 0 1 1 20.3 7l-.1.1a1.6 1.6 0 0 0-.3 1.8v.1a1.6 1.6 0 0 0 1.5 1h.2a2 2 0 1 1 0 4H21a1.6 1.6 0 0 0-1.5 1z"/>'),
+  link:  _sv('<path d="M10 13a5 5 0 0 0 7.5.5l2-2A5 5 0 0 0 12.5 4.5l-1.2 1.2"/><path d="M14 11a5 5 0 0 0-7.5-.5l-2 2A5 5 0 0 0 11.5 19.5l1.2-1.2"/>'),
+  table: _sv('<rect x="3" y="4" width="18" height="16" rx="2"/><path d="M3 9h18M9 9v11"/>'),
+  truck: _sv('<path d="M3 6h11v10H3zM14 9h4l3 3v4h-7z"/><circle cx="7" cy="18" r="1.8"/><circle cx="17.5" cy="18" r="1.8"/>'),
+};
+/* ใส่ไอคอนให้หัวการ์ดที่ระบุด้วย data-ic */
+function paintIcons(){
+  document.querySelectorAll('[data-ic]').forEach(el=>{
+    if(el.dataset.icDone) return;
+    const k=el.dataset.ic; if(!ICON[k]) return;
+    el.insertAdjacentHTML('afterbegin', `<span class="ic">${ICON[k]}</span>`);
+    el.dataset.icDone='1';
+  });
 }
 
 /* ============ ดรอปดาวน์ธีม KORN (ใช้แทน select ทุกตัว) ============ */
@@ -1116,7 +1178,7 @@ function buildSummary(){
   hc('hcImp',impChips());
   hc('hcExp',`<span class="ph-chip">● เดือนล่าสุด <b>${latestLabel}</b></span>
     <span class="ph-chip">${LIVE.on?'☁ รวมคลังสดแล้ว':'⚠ ยังไม่ได้เชื่อมคลัง'}</span>`);
-  hc('hcSys',`<span class="ph-chip">เวอร์ชัน <b>3.5</b></span>
+  hc('hcSys',`<span class="ph-chip">เวอร์ชัน <b>3.7</b></span>
     <span class="ph-chip">อัปเดต 16 ส.ค. 2569</span>`);
   const nRowsLast = P.series.filter(s=>s[4][LAST]!=null).length;
   const nSrc = P.srcs.filter(s=>s).length;
@@ -1161,21 +1223,22 @@ function buildSummary(){
   });
   $('tblTypes').innerHTML = tr2+'</tbody>';
 
-  /* key material cards */
-  const probes = [
-    ['น้ำมันดีเซล', /ดีเซล/],
-    ['ปูนซีเมนต์', /ปูนซีเมนต์/],
-    ['เหล็กเส้น', /เหล็กเส้นกลม|เหล็กข้ออ้อย/],
-    ['หินคลุก', /หินคลุก/],
-    ['ทรายหยาบ', /ทรายหยาบ/],
-    ['ยางแอสฟัลต์', /แอสฟัลต์|แอสฟัลท์/],
-    ['ดินถม', /ดินถม/],
-    ['ลูกรัง', /ลูกรัง/],
+  /* การ์ดวัสดุหลัก — จัดกลุ่มตามหมวดงานทาง เฉพาะหมวดหลักที่ใช้ประจำ */
+  const GROUPS = [
+    ['งานทาง', [
+      ['หินคลุก', /หินคลุก/], ['ลูกรัง', /ลูกรัง/], ['ดินถม', /ดินถม/],
+      ['ทรายหยาบ', /ทรายหยาบ/]]],
+    ['งานผิวทาง', [
+      ['ยางแอสฟัลต์ AC 60/70', /AC ?60\/70|เกรด 60\/70/], ['ยางอิมัลชัน CSS-1h', /CSS-?1h/],
+      ['น้ำมันดีเซล', /ดีเซล/]]],
+    ['งานโครงสร้าง', [
+      ['ปูนซีเมนต์', /ปูนซีเมนต์ปอร์ตแลนด์|ปูนซีเมนต์ผสม/], ['เหล็กเส้นกลม', /เหล็กเส้นกลม/],
+      ['เหล็กข้ออ้อย', /เหล็กข้ออ้อย/], ['คอนกรีตผสมเสร็จ', /คอนกรีตผสมเสร็จ/]]],
   ];
-  $('keyCards').innerHTML = probes.map(([label,re])=>{
+  const kcard = ([label,re])=>{
     const mi = new Set(); P.mats.forEach((m,i)=>{ if(re.test(m)) mi.add(i); });
     const ss = P.series.filter(s=>mi.has(s[0]));
-    if(!ss.length) return `<div class="kcard"><div class="t">${label}</div><div class="v" style="color:var(--muted)">รอเชื่อมข้อมูล</div><div class="s">ยังไม่มีในคลัง — ดูหน้า นำเข้าข้อมูล</div></div>`;
+    if(!ss.length) return `<div class="kcard"><div class="t">${label}</div><div class="v" style="color:var(--muted)">—</div><div class="s">ยังไม่มีในคลัง</div></div>`;
     /* cheapest at latest available month */
     let best=null, bestPrev=null;
     let lm=-1; ss.forEach(s=>{const lv=latestVal(s[4]); if(lv&&lv.m>lm) lm=lv.m;});
@@ -1188,7 +1251,10 @@ function buildSummary(){
       <div class="v">${fmt(best.p)} <span class="u">บาท/${esc(P.units[best.s[2]]||'-')}</span></div>
       <div class="s">ถูกสุด: ${esc(P.srcs[best.s[1]]||'(ไม่ระบุ)')}</div>
       <div class="d ${cls}">${d==null?'ไม่มีฐานเทียบ':(d>0?'▲ +':d<0?'▼ ':'—  ')+Math.abs(d).toFixed(2)+'% จากครั้งก่อน'}</div></div>`;
-  }).join('');
+  };
+  $('keyCards').innerHTML = GROUPS.map(([g,items])=>
+    `<div class="kgroup"><div class="kg-lab">${g}</div>
+     <div class="kcards">${items.map(kcard).join('')}</div></div>`).join('');
 
   /* observations */
   const movers=[];
@@ -1998,7 +2064,7 @@ function impInit(){
     if(!mat||!(price>0)){ alert('กรอกชื่อวัสดุและราคาก่อน'); return; }
     if(!src){ alert('เลือกหรือพิมพ์ชื่อแหล่งก่อน'); return; }
     if(!(y>=2560&&y<=2600)){ alert('ตรวจปี พ.ศ. อีกครั้ง'); return; }
-    queue.push({y,mo,mat,unit,price,src,ref:$('mRef').value.trim(),typ:$('mType').value,chan:$('mChan').value,known:P.mats.includes(mat)||!!REG.map[mat]});
+    queue.push({y,mo,mat,unit,price,src,ref:$('mRef').value.trim(),typ:$('mType').value,chan:$('mChan').value,known:P.mats.includes(mat)||!!regStd(mat)});
     $('mMat').value='';$('mPrice').value='';$('mRef').value='';
     renderQueue();
   };
@@ -2025,7 +2091,7 @@ function impInit(){
       queue.push({y,mo,mat,unit:ci.unit>=0?String(r[ci.unit]||'').trim():'',price,src,
         ref:ci.ref>=0?String(r[ci.ref]||'').trim():'',
         typ:ci.typ>=0&&String(r[ci.typ]||'').trim()?String(r[ci.typ]).trim():$('mType').value,
-        chan:$('mChan').value, known:P.mats.includes(mat)||!!REG.map[mat]});
+        chan:$('mChan').value, known:P.mats.includes(mat)||!!regStd(mat)});
       ok++;
     });
     renderQueue();
@@ -2158,7 +2224,8 @@ function sysInit(){
       <td class="num">${new Set(rs.map(s=>s[0])).size.toLocaleString()}</td>
       <td class="num">${new Set(rs.map(s=>s[1])).size}</td></tr>`;});
   $('tblSysStat').innerHTML=h+'</tbody>';
-  $('sysInfo').innerHTML=`เวอร์ชัน: 3.5 · อัปเดต: 16 ส.ค. 2569<br>
+  const cm=$('cMeta'); if(cm) cm.innerHTML='เริ่มพัฒนา สิงหาคม 2569 · เวอร์ชันปัจจุบัน v3.7 · '+(LIVE.on?'เชื่อมคลังข้อมูลแล้ว':'ยังไม่ได้เชื่อมคลัง');
+  $('sysInfo').innerHTML=`เวอร์ชัน: 3.7 · อัปเดต: 17 ส.ค. 2569<br>
     การเชื่อมราคาน้ำมันอัตโนมัติ: สร้างแท็บชื่อ <b>OIL</b> ในชีทคลังข้อมูล คอลัมน์ A=วันที่ B=จังหวัด C=ราคาดีเซล (หรือ A=วันที่ B=ราคา ถ้ามีเฉพาะขอนแก่น) แชร์แบบ อ่านได้ทุกคนที่มีลิงก์ — หน้าคำนวณระยะขนส่งจะอ่านราคาล่าสุดของจังหวัดที่เลือกให้เอง<br>
     ขอบเขตข้อมูลที่ฝังในไฟล์นี้: ${mLabI(0)} – ${mLabI(LAST)} (${P.series.length.toLocaleString()} คู่ราคา)<br>
     ชีทกลาง: 01.0 คลังข้อมูลวัสดุก่อสร้าง (แท็บ PRICES + OIL + REGISTRY) · เปิดหน้าเว็บครั้งใด ระบบอ่านแท็บ PRICES มารวมกับข้อมูลฝังให้อัตโนมัติ — ราคา TPSO เดือนใหม่และราคากรอกเองจึงขึ้นจอโดยไม่ต้องแก้ไฟล์นี้<br>
@@ -2279,7 +2346,7 @@ function clearInit(){
 /* ============ boot ============ */
 [buildSummary, lawInit, provInit, matInit, initMap, statInit, impInit, expInit, sysInit, regInit, clearInit, fullInit, distTabs, dieselIdx, drawMatChips]
   .forEach(f=>{ try{ f(); }catch(e){ console.error('init:', f.name, e); } });
-kddAll();
+kddAll(); paintIcons();
 try{ fetchOil(true); }catch(e){}
 try{ loadLive(); }catch(e){}
 </script>
