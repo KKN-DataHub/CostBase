@@ -423,7 +423,7 @@ canvas{max-width:100%}
   <div class="brand">
     <h1>ระบบฐานข้อมูลวัสดุ</h1>
     <div class="sub">แขวงทางหลวงชนบทขอนแก่น</div>
-    <div class="chips"><span class="chip" id="bLatest">—</span><span class="chip">v3.3</span></div>
+    <div class="chips"><span class="chip" id="bLatest">—</span><span class="chip">v3.5</span></div>
   </div>
   <nav class="nav" id="nav">
     <button data-p="sum" class="active"><span class="ico">▦</span>หน้าสรุป</button>
@@ -714,7 +714,7 @@ canvas{max-width:100%}
         <div id="sysInfo" style="font-size:12.5px;line-height:1.8"></div>
         <div style="margin-top:14px;border-top:1px solid var(--grid);padding-top:10px;font-size:12px;color:var(--ink2);line-height:1.7">
           คิดค้นและพัฒนาโดย นายสิษฐ์ชกรณ์ ซึ้งสัมปทาน กลุ่มวิชาการ แขวงทางหลวงชนบทขอนแก่น · กรมทางหลวงชนบท<br>
-          เริ่มพัฒนา สิงหาคม 2569 <span class="pill info" style="margin-left:6px">v3.3</span>
+          เริ่มพัฒนา สิงหาคม 2569 <span class="pill info" style="margin-left:6px">v3.5</span>
         </div>
       </div>
     </div>
@@ -734,6 +734,24 @@ canvas{max-width:100%}
       <span class="hint" id="liveStat">—</span>
     </div>
     <div class="tw" style="margin-top:12px"><table id="tblConn"></table></div>
+  </div>
+  <div class="card" style="margin-top:12px">
+    <h2>ล้างข้อมูลในคลัง <span class="pill warn" style="margin-left:6px">สำรองอัตโนมัติก่อนล้างทุกครั้ง</span></h2>
+    <div class="frow ymc">
+      <div style="grid-column:1/3"><label class="f">ขอบเขตที่จะล้าง</label><select id="clScope">
+        <option value="prices_month">ราคา — เฉพาะเดือนที่ระบุ</option>
+        <option value="prices_channel">ราคา — เฉพาะช่องทางที่ระบุ</option>
+        <option value="prices">ราคา — ทั้งแท็บ PRICES (เริ่มนับหนึ่งใหม่)</option>
+        <option value="new">คิวชื่อใหม่ — ทั้งแท็บ NEW_ITEMS</option>
+        <option value="oil">ราคาน้ำมัน — ทั้งแท็บ OIL</option>
+      </select></div>
+      <div id="clOptBox"></div>
+    </div>
+    <div class="frow cm" style="margin-top:10px">
+      <div><label class="f">พิมพ์คำว่า <b>ล้าง</b> เพื่อยืนยัน</label><input type="text" id="clYes" placeholder="ล้าง"></div>
+      <div style="align-self:end"><button class="btn" id="clGo" style="background:#a33">ล้างข้อมูลตามที่เลือก</button></div>
+    </div>
+    <div class="hint" id="clStat" style="margin-top:8px">ข้อมูลที่ล้างจะถูกสำรองเป็นแท็บซ่อนชื่อขึ้นต้น "สำรอง_" ในชีทเดียวกัน (เก็บล่าสุด 5 ชุด) · กู้คืนได้จากเมนู ระบบวัสดุ → กู้คืนจากไฟล์สำรอง</div>
   </div>
   <div class="card" style="margin-top:12px">
     <h2>อัปโหลดบัญชีคุม (REGISTRY) ขึ้นคลัง</h2>
@@ -853,7 +871,7 @@ function drawConn(){
     ['ชีทคลังข้อมูล (อ่าน)', CONN.sheet===null?'<span class="pill warn">ยังไม่ได้ตรวจ</span>':ok(CONN.sheet,CONN.sheet?'อ่านได้':'อ่านไม่ได้ — ตรวจการแชร์ชีท'),
       CONN.sheet?`แท็บ PRICES ${CONN.prices.toLocaleString()} แถว`:'—'],
     ['ตัวรับข้อมูล (Apps Script)', CONN.web===null?'<span class="pill warn">ยังไม่ได้ตรวจ</span>':ok(CONN.web,CONN.web?('เชื่อมได้ · รุ่น '+CONN.ver):'เชื่อมไม่ได้'),
-      CONN.web?(CONN.ver>=7?'รุ่นล่าสุด':'ควรอัปเป็นรุ่น 7'):'ตรวจ URL ในช่องด้านบน'],
+      CONN.web?(CONN.ver>=9?'รุ่นล่าสุด':'ควรอัปเป็นรุ่น 9 — รุ่นเก่ายังไม่มีระบบสำรอง/ล้างข้อมูล'):'ตรวจ URL ในช่องด้านบน'],
     ['บัญชีคุม (แท็บ REGISTRY)', CONN.reg?ok(true,'อัปโหลดแล้ว'):'<span class="pill warn">ยังไม่มีข้อมูล</span>',
       CONN.reg?`${CONN.reg.toLocaleString()} ชื่อเดิม → ${P.mats.length?P.mats.length.toLocaleString():'—'} ชื่อมาตรฐาน`:'อัปโหลดจากกล่องด้านล่าง'],
     ['พิกัดแหล่งวัสดุ (แท็บ SOURCES)', CONN.src?ok(true,'อัปโหลดแล้ว'):'<span class="pill warn">ยังไม่มีข้อมูล</span>',
@@ -1098,7 +1116,7 @@ function buildSummary(){
   hc('hcImp',impChips());
   hc('hcExp',`<span class="ph-chip">● เดือนล่าสุด <b>${latestLabel}</b></span>
     <span class="ph-chip">${LIVE.on?'☁ รวมคลังสดแล้ว':'⚠ ยังไม่ได้เชื่อมคลัง'}</span>`);
-  hc('hcSys',`<span class="ph-chip">เวอร์ชัน <b>3.3</b></span>
+  hc('hcSys',`<span class="ph-chip">เวอร์ชัน <b>3.5</b></span>
     <span class="ph-chip">อัปเดต 16 ส.ค. 2569</span>`);
   const nRowsLast = P.series.filter(s=>s[4][LAST]!=null).length;
   const nSrc = P.srcs.filter(s=>s).length;
@@ -2140,7 +2158,7 @@ function sysInit(){
       <td class="num">${new Set(rs.map(s=>s[0])).size.toLocaleString()}</td>
       <td class="num">${new Set(rs.map(s=>s[1])).size}</td></tr>`;});
   $('tblSysStat').innerHTML=h+'</tbody>';
-  $('sysInfo').innerHTML=`เวอร์ชัน: 3.3 · อัปเดต: 16 ส.ค. 2569<br>
+  $('sysInfo').innerHTML=`เวอร์ชัน: 3.5 · อัปเดต: 16 ส.ค. 2569<br>
     การเชื่อมราคาน้ำมันอัตโนมัติ: สร้างแท็บชื่อ <b>OIL</b> ในชีทคลังข้อมูล คอลัมน์ A=วันที่ B=จังหวัด C=ราคาดีเซล (หรือ A=วันที่ B=ราคา ถ้ามีเฉพาะขอนแก่น) แชร์แบบ อ่านได้ทุกคนที่มีลิงก์ — หน้าคำนวณระยะขนส่งจะอ่านราคาล่าสุดของจังหวัดที่เลือกให้เอง<br>
     ขอบเขตข้อมูลที่ฝังในไฟล์นี้: ${mLabI(0)} – ${mLabI(LAST)} (${P.series.length.toLocaleString()} คู่ราคา)<br>
     ชีทกลาง: 01.0 คลังข้อมูลวัสดุก่อสร้าง (แท็บ PRICES + OIL + REGISTRY) · เปิดหน้าเว็บครั้งใด ระบบอ่านแท็บ PRICES มารวมกับข้อมูลฝังให้อัตโนมัติ — ราคา TPSO เดือนใหม่และราคากรอกเองจึงขึ้นจอโดยไม่ต้องแก้ไฟล์นี้<br>
@@ -2210,8 +2228,56 @@ function regInit(){
   };
 }
 
+/* ============ ล้างข้อมูลในคลัง ============ */
+function clearInit(){
+  const sc=$('clScope'); if(!sc) return;
+  const box=$('clOptBox');
+  const opts=()=>{
+    const v=sc.value;
+    if(v==='prices_month'){
+      box.innerHTML='<label class="f">ปี พ.ศ. / เดือน</label><div style="display:flex;gap:6px">'
+        +'<input type="number" id="clY" style="width:88px" value="'+P.ylist[LAST]+'">'
+        +'<select id="clM"></select></div>';
+      $('clM').innerHTML=TH_M.map((t,i)=>`<option value="${i+1}" ${i+1===P.months[LAST]?'selected':''}>${t}</option>`).join('');
+    } else if(v==='prices_channel'){
+      box.innerHTML='<label class="f">ช่องทาง</label><select id="clC">'
+        +['TPSO','หน่วยงานราชการ','เว็บร้านค้า','กรอกเอง'].map(x=>`<option>${x}</option>`).join('')+'</select>';
+    } else box.innerHTML='<div class="hint" style="padding-bottom:9px">ล้างทั้งแท็บ</div>';
+    kddAll();
+  };
+  sc.onchange=opts; opts();
+  $('clGo').onclick=async()=>{
+    const url=($('cfgUrl').value||'').trim(), st=$('clStat');
+    if($('clYes').value.trim()!=='ล้าง'){ st.innerHTML='<span class="up">พิมพ์คำว่า ล้าง ในช่องยืนยันก่อน</span>'; return; }
+    if(!url){ st.innerHTML='<span class="up">ยังไม่ตั้ง WebApp URL</span>'; return; }
+    const scope=sc.value; const opt={};
+    if(scope==='prices_month'){ opt.be=+$('clY').value; opt.mo=+$('clM').value; }
+    if(scope==='prices_channel') opt.chan=$('clC').value;
+    const label={prices_month:'ราคาเดือน '+(opt.mo?TH_M[opt.mo-1]+' '+String(opt.be).slice(2):''),
+      prices_channel:'ราคาช่องทาง '+opt.chan, prices:'ราคาทั้งแท็บ',
+      'new':'คิวชื่อใหม่', oil:'ราคาน้ำมัน'}[scope];
+    if(!confirm('ยืนยันล้าง: '+label+'\n\nระบบจะสำรองแท็บนั้นไว้ก่อนอัตโนมัติ กู้คืนได้ภายหลัง')) return;
+    $('clGo').disabled=true; st.textContent='กำลังล้าง…';
+    try{
+      const r=await fetch(url,{method:'POST',headers:{'Content-Type':'text/plain;charset=utf-8'},
+        body:JSON.stringify({token:WTOKEN,action:'clear',scope,opt})});
+      const res=await r.json();
+      if(!res.ok) throw new Error(res.error||'ไม่สำเร็จ');
+      st.innerHTML='<span class="pill ok">ล้างแล้ว</span> '+label+' · เอาออก <b>'+(res.removed||0).toLocaleString()
+        +'</b> แถว · สำรองไว้ที่แท็บ <b>'+(res.backup||'—')+'</b>';
+      $('clYes').value='';
+      loadLive();                       /* อ่านคลังใหม่ ไม่ต้องรีโหลดหน้า สถานะยังอยู่ให้อ่าน */
+    }catch(e){
+      const m=String(e.message);
+      st.innerHTML='<span class="up">ล้างไม่สำเร็จ: '+esc(m)+'</span>'
+        +(/scope|action/i.test(m)?' — ต้องใช้ Code.gs รุ่น 9 ขึ้นไป':'');
+    }
+    $('clGo').disabled=false;
+  };
+}
+
 /* ============ boot ============ */
-[buildSummary, lawInit, provInit, matInit, initMap, statInit, impInit, expInit, sysInit, regInit, fullInit, distTabs, dieselIdx, drawMatChips]
+[buildSummary, lawInit, provInit, matInit, initMap, statInit, impInit, expInit, sysInit, regInit, clearInit, fullInit, distTabs, dieselIdx, drawMatChips]
   .forEach(f=>{ try{ f(); }catch(e){ console.error('init:', f.name, e); } });
 kddAll();
 try{ fetchOil(true); }catch(e){}
