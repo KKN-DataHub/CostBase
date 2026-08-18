@@ -464,7 +464,7 @@ canvas{max-width:100%}
   <div class="brand">
     <h1>ระบบฐานข้อมูลวัสดุ</h1>
     <div class="sub">แขวงทางหลวงชนบทขอนแก่น</div>
-    <div class="chips"><span class="chip" id="bLatest">—</span><span class="chip">v4.4</span></div>
+    <div class="chips"><span class="chip" id="bLatest">—</span><span class="chip">v4.7</span></div>
   </div>
   <nav class="nav" id="nav">
     <button data-p="sum" class="active"><span class="ico">▦</span>หน้าสรุป</button>
@@ -725,7 +725,12 @@ canvas{max-width:100%}
     <div class="card">
       <h2 data-ic="gear">ตั้งค่าการส่งออก</h2>
       <label class="f">เดือน</label><select id="eMonth"></select>
-      <label class="f" style="margin-top:12px">หมวด (กรองรายการที่จะส่งออก)</label><select id="eCat"></select>
+      <label class="f" style="margin-top:12px">หมวด (กรองรายการที่จะส่งออก — เลือกได้หลายหมวด)</label>
+      <div class="kdd" id="eCatBox">
+        <input type="text" class="kdd-inp" id="eCatInp" readonly value="ทุกหมวด — ส่งออกทั้งคลัง">
+        <div class="kdd-panel" id="eCatPanel" style="max-height:240px"></div>
+      </div>
+      <div class="chips" id="eCatChips" style="margin-top:6px"></div>
       <label class="f" style="margin-top:12px">ยกยอดราคาเดือนก่อน เมื่อเดือนที่เลือกไม่มีราคา</label>
       <select id="eCarry"><option value="1" selected>เปิด — ใช้ราคาล่าสุดที่มี (แนะนำ)</option><option value="0">ปิด — เดือนไหนไม่มี ตัดทิ้ง</option></select>
       <div class="statusline" style="margin-top:14px">
@@ -926,19 +931,38 @@ function mergeLive(rows){
   });
   return added;
 }
-let REG={on:false, map:{}, cat:{}, n:0, nmap:{}, tmap:{}, ncat:{}, tcat:{}};
+let REG={on:false, map:{}, cat:{}, n:0, nmap:{}, tmap:{}, ncat:{}, tcat:{}, gmap:{}, gcat:{}};
 /* ทำความสะอาดชื่อก่อนเทียบ — ชื่อจากพาณิชย์มีช่องว่างซ้อน/NBSP ปนมาเยอะ */
 const rNorm = s => String(s==null?'':s)
   .replace(/[\u00A0\u200B\u200C\u200D\uFEFF]/g,' ').replace(/\s+/g,' ').trim();
 const rTight = s => kNorm(rNorm(s));
+/* ชั้นที่ 4: "ลายเซ็นสเปก" — ตัดยี่ห้อ/มอก./รุ่น/สี/รูปแบบตัวเลข ก่อนเทียบ
+   TPSO แก้ชื่อเปลือกนอกเล็กน้อย (เปลี่ยนตรา เปลี่ยนปีมอก. เพิ่มสี) จะยังจับคู่ชื่อมาตรฐานเดิมได้ */
+function rSig(s){
+  s=rNorm(s).toLowerCase();
+  s=s.replace(/\(?\s*มอก\.?\s*[\d\/\-]+\s*\)?/g,' ');
+  s=s.replace(/รุ่น\s*\S+/g,' ');
+  s=s.replace(/ตรา\s*\S+(\s*\([^)]*\))?/g,' ');
+  s=s.replace(/ยี่ห้อ\s*\S+/g,' ');
+  s=s.replace(/(\s)สี\S+/g,'$1');
+  s=s.replace(/(\d),(\d)/g,'$1$2');
+  s=s.replace(/([1-9]\d*)\.(\d{3})(?=\D|$)/g,'$1$2');
+  s=s.replace(/(\d)\s*[x×*]\s*(\d)/g,'$1x$2');
+  s=s.replace(/(\d+\.\d*?)0+(?=\D|$)/g,'$1').replace(/(\d)\.(?=\D|$)/g,'$1');
+  s=s.replace(/นิ้ว/g,'"').replace(/เมตร/g,'ม').replace(/sq\.?mm\.?/g,'ตรมม');
+  s=s.replace(/['′]/g,'ฟุต');
+  s=s.replace(/[็-๎]/g,'');
+  s=s.replace(/[.\s()\/\-–—ๆฯ]/g,'');
+  return s;
+}
 /* หาชื่อมาตรฐาน/หมวดของชื่อดิบ: ตรงเป๊ะ → ยุบช่องว่าง → ตัดวรรณยุกต์ */
 function regStd(name){
   const raw=String(name==null?'':name).trim();
-  return REG.map[raw] || REG.nmap[rNorm(raw)] || REG.tmap[rTight(raw)] || null;
+  return REG.map[raw] || REG.nmap[rNorm(raw)] || REG.tmap[rTight(raw)] || REG.gmap[rSig(raw)] || null;
 }
 function regCat(name){
   const raw=String(name==null?'':name).trim();
-  return REG.cat[raw] || REG.ncat[rNorm(raw)] || REG.tcat[rTight(raw)] || null;
+  return REG.cat[raw] || REG.ncat[rNorm(raw)] || REG.tcat[rTight(raw)] || REG.gcat[rSig(raw)] || null;
 }
 let CONN={sheet:null, web:null, ver:0, prices:0, reg:0, src:0, oil:null, at:''};
 function drawConn(){
@@ -962,13 +986,15 @@ function drawConn(){
 }
 function applyRegistry(rows){
   /* rows: [ลำดับ, ชื่อเดิม, หมวด, หน่วย, ชื่อมาตรฐาน] — ชื่อมาตรฐานว่าง = ใช้ชื่อเดิม */
-  REG.map={}; REG.cat={}; REG.nmap={}; REG.tmap={}; REG.ncat={}; REG.tcat={};
+  REG.map={}; REG.cat={}; REG.nmap={}; REG.tmap={}; REG.ncat={}; REG.tcat={}; REG.gmap={}; REG.gcat={};
   rows.forEach(r=>{
     const old=String(r[1]||'').trim(); if(!old) return;
     const std=String(r[4]||'').trim()||old;
     REG.map[old]=std; REG.nmap[rNorm(old)]=std; REG.tmap[rTight(old)]=std;
+    const g=rSig(old); if(!(g in REG.gmap)) REG.gmap[g]=std;
     const c=String(r[2]||'').trim();
     if(c&&!REG.cat[std]){ REG.cat[std]=c; REG.ncat[rNorm(std)]=c; REG.tcat[rTight(std)]=c; }
+    if(c){ const g2=rSig(old); if(!(g2 in REG.gcat)) REG.gcat[g2]=c; }
   });
   REG.n=Object.keys(REG.map).length;
   if(!REG.n) return;
@@ -1332,7 +1358,7 @@ function buildSummary(){
   hc('hcImp',impChips());
   hc('hcExp',`<span class="ph-chip">● เดือนล่าสุด <b>${latestLabel}</b></span>
     <span class="ph-chip">${LIVE.on?'☁ รวมคลังสดแล้ว':'⚠ ยังไม่ได้เชื่อมคลัง'}</span>`);
-  hc('hcSys',`<span class="ph-chip">เวอร์ชัน <b>4.4</b></span>
+  hc('hcSys',`<span class="ph-chip">เวอร์ชัน <b>4.7</b></span>
     <span class="ph-chip">อัปเดต 18 ส.ค. 2569</span>`);
   const nRowsLast = P.series.filter(s=>s[4][LAST]!=null).length;
   /* พร้อมใช้ = มีราคาเดือนล่าสุด หรือมีราคาเดือนก่อนหน้าให้ยกยอด (ตามหลักเกณฑ์ยกยอดของระบบ)
@@ -2439,10 +2465,11 @@ function renderQueue(){
 function expCatOf(s){          /* หมวดของคู่ราคา — ใช้บัญชีคุมก่อน ไม่มีค่อยใช้ประเภท */
   return regCat(P.mats[s[0]]) || P.types[s[3]] || '';
 }
-function expRows(mi,carry,cat){
+let eCatSel=new Set();          /* หมวดที่เลือกส่งออก — ว่าง = ทุกหมวด */
+function expRows(mi,carry,cats){
   const rows=[]; let carried=0, dropped=0;
   P.series.forEach(s=>{
-    if(cat && expCatOf(s)!==cat) return;
+    if(cats&&cats.size&&!cats.has(expCatOf(s))) return;
     const v=valAt(s[4],mi,carry);
     if(!v){ dropped++; return; }
     if(v.carried) carried++;
@@ -2452,24 +2479,44 @@ function expRows(mi,carry,cat){
 }
 function expInit(){
   $('eMonth').innerHTML=P.months.map((m,i)=>`<option value="${i}" ${i===LAST?'selected':''}>${mLabI(i)}</option>`).join('');
-  /* หมวดกรอง — จากบัญชีคุมถ้ามี ไม่มีใช้ประเภทที่พบในคลัง */
-  const prevECat=$('eCat').value;
+  /* หมวดกรอง (เลือกหลายหมวด) — จากบัญชีคุมถ้ามี ไม่มีใช้ประเภทที่พบในคลัง */
   const ecats=[...new Set(P.series.map(expCatOf).filter(Boolean))].sort((a,b)=>a.localeCompare(b,'th'));
-  $('eCat').innerHTML='<option value="">ทุกหมวด — ส่งออกทั้งคลัง</option>'
-    +ecats.map(c=>`<option ${c===prevECat?'selected':''}>${esc(c)}</option>`).join('');
+  eCatSel=new Set([...eCatSel].filter(c=>ecats.includes(c)));   /* ตัดหมวดที่ไม่มีแล้วออก */
+  const box=$('eCatBox'), inp=$('eCatInp'), panel=$('eCatPanel');
+  const drawCat=()=>{
+    inp.value=eCatSel.size?`เลือกไว้ ${eCatSel.size} หมวด`:'ทุกหมวด — ส่งออกทั้งคลัง';
+    panel.innerHTML=`<div class="kdd-it ${eCatSel.size?'':'on'}" data-c="">ทุกหมวด — ส่งออกทั้งคลัง</div>`
+      +ecats.map(c=>`<div class="kdd-it ${eCatSel.has(c)?'on':''}" data-c="${esc(c)}">${eCatSel.has(c)?'☑':'☐'} ${esc(c)}</div>`).join('');
+    panel.querySelectorAll('.kdd-it').forEach(it=>it.onmousedown=e=>{
+      e.preventDefault(); e.stopPropagation();
+      const c=it.dataset.c;
+      if(!c) eCatSel.clear();                       /* ทุกหมวด = ล้างตัวกรอง */
+      else eCatSel.has(c)?eCatSel.delete(c):eCatSel.add(c);
+      drawCat(); upd();                              /* เปิดค้างไว้ ติ๊กต่อได้เลย */
+    });
+    $('eCatChips').innerHTML=[...eCatSel].map(c=>`<span class="matchip">${esc(c)} <b data-c="${esc(c)}" style="cursor:pointer">✕</b></span>`).join('');
+    $('eCatChips').querySelectorAll('[data-c]').forEach(b=>b.onclick=()=>{ eCatSel.delete(b.dataset.c); drawCat(); upd(); });
+  };
+  if(!box.dataset.wired){ box.dataset.wired='1';
+    inp.onmousedown=e=>{ e.preventDefault(); e.stopPropagation(); box.classList.toggle('open'); };
+    panel.onmousedown=e=>e.stopPropagation();
+    box._close=()=>box.classList.remove('open');
+  }
   const upd=()=>{
-    const mi=+$('eMonth').value, carry=$('eCarry').value==='1', cat=$('eCat').value;
-    const {rows,carried,dropped}=expRows(mi,carry,cat);
-    $('eInfo').innerHTML=`จะส่งออก <b>${rows.length.toLocaleString()}</b> แถว${cat?` (เฉพาะหมวด ${esc(cat)})`:''} · ยกยอดจากเดือนก่อน <b>${carried.toLocaleString()}</b> แถว · ไม่มีราคาเลยตัดทิ้ง <b>${dropped.toLocaleString()}</b> แถว`;
+    const mi=+$('eMonth').value, carry=$('eCarry').value==='1';
+    const {rows,carried,dropped}=expRows(mi,carry,eCatSel);
+    const catTxt=eCatSel.size?` (เฉพาะหมวด ${esc([...eCatSel].join(' · '))})`:'';
+    $('eInfo').innerHTML=`จะส่งออก <b>${rows.length.toLocaleString()}</b> แถว${catTxt} · ยกยอดจากเดือนก่อน <b>${carried.toLocaleString()}</b> แถว · ไม่มีราคาเลยตัดทิ้ง <b>${dropped.toLocaleString()}</b> แถว`;
     let h='<thead><tr><th>รายการวัสดุ</th><th>หน่วย</th><th class="num">ราคา</th><th>แหล่งวัสดุ</th><th>ประเภท</th><th>ยกยอดจาก</th></tr></thead><tbody>';
     rows.slice(0,60).forEach(r=>{h+=`<tr><td>${esc(r[0])}</td><td>${esc(r[1])}</td><td class="num">${fmt(r[2])}</td><td>${esc(r[3])}</td><td>${esc(r[4])}</td><td>${r[5]?`<span class="pill warn">${r[5]}</span>`:''}</td></tr>`;});
     $('tblPrev').innerHTML=h+`</tbody>`;
   };
-  $('eMonth').onchange=upd; $('eCarry').onchange=upd; $('eCat').onchange=upd; upd();
+  drawCat();
+  $('eMonth').onchange=upd; $('eCarry').onchange=upd; upd();
   const buildXlsx=(fname)=>{
     if(typeof XLSX==='undefined'){ alert('ตัวสร้าง .xlsx ต้องต่ออินเทอร์เน็ตครั้งแรก — ระหว่างนี้ใช้ปุ่ม .csv แทนได้'); return; }
     const mi=+$('eMonth').value, carry=$('eCarry').value==='1';
-    const {rows}=expRows(mi,carry,$('eCat').value);
+    const {rows}=expRows(mi,carry,eCatSel);
     const aoa=[['รายการวัสดุ','หน่วย','ราคา','แหล่งวัสดุ','ประเภท'],...rows.map(r=>r.slice(0,5))];
     const ws=XLSX.utils.aoa_to_sheet(aoa);
     const wb=XLSX.utils.book_new(); XLSX.utils.book_append_sheet(wb,ws,'Sheet1');
@@ -2488,7 +2535,7 @@ function expInit(){
   };
   $('eCsv').onclick=()=>{
     const mi=+$('eMonth').value, carry=$('eCarry').value==='1';
-    const {rows}=expRows(mi,carry,$('eCat').value);
+    const {rows}=expRows(mi,carry,eCatSel);
     const t=[['รายการวัสดุ','หน่วย','ราคา','แหล่งวัสดุ','ประเภท'],...rows.map(r=>r.slice(0,5))]
       .map(r=>r.map(x=>/[",\n]/.test(x)?'"'+String(x).replace(/"/g,'""')+'"':x).join(',')).join('\n');
     const blob=new Blob(['﻿'+t],{type:'text/csv;charset=utf-8'});
@@ -2517,8 +2564,8 @@ function sysInit(){
       <td class="num">${new Set(rs.map(s=>s[0])).size.toLocaleString()}</td>
       <td class="num">${new Set(rs.map(s=>s[1])).size}</td></tr>`;});
   $('tblSysStat').innerHTML=h+'</tbody>';
-  const cm=$('cMeta'); if(cm) cm.innerHTML='เริ่มพัฒนา สิงหาคม 2569 · เวอร์ชันปัจจุบัน v4.4 · '+(LIVE.on?'เชื่อมคลังข้อมูลแล้ว':'ยังไม่ได้เชื่อมคลัง');
-  $('sysInfo').innerHTML=`เวอร์ชัน: 4.4 · อัปเดต: 18 ส.ค. 2569<br>
+  const cm=$('cMeta'); if(cm) cm.innerHTML='เริ่มพัฒนา สิงหาคม 2569 · เวอร์ชันปัจจุบัน v4.7 · '+(LIVE.on?'เชื่อมคลังข้อมูลแล้ว':'ยังไม่ได้เชื่อมคลัง');
+  $('sysInfo').innerHTML=`เวอร์ชัน: 4.7 · อัปเดต: 18 ส.ค. 2569<br>
     การเชื่อมราคาน้ำมันอัตโนมัติ: สร้างแท็บชื่อ <b>OIL</b> ในชีทคลังข้อมูล คอลัมน์ A=วันที่ B=จังหวัด C=ราคาดีเซล (หรือ A=วันที่ B=ราคา ถ้ามีเฉพาะขอนแก่น) แชร์แบบ อ่านได้ทุกคนที่มีลิงก์ — หน้าคำนวณระยะขนส่งจะอ่านราคาล่าสุดของจังหวัดที่เลือกให้เอง<br>
     ขอบเขตข้อมูลที่ฝังในไฟล์นี้: ${mLabI(0)} – ${mLabI(LAST)} (${P.series.length.toLocaleString()} คู่ราคา)<br>
     ชีทกลาง: 01.0 คลังข้อมูลวัสดุก่อสร้าง (แท็บ PRICES + OIL + REGISTRY) · เปิดหน้าเว็บครั้งใด ระบบอ่านแท็บ PRICES มารวมกับข้อมูลฝังให้อัตโนมัติ — ราคา TPSO เดือนใหม่และราคากรอกเองจึงขึ้นจอโดยไม่ต้องแก้ไฟล์นี้<br>
