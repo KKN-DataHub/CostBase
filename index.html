@@ -464,7 +464,7 @@ canvas{max-width:100%}
   <div class="brand">
     <h1>ระบบฐานข้อมูลวัสดุ</h1>
     <div class="sub">แขวงทางหลวงชนบทขอนแก่น</div>
-    <div class="chips"><span class="chip" id="bLatest">—</span><span class="chip">v4.7</span></div>
+    <div class="chips"><span class="chip" id="bLatest">—</span><span class="chip">v4.8</span></div>
   </div>
   <nav class="nav" id="nav">
     <button data-p="sum" class="active"><span class="ico">▦</span>หน้าสรุป</button>
@@ -1032,6 +1032,7 @@ function mergeSources(rows){
     if(ex){ if(ex.lat!==lat||ex.lon!==lon){ ex.lat=lat; ex.lon=lon; upd++; } }
     else { SRC.push({n:SRC.length+1,name,t:'',lat,lon}); add++; }
   });
+  if(upd||add){ try{ rebuildSrcIndex(); }catch(e){} }
   if((upd||add)&&typeof map!=='undefined'&&map) drawMap();
   return {upd,add};
 }
@@ -1358,7 +1359,7 @@ function buildSummary(){
   hc('hcImp',impChips());
   hc('hcExp',`<span class="ph-chip">● เดือนล่าสุด <b>${latestLabel}</b></span>
     <span class="ph-chip">${LIVE.on?'☁ รวมคลังสดแล้ว':'⚠ ยังไม่ได้เชื่อมคลัง'}</span>`);
-  hc('hcSys',`<span class="ph-chip">เวอร์ชัน <b>4.7</b></span>
+  hc('hcSys',`<span class="ph-chip">เวอร์ชัน <b>4.8</b></span>
     <span class="ph-chip">อัปเดต 18 ส.ค. 2569</span>`);
   const nRowsLast = P.series.filter(s=>s[4][LAST]!=null).length;
   /* พร้อมใช้ = มีราคาเดือนล่าสุด หรือมีราคาเดือนก่อนหน้าให้ยกยอด (ตามหลักเกณฑ์ยกยอดของระบบ)
@@ -1477,7 +1478,27 @@ function buildSummary(){
 let map=null, layerSrc=null, destMarker=null;
 let dres=[], dest=null, distCache={}, matSel=[], cmpState={}, oilMeta=null, routeCache={};
 let mmMap=null, mmLayer=null;
-const SRCBYNAME=Object.fromEntries(SRC.map(s=>[s.name,s]));
+let SRCBYNAME=Object.fromEntries(SRC.map(s=>[s.name,s]));
+function rebuildSrcIndex(){ SRCBYNAME=Object.fromEntries(SRC.map(s=>[s.name,s])); }
+/* จับคู่ชื่อแหล่งแบบยืดหยุ่น — ตอนกรอกราคามักใช้ชื่อเต็ม (บจก.ซีโก้แอสฟัลท์)
+   แต่บัญชีแหล่งวัสดุใช้ชื่อสั้น (ซีโก้) — ตัดคำนำหน้านิติบุคคล/คำสามัญ แล้วเทียบแบบมีกันเอง
+   ถ้าเข้าได้หลายแหล่ง (เช่น โซล่า มี 2 สาขา) ถือว่ากำกวม ไม่จับให้ ปล่อยกรอกระยะเอง */
+const srcNorm=s=>rNorm(s).toLowerCase()
+  .replace(/ห้างหุ้นส่วนจำกัด|บริษัท|บจก\.?|บมจ\.?|หจก\.?|จำกัด|\(?มหาชน\)?/g,' ')
+  .replace(/แอสฟัลท์|แอสฟัลต์|asphalt/g,' ')
+  .replace(/[()\s.\-–—]/g,'')
+  .replace(/[็-๎]/g,'')
+  .replace(/ี/g,'ิ');
+function findSrc(nm){
+  if(SRCBYNAME[nm]) return SRCBYNAME[nm];
+  const q=srcNorm(nm); if(!q) return null;
+  const hits=SRC.filter(x=>{
+    const t=srcNorm(x.name); if(!t) return false;
+    if(t===q) return true;
+    return Math.min(t.length,q.length)>=4 && (q.includes(t)||t.includes(q));
+  });
+  return hits.length===1?hits[0]:null;
+}
 const TYPE_TH={online:'ออนไลน์','กล่อง':'กล่องเกเบียน','ดินถม':'ดินถม','ทราย':'ทราย','พาณิชย์':'พาณิชย์','ยาง':'ยาง','สะพาน':'สะพาน','หิน':'หิน','เหล็ก':'เหล็ก','ไฟฟ้า':'ไฟฟ้า'};
 const TRUCKS=[['6','🚚 6 ล้อ','รถบรรทุก 6 ล้อ · น้ำหนักรวมไม่เกิน 15 ตัน'],
               ['10','🚛 10 ล้อ','รถบรรทุก 10 ล้อ · น้ำหนักรวมไม่เกิน 25 ตัน'],
@@ -1692,7 +1713,7 @@ function cmpRowsFor(mi){
     const lv=latestVal(s[4]); if(!lv) return;
     const nm=P.srcs[s[1]]||'(ไม่ระบุ)';
     const unit=P.units[s[2]]||''; const tU=unit==='ลบ.ม.'?'v':unit==='ตัน'?'t':null;
-    const sc=SRCBYNAME[nm]||null;
+    const sc=findSrc(nm);
     const dc=sc?distCache[sc.name]:null;
     const L0=dc?dc.L:0;
     rows.push({nm,sc,price:lv.p,pm:lv.m,unit,tU,
@@ -2564,8 +2585,8 @@ function sysInit(){
       <td class="num">${new Set(rs.map(s=>s[0])).size.toLocaleString()}</td>
       <td class="num">${new Set(rs.map(s=>s[1])).size}</td></tr>`;});
   $('tblSysStat').innerHTML=h+'</tbody>';
-  const cm=$('cMeta'); if(cm) cm.innerHTML='เริ่มพัฒนา สิงหาคม 2569 · เวอร์ชันปัจจุบัน v4.7 · '+(LIVE.on?'เชื่อมคลังข้อมูลแล้ว':'ยังไม่ได้เชื่อมคลัง');
-  $('sysInfo').innerHTML=`เวอร์ชัน: 4.7 · อัปเดต: 18 ส.ค. 2569<br>
+  const cm=$('cMeta'); if(cm) cm.innerHTML='เริ่มพัฒนา สิงหาคม 2569 · เวอร์ชันปัจจุบัน v4.8 · '+(LIVE.on?'เชื่อมคลังข้อมูลแล้ว':'ยังไม่ได้เชื่อมคลัง');
+  $('sysInfo').innerHTML=`เวอร์ชัน: 4.8 · อัปเดต: 18 ส.ค. 2569<br>
     การเชื่อมราคาน้ำมันอัตโนมัติ: สร้างแท็บชื่อ <b>OIL</b> ในชีทคลังข้อมูล คอลัมน์ A=วันที่ B=จังหวัด C=ราคาดีเซล (หรือ A=วันที่ B=ราคา ถ้ามีเฉพาะขอนแก่น) แชร์แบบ อ่านได้ทุกคนที่มีลิงก์ — หน้าคำนวณระยะขนส่งจะอ่านราคาล่าสุดของจังหวัดที่เลือกให้เอง<br>
     ขอบเขตข้อมูลที่ฝังในไฟล์นี้: ${mLabI(0)} – ${mLabI(LAST)} (${P.series.length.toLocaleString()} คู่ราคา)<br>
     ชีทกลาง: 01.0 คลังข้อมูลวัสดุก่อสร้าง (แท็บ PRICES + OIL + REGISTRY) · เปิดหน้าเว็บครั้งใด ระบบอ่านแท็บ PRICES มารวมกับข้อมูลฝังให้อัตโนมัติ — ราคา TPSO เดือนใหม่และราคากรอกเองจึงขึ้นจอโดยไม่ต้องแก้ไฟล์นี้<br>
