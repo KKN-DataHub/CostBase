@@ -211,10 +211,16 @@ tbody tr:hover{background:var(--teal-soft)}
 .basectl button{border:none;background:transparent;color:#c8d2e4;font-family:inherit;font-size:12px;
   padding:5px 12px;border-radius:7px;cursor:pointer;white-space:nowrap}
 .basectl button.on{background:#fff;color:var(--navy);font-weight:700}
-thead th{text-align:center}
-td.num{text-align:center}
-td.num input{text-align:center}
-input[type=number]{text-align:center}
+/* จัดคอลัมน์ให้ตรงกันทั้งระบบ — ข้อความชิดซ้าย ตัวเลขชิดขวา หัวตารางตามคอลัมน์ของมัน
+   (เดิมบังคับ center ทับทั้งหมด หัวตารางกับตัวเลขเลยไม่ตรงกัน) */
+thead th{text-align:left}
+thead th.num,thead th.c{text-align:center}
+thead th.num{text-align:right}
+td.num{text-align:right;font-variant-numeric:tabular-nums}
+td.num input{text-align:right}
+input[type=number]{text-align:right}
+/* ตารางอัตราค่าขนส่ง ว 477 เป็นตารางตัวเลขล้วน จัดกึ่งกลางอ่านง่ายกว่า */
+.ratetbl thead th,.ratetbl td,.ratetbl td.num{text-align:center}
 .modal{position:fixed;inset:0;background:rgba(11,17,32,.55);z-index:2000;display:none;align-items:center;justify-content:center;padding:18px}
 .modal.on{display:flex}
 .modal-in{background:#fff;border-radius:12px;max-width:1020px;width:100%;max-height:94vh;overflow:auto;padding:14px 18px}
@@ -409,6 +415,8 @@ tr.detail>td{background:#F8F7F3;border-top:none;padding:10px 14px}
   transition:transform .16s,box-shadow .16s,border-color .16s}
 .kcard:hover{transform:translateY(-3px);border-color:var(--teal);box-shadow:0 10px 24px rgba(13,148,136,.16)}
 .kcard[data-mi]{cursor:pointer}
+.kcard.empty{background:linear-gradient(180deg,#fdfdfb,#f6f6f2);border-style:dashed}
+.kcard.empty:hover{transform:none;border-color:var(--hairline);box-shadow:var(--sh-card)}
 .kcard[data-mi]:focus-visible{outline:2px solid var(--teal);outline-offset:2px}
 .kcard .kgo{font-size:10.5px;color:var(--teal);font-weight:600;margin-top:6px;opacity:0;transform:translateX(-4px);
   transition:opacity .18s,transform .18s}
@@ -422,7 +430,28 @@ tr.detail>td{background:#F8F7F3;border-top:none;padding:10px 14px}
 #tblCov td.cov{text-align:center;padding:3px 4px}
 #tblCov td.nm{cursor:pointer}
 #tblCov td.nm:hover{color:var(--teal);text-decoration:underline}
-#tblCov th{white-space:nowrap}
+#tblCov th,#tblCovChan th,#tblCovCat th{white-space:nowrap}
+#tblCovChan td.cov,#tblCovCat td.cov{text-align:center;padding:3px 4px}
+#tblCovChan td:first-child{max-width:280px}
+/* แถบสัดส่วนเล็ก ๆ ในตาราง */
+.bar{display:inline-block;width:84px;height:7px;border-radius:4px;background:#eeeeea;overflow:hidden;vertical-align:middle}
+.bar i{display:block;height:100%;background:linear-gradient(90deg,var(--teal),#4fb3a3);border-radius:4px;transition:width .35s}
+.barlab{font-size:11px;margin-left:7px;color:var(--ink2);font-variant-numeric:tabular-nums}
+.barlab.up{color:#b23b3b;font-weight:600}
+.barlab.dn{color:#0b6b57;font-weight:600}
+/* คอลัมน์ชื่อค้างไว้ตอนเลื่อนตารางกว้าง */
+#tblCov tbody td:first-child,#tblCovChan tbody td:first-child,#tblCovCat tbody td:first-child{
+  position:sticky;left:0;background:#fff;z-index:2}
+#tblCov thead th:first-child,#tblCovChan thead th:first-child,#tblCovCat thead th:first-child{left:0;z-index:6}
+#tblCov tbody tr:nth-child(even) td,#tblCovChan tbody tr:nth-child(even) td,
+#tblCovCat tbody tr:nth-child(even) td,#tblTypes tbody tr:nth-child(even) td{background:#fbfbf8}
+#tblCov tbody tr:hover td,#tblCovChan tbody tr:hover td,#tblCovCat tbody tr:hover td{background:var(--teal-soft)}
+/* หัวตารางที่กดเรียงได้ */
+th.sortable{cursor:pointer;user-select:none;position:relative}
+th.sortable:hover{background:#25406e}
+th.sortable::after{content:'↕';opacity:.35;margin-left:5px;font-size:10px}
+th.sortable.asc::after{content:'↑';opacity:1}
+th.sortable.desc::after{content:'↓';opacity:1}
 /* ── แผนผังเส้นทางเดินของข้อมูล ── */
 .flowmap{display:grid;grid-template-columns:1fr auto 1fr auto 1fr;gap:10px;align-items:start}
 .flowcol{display:flex;flex-direction:column;gap:7px}
@@ -480,6 +509,12 @@ tr.detail>td{background:#F8F7F3;border-top:none;padding:10px 14px}
 .notebox.teal{border-left-color:var(--teal);background:var(--teal-soft);color:#0b5a54}
 .tabbar{display:flex;gap:6px;margin-bottom:10px;flex-wrap:wrap}
 .tabbar .btn.ghost.on{border-color:var(--teal);color:var(--teal);font-weight:700}
+/* ปุ่มสลับมุมมองแบบแท็บใต้เส้น — ใช้ในการ์ดความครบถ้วน */
+.tabbtn{background:none;border:none;border-bottom:2px solid transparent;font-family:inherit;font-size:12.5px;
+  font-weight:600;color:var(--muted);padding:6px 12px;cursor:pointer;transition:color .16s,border-color .16s}
+.tabbtn:hover{color:var(--teal)}
+.tabbtn.on{color:var(--navy);border-bottom-color:var(--teal)}
+#covTabs{border-bottom:1px solid var(--hairline);gap:0;margin-bottom:0}
 canvas{max-width:100%}
 @media print{
   .calcsheet{display:block}
@@ -496,7 +531,7 @@ canvas{max-width:100%}
   <div class="brand">
     <h1>ระบบฐานข้อมูลวัสดุ</h1>
     <div class="sub">แขวงทางหลวงชนบทขอนแก่น</div>
-    <div class="chips"><span class="chip" id="bLatest">—</span><span class="chip">v5.5</span></div>
+    <div class="chips"><span class="chip" id="bLatest">—</span><span class="chip">v5.6</span></div>
   </div>
   <nav class="nav" id="nav">
     <button data-p="sum" class="active"><span class="ico">▦</span>หน้าสรุป</button>
@@ -528,9 +563,6 @@ canvas{max-width:100%}
     <button class="jchip" data-jump="secTypes">▦ ภาพรวมตามประเภท</button>
   </div>
   <h2 class="sec" data-ic="tag" id="secKey">สรุปราคาวัสดุหลักประจำเดือน — เอาแหล่งที่ถูกสุดขึ้นก่อน</h2>
-  <div class="cap" style="margin:-4px 0 10px">ตัวเลขบนการ์ดคือ <b>ราคาถูกสุดของเดือนล่าสุดที่มีข้อมูล</b> (ไม่ใช่ถูกสุดข้ามเดือน)
-    · เส้นใต้ตัวเลขคือแนวโน้มย้อนหลังของแหล่งนั้น · แต่ละการ์ดล็อกหน่วยตามที่ระเบียบใช้ ไอเท็มหน่วยอื่นไม่ถูกนำมาเทียบ
-    · <b>กดที่การ์ดเพื่อเปิดกราฟแนวโน้มเต็มในหน้าสถิติราคา</b></div>
   <div id="keyCards"></div>
   <div class="card" style="margin-top:14px" id="secNews">
     <h2>ข่าวและประกาศที่เกี่ยวข้อง <span class="pill info">ชุดข่าว ณ 16 ส.ค. 69</span></h2>
@@ -644,7 +676,7 @@ canvas{max-width:100%}
             <div style="flex:0 0 130px"><button class="btn ghost" onclick="window.print()" style="width:100%">พิมพ์ตารางนี้</button></div>
           </div>
           <div class="hint" id="fHit" style="margin-top:8px"></div>
-          <div class="tw" style="max-height:560px;margin-top:10px"><table id="tblFull"></table></div>
+          <div class="tw" style="max-height:560px;margin-top:10px"><table id="tblFull" class="ratetbl"></table></div>
           <div class="cap">ที่มา: หนังสือกรมบัญชีกลาง ด่วนที่สุด ที่ กค 0433.2/ว 477 ลว. 26 มิ.ย. 2569 · ระยะเกิน 200 กม. คิดเป็นอัตราต่อกิโลเมตร (แถวล่างสุด) × ระยะทางจริง · ตัวเลขทุกช่องตรงตามเล่ม ตรวจทานกับตัวอย่างท้ายหนังสือแล้ว</div>
         </div>
       </div>
@@ -695,22 +727,42 @@ canvas{max-width:100%}
   <h2 class="sec" data-ic="check" id="secCov">ความครบถ้วนของข้อมูล — รายการไหน เดือนไหน ยังไม่ได้เอาเข้า</h2>
   <div class="card">
     <div id="covKpi" class="kcards" style="margin-bottom:12px"></div>
-    <div class="grid3 no-print">
-      <div><label class="f">หมวด</label><select id="covCat"></select></div>
-      <div><label class="f">ค้นชื่อรายการ</label><input type="text" id="covQ" placeholder="พิมพ์บางส่วนของชื่อ เช่น หินคลุก"></div>
-      <div><label class="f">แสดง</label><select id="covMode">
-        <option value="miss" selected>เฉพาะที่ยังไม่ครบ (ขาดอย่างน้อย 1 เดือน)</option>
-        <option value="missLast">เฉพาะที่ยังไม่มีราคาเดือนล่าสุด</option>
-        <option value="all">ทั้งหมด</option></select></div>
+    <div class="tabbar no-print" id="covTabs">
+      <button class="tabbtn on" data-cv="chan">ตามช่องทางที่มา</button>
+      <button class="tabbtn" data-cv="cat">ตามหมวดวัสดุ</button>
+      <button class="tabbtn" data-cv="mat">ตามรายการวัสดุ</button>
     </div>
-    <div class="statusline no-print" style="margin-top:10px">
-      <button class="btn ghost" id="covXlsx">⬇ ดาวน์โหลดตารางความครบถ้วน (.xlsx)</button>
+
+    <div id="covPaneChan">
+      <div class="cap" style="margin:10px 0 6px">แต่ละช่องทางเอาราคาเข้าคลังเดือนไหนไปแล้วบ้าง — ตัวเลขในช่อง = จำนวนแถวราคาที่บันทึกในเดือนนั้น
+        · ช่องเทา = เดือนนั้นยังไม่ได้เอาข้อมูลของช่องทางนี้เข้า · เอาเมาส์ชี้ที่ตัวเลขเพื่อดูเลขที่หนังสือ/ใบเสนอราคาที่ใช้</div>
+      <div class="tw"><table id="tblCovChan"></table></div>
+    </div>
+
+    <div id="covPaneCat" style="display:none">
+      <div class="cap" style="margin:10px 0 6px">แต่ละหมวดวัสดุมีราคาครบถึงเดือนไหน — ตัวเลข = จำนวนคู่ราคา (วัสดุ×แหล่ง) ที่มีข้อมูลในเดือนนั้น</div>
+      <div class="tw" style="max-height:420px"><table id="tblCovCat"></table></div>
+    </div>
+
+    <div id="covPaneMat" style="display:none">
+      <div class="grid3 no-print" style="margin-top:10px">
+        <div><label class="f">หมวด</label><select id="covCat"></select></div>
+        <div><label class="f">ค้นชื่อรายการ</label><input type="text" id="covQ" placeholder="พิมพ์บางส่วนของชื่อ เช่น หินคลุก"></div>
+        <div><label class="f">แสดง</label><select id="covMode">
+          <option value="miss" selected>เฉพาะที่ยังไม่ครบ (ขาดอย่างน้อย 1 เดือน)</option>
+          <option value="missLast">เฉพาะที่ยังไม่มีราคาเดือนล่าสุด</option>
+          <option value="all">ทั้งหมด</option></select></div>
+      </div>
+      <div class="cap" style="margin-top:8px">ตัวเลขในช่อง = จำนวนแหล่งที่มีราคาในเดือนนั้น (จากทั้งหมดที่เคยมีราคาของรายการนั้น)
+        · <span class="covc full">เขียว</span> ครบทุกแหล่ง · <span class="covc part">เหลือง</span> มีบางแหล่ง · <span class="covc none">เทา</span> เดือนนั้นไม่มีเลย
+        · กดชื่อรายการเพื่อเปิดกราฟแนวโน้ม</div>
+      <div class="tw" style="max-height:420px;margin-top:8px"><table id="tblCov"></table></div>
+    </div>
+
+    <div class="statusline no-print" style="margin-top:12px">
+      <button class="btn ghost" id="covXlsx">⬇ ดาวน์โหลดตารางความครบถ้วน (.xlsx — ครบทั้ง 3 มุมมอง)</button>
       <span class="hint" id="covStat"></span>
     </div>
-    <div class="cap" style="margin-top:8px">ตัวเลขในช่อง = จำนวนแหล่งที่มีราคาในเดือนนั้น (จากทั้งหมดที่เคยมีราคาของรายการนั้น)
-      · <span class="covc full">เขียว</span> = ครบทุกแหล่ง · <span class="covc part">เหลือง</span> = มีบางแหล่ง · <span class="covc none">เทา</span> = เดือนนั้นไม่มีเลย
-      · กดชื่อรายการเพื่อเปิดกราฟแนวโน้ม</div>
-    <div class="tw" style="max-height:460px;margin-top:8px"><table id="tblCov"></table></div>
   </div>
 </section>
 
@@ -1028,15 +1080,31 @@ function ensureMonth(y,m){
   P.series.forEach(s=>s[4].push(null)); NM=P.months.length; LAST=NM-1; return NM-1;
 }
 function idxOf(arr,val){ let i=arr.indexOf(val); if(i<0){ arr.push(val); i=arr.length-1; } return i; }
+/* ช่องทางที่มา — คอลัมน์ "ช่องทาง" เก็บรวมเลขที่หนังสือไว้ด้วย เช่น
+   "หน่วยงานราชการ · ใบเสนอราคา SQ.690801 ลว. 10 ส.ค. 69 · ไม่รวม VAT"
+   ตัดเอาเฉพาะคำแรกหน้า " · " เป็นชื่อช่องทาง ส่วนที่เหลือคือเอกสารอ้างอิง */
+const chanHead = s => String(s||'').split('·')[0].trim() || 'ไม่ระบุช่องทาง';
+let CHAN = {};        /* ช่องทาง → {per:[จำนวนแถวต่อเดือน], docs:{เดือน→Set(เอกสาร)}, mats:Set} */
+function chanBump(ch, mi, doc, mat){
+  let o=CHAN[ch];
+  if(!o){ o={per:[], docs:{}, mats:new Set()}; CHAN[ch]=o; }
+  o.per[mi]=(o.per[mi]||0)+1;
+  if(doc){ (o.docs[mi]=o.docs[mi]||new Set()).add(doc); }
+  if(mat) o.mats.add(mat);
+}
 function mergeLive(rows){
   const serIdx={}; P.series.forEach((s,i)=>{ serIdx[s[0]+'|'+s[1]]=i; });
+  CHAN={};
   let added=0;
   rows.forEach(r=>{
     const y=parseInt(r[0]), m=parseInt(r[1]), name=String(r[2]||'').trim(),
           unit=String(r[3]||'').trim(), price=parseFloat(String(r[4]).replace(/,/g,'')),
-          src=String(r[5]||'').trim(), typ=String(r[6]||'').trim();
+          src=String(r[5]||'').trim(), typ=String(r[6]||'').trim(),
+          chRaw=String(r[7]||'').trim();
     if(!y||y<2500||!m||m<1||m>12||!name||!(price>0)) return;
     const mi=ensureMonth(y,m);
+    { const parts=chRaw.split('·').map(x=>x.trim()).filter(Boolean);
+      chanBump(chanHead(chRaw), mi, parts.slice(1).join(' · '), name); }
     /* ถ้าอ่านบัญชีคุมแล้ว ใช้ชื่อมาตรฐานตั้งแต่ตอนรวมข้อมูล */
     const std=REG.on?regStd(name):null;
     const a=idxOf(P.mats,std||name), b=idxOf(P.srcs,src);
@@ -1211,6 +1279,7 @@ function rerender(){
   [buildSummary, matInit, statInit, buildMovers, covInit, impInit, drawNoGeo, expInit, sysInit, drawMatChips]
     .forEach(f=>{ try{ f(); }catch(e){ console.error('rerender:', f.name, e); } });
   kddAll(); kfreeAll(); paintIcons(); drawConn();
+  try{ sortableAll(); countUpAll(); }catch(e){}
 }
 
 /* ============ ไอคอน (SVG เส้นบาง ชุดเดียวกันทั้งระบบ) ============ */
@@ -1525,15 +1594,20 @@ function buildSummary(){
   $('tblCheck').innerHTML = rows+'</tbody>';
 
   /* type overview table */
-  let tr2 = '<thead><tr><th>ประเภท</th><th class="num">คู่ราคา (วัสดุ×แหล่ง)</th><th class="num">มีราคาเดือนนี้</th><th class="num">ยกยอด</th><th class="num">เปลี่ยนแปลงเฉลี่ย (MoM)</th></tr></thead><tbody>';
+  /* เดิมมีคอลัมน์ "เปลี่ยนแปลงเฉลี่ย (MoM)" ซึ่งขึ้น — ตลอด เพราะต้องมีราคาทั้งเดือนล่าสุด
+     และเดือนก่อนหน้าของคู่เดียวกัน แต่ข้อมูลจริงเข้าคนละเดือนกัน (TPSO เดือนหนึ่ง ใบเสนอราคาอีกเดือนหนึ่ง)
+     เปลี่ยนเป็น "อัปเดตล่าสุดถึงเดือนไหน + ความครบ" ซึ่งใช้ตัดสินใจได้จริง */
+  let tr2 = '<thead><tr><th>ประเภท</th><th class="num">คู่ราคา (วัสดุ×แหล่ง)</th><th class="num">มีราคาเดือนล่าสุด</th>'
+          + '<th class="num">ต้องยกยอด</th><th>อัปเดตถึงเดือน</th><th>ความครบของเดือนล่าสุด</th></tr></thead><tbody>';
   typeStats.forEach(x=>{
     const ss = P.series.filter(s=>s[3]===x.ti);
-    let dsum=0,dn=0;
-    ss.forEach(s=>{const a=s[4][LAST],b=s[4][LAST-1]; if(a!=null&&b!=null&&b!==0){dsum+=(a-b)/b;dn++;}});
-    const avg = dn? (dsum/dn*100) : null;
-    const cls = avg==null?'fl':avg>0.05?'up':avg<-0.05?'dn':'fl';
-    tr2 += `<tr><td>${esc(x.t)}</td><td class="num">${x.tot}</td><td class="num">${x.cur}</td>
-      <td class="num">${x.tot-x.cur}</td><td class="num ${cls}">${avg==null?'—':(avg>0?'+':'')+avg.toFixed(2)+'%'}</td></tr>`;
+    let last=-1; ss.forEach(s=>{ const lv=latestVal(s[4]); if(lv&&lv.m>last) last=lv.m; });
+    const pct = x.tot? Math.round(x.cur/x.tot*100) : 0;
+    const cls = pct>=90?'dn':pct>0?'':'up';
+    tr2 += `<tr><td>${esc(x.t)}</td><td class="num">${fmtInt(x.tot)}</td><td class="num">${fmtInt(x.cur)}</td>
+      <td class="num">${fmtInt(x.tot-x.cur)}</td>
+      <td>${last<0?'—':mLabI(last)}${last>=0&&last!==LAST?' <span class="pill warn">ไม่ใช่เดือนล่าสุด</span>':''}</td>
+      <td><div class="bar"><i style="width:${pct}%"></i></div><span class="barlab ${cls}">${pct}%</span></td></tr>`;
   });
   $('tblTypes').innerHTML = tr2+'</tbody>';
 
@@ -1577,10 +1651,10 @@ function buildSummary(){
     let ss = unitRe ? all.filter(s=>unitRe.test(String(P.units[s[2]]||'').trim())) : all;
     if(!ss.length){
       const other = [...new Set(all.map(s=>P.units[s[2]]).filter(Boolean))];
-      return `<div class="kcard"><div class="t">${label}</div><div class="v" style="color:var(--muted)">—</div>
+      return `<div class="kcard empty"><div class="t">${label}</div><div class="v" style="color:var(--muted)">—</div>
         <div class="s">${all.length&&other.length
           ? 'มีในคลังแต่คนละหน่วย ('+esc(other.slice(0,3).join(' / '))+') — การ์ดนี้ใช้เฉพาะหน่วยที่ระเบียบกำหนด'
-          : 'ยังไม่มีในคลัง'}</div></div>`;
+          : 'ยังไม่มีรายการนี้ในคลัง — ยังไม่มีช่องทางไหนส่งราคาเข้ามา'}</div></div>`;
     }
     /* ── ราคาถูกสุด "ของเดือนล่าสุดเท่านั้น" (ไม่ไล่หาถูกสุดข้ามเดือน) ── */
     let best=null, bestPrev=null;
@@ -2568,13 +2642,15 @@ function drawCov(){
   let pairs=0, havLast=0, matsNoLast=0, matsTot=0;
   cov.forEach(o=>{ pairs+=o.tot; havLast+=o.per[LAST]; matsTot++; if(!o.per[LAST]) matsNoLast++; });
   const pct = pairs? Math.round(havLast/pairs*1000)/10 : 0;
-  const card=(t,v,s,cls)=>`<div class="kcard"><div class="t">${t}</div>
-    <div class="v ${cls||''}">${v}</div><div class="s">${s}</div></div>`;
+  const card=(t,n,unit,s,cls)=>`<div class="kcard"><div class="t">${t}</div>
+    <div class="v ${cls||''}"><span data-cu="${n}">0</span>${unit?' <span class="u">'+unit+'</span>':''}</div>
+    <div class="s">${s}</div></div>`;
   $('covKpi').innerHTML =
-     card('คู่ราคาในคลัง (วัสดุ×แหล่ง)', fmtInt(pairs), matsTot.toLocaleString()+' รายการ')
-   + card('มีราคาเดือน '+mLabI(LAST), fmtInt(havLast)+' <span class="u">คู่</span>', pct+'% ของทั้งคลัง', pct>=80?'':'up')
-   + card('รายการที่ยังไม่มีราคาเดือนนี้', fmtInt(matsNoLast)+' <span class="u">รายการ</span>',
+     card('คู่ราคาในคลัง (วัสดุ×แหล่ง)', pairs, '', fmtInt(matsTot)+' รายการ')
+   + card('มีราคาเดือน '+mLabI(LAST), havLast, 'คู่', pct+'% ของทั้งคลัง', pct>=80?'':'up')
+   + card('รายการที่ยังไม่มีราคาเดือนนี้', matsNoLast, 'รายการ',
           matsNoLast?'ต้องตามเก็บ หรือใช้ราคายกยอด':'ครบทุกรายการแล้ว', matsNoLast?'up':'dn');
+  countUpAll($('covKpi'));
   /* ── ตาราง ── */
   const rows=covRows();
   const shown=rows.slice(0,COV_CAP);
@@ -2595,8 +2671,73 @@ function drawCov(){
   $('tblCov').innerHTML=h+'</tbody>';
   $('tblCov').querySelectorAll('td.nm').forEach(td=>td.onclick=()=>gotoStat(+td.dataset.mi,-1));
 }
+/* ── มุมมองที่ 1: ช่องทางที่มา × เดือน — ตอบคำถาม "พาณิชย์/ยาง/เว็บ แอดเข้าเดือนไหนแล้วบ้าง" ── */
+function drawCovChan(){
+  if(!$('tblCovChan')) return;
+  const names=Object.keys(CHAN).sort((a,b)=>{
+    const s=(CHAN[b].per.reduce((x,y)=>x+(y||0),0))-(CHAN[a].per.reduce((x,y)=>x+(y||0),0));
+    return s||a.localeCompare(b,'th');
+  });
+  if(!names.length){
+    $('tblCovChan').innerHTML='<tbody><tr><td class="hint">ยังไม่ได้เชื่อมคลัง หรือแท็บ PRICES ยังไม่มีข้อมูล</td></tr></tbody>';
+    return;
+  }
+  let h='<thead><tr><th>ช่องทางที่มา</th>'
+      + P.months.map((_,i)=>`<th class="num">${mLabI(i)}</th>`).join('')
+      + '<th class="num">รวม</th><th class="num">รายการ</th><th>ล่าสุด</th></tr></thead><tbody>';
+  names.forEach(n=>{
+    const o=CHAN[n];
+    const tot=o.per.reduce((x,y)=>x+(y||0),0);
+    let last=-1; for(let i=NM-1;i>=0;i--) if(o.per[i]){ last=i; break; }
+    h+=`<tr><td><b>${esc(n)}</b></td>`
+      + P.months.map((_,i)=>{
+          const v=o.per[i]||0;
+          const docs=o.docs[i]?[...o.docs[i]].filter(Boolean):[];
+          const tip=v? esc((docs.length?docs.join('\n'):'ไม่ได้ระบุเอกสารอ้างอิง')) : 'เดือนนี้ยังไม่ได้เอาข้อมูลของช่องทางนี้เข้า';
+          return `<td class="cov"><span class="covc ${v?'full':'none'}" title="${tip}">${v?fmtInt(v):'—'}</span></td>`;
+        }).join('')
+      + `<td class="num">${fmtInt(tot)}</td><td class="num">${fmtInt(o.mats.size)}</td>`
+      + `<td>${last<0?'—':mLabI(last)+(last===LAST?'':' <span class="pill warn">ไม่ใช่เดือนล่าสุด</span>')}</td></tr>`;
+  });
+  $('tblCovChan').innerHTML=h+'</tbody>';
+}
+/* ── มุมมองที่ 2: หมวดวัสดุ × เดือน ── */
+function covCatRows(){
+  const cat=mi=>REG.on?((P.matCat||{})[mi]||'(ไม่ระบุหมวด)'):(P.types[(P.series.find(s=>s[0]===mi)||[])[3]]||'(ไม่ระบุ)');
+  const g={};
+  P.series.forEach(s=>{
+    const c=cat(s[0]);
+    let o=g[c]; if(!o){ o={tot:0,per:Array(NM).fill(0),mats:new Set()}; g[c]=o; }
+    o.tot++; o.mats.add(s[0]);
+    for(let i=0;i<NM;i++) if(s[4][i]!=null) o.per[i]++;
+  });
+  return Object.keys(g).sort((a,b)=>g[b].tot-g[a].tot||a.localeCompare(b,'th')).map(k=>({name:k,...g[k]}));
+}
+function drawCovCat(){
+  if(!$('tblCovCat')) return;
+  const rows=covCatRows();
+  let h='<thead><tr><th>หมวดวัสดุ</th><th class="num">รายการ</th><th class="num">คู่ราคา</th>'
+      + P.months.map((_,i)=>`<th class="num">${mLabI(i)}</th>`).join('')
+      + '<th>ล่าสุด</th></tr></thead><tbody>';
+  rows.forEach(r=>{
+    let last=-1; for(let i=NM-1;i>=0;i--) if(r.per[i]){ last=i; break; }
+    h+=`<tr><td>${esc(r.name)}</td><td class="num">${fmtInt(r.mats.size)}</td><td class="num">${fmtInt(r.tot)}</td>`
+      + r.per.map(n=>{
+          const cls=n===0?'none':n>=r.tot?'full':'part';
+          return `<td class="cov"><span class="covc ${cls}">${n===0?'—':fmtInt(n)}</span></td>`;
+        }).join('')
+      + `<td>${last<0?'—':mLabI(last)+(last===LAST?'':' <span class="pill warn">ยกยอด</span>')}</td></tr>`;
+  });
+  $('tblCovCat').innerHTML=h+'</tbody>';
+}
 function covInit(){
   if(!$('covCat')) return;
+  /* แท็บสลับมุมมอง */
+  const panes={chan:'covPaneChan',cat:'covPaneCat',mat:'covPaneMat'};
+  document.querySelectorAll('#covTabs .tabbtn').forEach(b=>b.onclick=()=>{
+    document.querySelectorAll('#covTabs .tabbtn').forEach(x=>x.classList.toggle('on',x===b));
+    Object.entries(panes).forEach(([k,id])=>{ const el=$(id); if(el) el.style.display = (k===b.dataset.cv)?'':'none'; });
+  });
   const cats = REG.on ? [...new Set(Object.values(P.matCat||{}))].sort((a,b)=>a.localeCompare(b,'th'))
                       : P.types.filter(Boolean);
   $('covCat').innerHTML='<option value="-1">ทุกหมวด</option>'
@@ -2610,14 +2751,88 @@ function covInit(){
     const aoa=[['รายการวัสดุ','หมวด','จำนวนแหล่ง',...P.months.map((_,i)=>mLabI(i)),'จำนวนเดือนที่ยังไม่ครบ','เดือนที่ยังไม่ครบ']];
     rows.forEach(r=>aoa.push([r.nm, (REG.on?(P.matCat||{})[r.mi]:'')||'', r.tot,
       ...r.per.map((n,i)=>n+'/'+r.tot), r.missMonths.length, r.missMonths.map(i=>mLabI(i)).join(', ')]));
+    const wb=XLSX.utils.book_new();
+    /* ชีต 1 — ช่องทางที่มา × เดือน */
+    const aoaC=[['ช่องทางที่มา',...P.months.map((_,i)=>mLabI(i)),'รวมแถว','จำนวนรายการ','เดือนล่าสุดที่มีข้อมูล','เอกสารอ้างอิงที่ใช้']];
+    Object.keys(CHAN).forEach(n=>{ const o=CHAN[n];
+      let last=-1; for(let i=NM-1;i>=0;i--) if(o.per[i]){ last=i; break; }
+      const docs=[]; Object.keys(o.docs).forEach(k=>o.docs[k].forEach(d=>{ if(d&&docs.indexOf(d)<0) docs.push(d); }));
+      aoaC.push([n,...P.months.map((_,i)=>o.per[i]||0), o.per.reduce((x,y)=>x+(y||0),0), o.mats.size,
+                 last<0?'—':mLabI(last), docs.join(' | ')]); });
+    const wsC=XLSX.utils.aoa_to_sheet(aoaC);
+    wsC['!cols']=[{wch:24},...P.months.map(()=>({wch:9})),{wch:10},{wch:12},{wch:18},{wch:70}];
+    XLSX.utils.book_append_sheet(wb,wsC,'ตามช่องทาง');
+    /* ชีต 2 — หมวดวัสดุ × เดือน */
+    const aoaG=[['หมวดวัสดุ','จำนวนรายการ','คู่ราคา',...P.months.map((_,i)=>mLabI(i)),'เดือนล่าสุดที่มีข้อมูล']];
+    covCatRows().forEach(r=>{ let last=-1; for(let i=NM-1;i>=0;i--) if(r.per[i]){ last=i; break; }
+      aoaG.push([r.name,r.mats.size,r.tot,...r.per,last<0?'—':mLabI(last)]); });
+    const wsG=XLSX.utils.aoa_to_sheet(aoaG);
+    wsG['!cols']=[{wch:22},{wch:12},{wch:10},...P.months.map(()=>({wch:9})),{wch:18}];
+    XLSX.utils.book_append_sheet(wb,wsG,'ตามหมวด');
+    /* ชีต 3 — รายการวัสดุ × เดือน (ตามตัวกรองที่เลือกอยู่) */
     const ws=XLSX.utils.aoa_to_sheet(aoa);
     ws['!cols']=[{wch:48},{wch:16},{wch:9},...P.months.map(()=>({wch:8})),{wch:10},{wch:34}];
-    const wb=XLSX.utils.book_new(); XLSX.utils.book_append_sheet(wb,ws,'ความครบถ้วน');
+    XLSX.utils.book_append_sheet(wb,ws,'ตามรายการ');
     XLSX.writeFile(wb,'ความครบถ้วนของข้อมูลราคา_'+mLabI(LAST).replace(/\s/g,'')+'.xlsx');
   };
-  kddAll(); drawCov();
+  kddAll(); drawCov(); drawCovChan(); drawCovCat();
 }
 const fmtInt=n=>Number(n||0).toLocaleString('th-TH');
+
+/* ══════ กดหัวตารางเพื่อเรียงลำดับ — ใช้ได้กับทุกตารางที่มี thead+tbody ══════
+   ตัวเลข/เปอร์เซ็นต์เรียงแบบตัวเลข · ข้อความเรียงแบบไทย · ขีด "—" ถือเป็นค่าน้อยสุดเสมอ */
+function numOfCell(td){
+  const t=td.textContent.replace(/[, ]/g,'');
+  if(!t||t==='—'||t==='-') return null;
+  const m=t.match(/-?\d+(\.\d+)?/);
+  return m?parseFloat(m[0]):null;
+}
+function makeSortable(tbl){
+  if(!tbl||tbl._srt) return; tbl._srt=1;
+  const ths=tbl.querySelectorAll('thead th');
+  ths.forEach((th,ci)=>{
+    th.classList.add('sortable');
+    th.onclick=()=>{
+      const body=tbl.tBodies[0]; if(!body) return;
+      const rows=[...body.rows];
+      const dir = th.classList.contains('asc') ? -1 : 1;
+      ths.forEach(x=>x.classList.remove('asc','desc'));
+      th.classList.add(dir===1?'asc':'desc');
+      const allNum = rows.every(r=>!r.cells[ci]||numOfCell(r.cells[ci])!==null||/^[—-]?$/.test(r.cells[ci].textContent.trim()));
+      rows.sort((a,b)=>{
+        const ca=a.cells[ci], cb=b.cells[ci];
+        if(!ca||!cb) return 0;
+        if(allNum){
+          const x=numOfCell(ca), y=numOfCell(cb);
+          return dir*((x==null?-Infinity:x)-(y==null?-Infinity:y));
+        }
+        return dir*ca.textContent.trim().localeCompare(cb.textContent.trim(),'th');
+      });
+      rows.forEach(r=>body.appendChild(r));
+    };
+  });
+}
+function sortableAll(){
+  ['tblTypes','tblCov','tblCovChan','tblCovCat','tblMovers','tblSeries','tblSysStat','tblQueue']
+    .forEach(id=>{ const t=$(id); if(t){ t._srt=0; makeSortable(t); } });
+}
+
+/* ตัวเลข KPI นับขึ้นให้ดูมีชีวิต — เรียกหลังวาดการ์ดเสร็จ */
+function countUp(el){
+  const raw=el.dataset.cu; if(raw==null) return;
+  const end=parseFloat(raw); if(!isFinite(end)) return;
+  const dec=(raw.split('.')[1]||'').length;
+  const t0=performance.now(), dur=520;
+  const step=t=>{
+    const k=Math.min(1,(t-t0)/dur), e=1-Math.pow(1-k,3);
+    el.textContent=(end*e).toLocaleString('th-TH',{minimumFractionDigits:dec,maximumFractionDigits:dec});
+    if(k<1) requestAnimationFrame(step);
+  };
+  requestAnimationFrame(step);
+}
+function countUpAll(root){
+  (root||document).querySelectorAll('[data-cu]').forEach(el=>{ if(el._cu) return; el._cu=1; countUp(el); });
+}
 
 /* เด้งไปหน้าสถิติราคา พร้อมตั้งรายการ (และแหล่ง ถ้าระบุ) ให้เรียบร้อย
    ใช้ร่วมกันระหว่างการ์ด KPI หน้าสรุป กับตารางรายการที่ราคาขยับ */
@@ -3067,7 +3282,7 @@ function sysInit(){
       <td class="num">${new Set(rs.map(s=>s[0])).size.toLocaleString()}</td>
       <td class="num">${new Set(rs.map(s=>s[1])).size}</td></tr>`;});
   $('tblSysStat').innerHTML=h+'</tbody>';
-  const cm=$('cMeta'); if(cm) cm.innerHTML='เริ่มพัฒนา สิงหาคม 2569 · เวอร์ชันปัจจุบัน v5.5 · '+(LIVE.on?'เชื่อมคลังข้อมูลแล้ว':'ยังไม่ได้เชื่อมคลัง');
+  const cm=$('cMeta'); if(cm) cm.innerHTML='เริ่มพัฒนา สิงหาคม 2569 · เวอร์ชันปัจจุบัน v5.6 · '+(LIVE.on?'เชื่อมคลังข้อมูลแล้ว':'ยังไม่ได้เชื่อมคลัง');
   $('sysInfo').innerHTML=`เวอร์ชัน: 5.1 · อัปเดต: 18 ส.ค. 2569<br>
     การเชื่อมราคาน้ำมันอัตโนมัติ: สร้างแท็บชื่อ <b>OIL</b> ในชีทคลังข้อมูล คอลัมน์ A=วันที่ B=จังหวัด C=ราคาดีเซล (หรือ A=วันที่ B=ราคา ถ้ามีเฉพาะขอนแก่น) แชร์แบบ อ่านได้ทุกคนที่มีลิงก์ — หน้าคำนวณระยะขนส่งจะอ่านราคาล่าสุดของจังหวัดที่เลือกให้เอง<br>
     ขอบเขตข้อมูลที่ฝังในไฟล์นี้: ${mLabI(0)} – ${mLabI(LAST)} (${P.series.length.toLocaleString()} คู่ราคา)<br>
@@ -3187,7 +3402,7 @@ function clearInit(){
 }
 
 /* ============ boot ============ */
-[buildSummary, lawInit, provInit, matInit, initMap, statInit, covInit, impInit, noGeoInit, expInit, sysInit, regInit, clearInit, fullInit, distTabs, dieselIdx, drawMatChips, usageInit]
+[buildSummary, lawInit, provInit, matInit, initMap, statInit, covInit, impInit, noGeoInit, sortableAll, countUpAll, expInit, sysInit, regInit, clearInit, fullInit, distTabs, dieselIdx, drawMatChips, usageInit]
   .forEach(f=>{ try{ f(); }catch(e){ console.error('init:', f.name, e); } });
 kddAll(); kfreeAll(); paintIcons();
 try{ fetchOil(true); }catch(e){}
