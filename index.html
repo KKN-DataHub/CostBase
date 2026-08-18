@@ -441,7 +441,7 @@ canvas{max-width:100%}
   <div class="brand">
     <h1>ระบบฐานข้อมูลวัสดุ</h1>
     <div class="sub">แขวงทางหลวงชนบทขอนแก่น</div>
-    <div class="chips"><span class="chip" id="bLatest">—</span><span class="chip">v3.9</span></div>
+    <div class="chips"><span class="chip" id="bLatest">—</span><span class="chip">v4.0</span></div>
   </div>
   <nav class="nav" id="nav">
     <button data-p="sum" class="active"><span class="ico">▦</span>หน้าสรุป</button>
@@ -717,20 +717,18 @@ canvas{max-width:100%}
       <div class="ph-chips" id="hcSys"></div>
     </div>
   </div>
-  <div class="grid2">
+  <div class="card">
+    <h2 data-ic="book">แหล่งที่มาของข้อมูลทุกส่วนในระบบ</h2>
+    <div id="sysSrc" style="display:grid;grid-template-columns:repeat(auto-fit,minmax(320px,1fr));gap:10px"></div>
+  </div>
+  <div class="grid2" style="margin-top:12px">
     <div class="card">
-      <h2 data-ic="book">แหล่งที่มาของข้อมูลทุกส่วนในระบบ</h2>
-      <div id="sysSrc" style="display:grid;gap:10px"></div>
+      <h2 data-ic="chart">สถิติการเก็บข้อมูล</h2>
+      <div class="tw" style="max-height:330px"><table id="tblSysStat"></table></div>
     </div>
-    <div>
-      <div class="card">
-        <h2 data-ic="chart">สถิติการเก็บข้อมูล</h2>
-        <div class="tw" style="max-height:230px"><table id="tblSysStat"></table></div>
-      </div>
-      <div class="card" style="margin-top:12px">
-        <h2 data-ic="table">ข้อมูลระบบ</h2>
-        <div id="sysInfo" style="font-size:12.5px;line-height:1.8"></div>
-      </div>
+    <div class="card">
+      <h2 data-ic="table">ข้อมูลระบบ</h2>
+      <div id="sysInfo" style="font-size:12.5px;line-height:1.8"></div>
     </div>
   </div>
   <div class="card" style="margin-top:12px">
@@ -762,7 +760,7 @@ canvas{max-width:100%}
       <div id="clOptBox"></div>
     </div>
     <div class="frow cm" style="margin-top:10px">
-      <div><label class="f">พิมพ์คำว่า <b>ล้าง</b> เพื่อยืนยัน</label><input type="text" id="clYes" placeholder="ล้าง"></div>
+      <div><label class="f">รหัสผู้ดูแลระบบ</label><input type="password" id="clYes" placeholder="เฉพาะผู้ดูแลระบบ" autocomplete="new-password"></div>
       <div style="align-self:end"><button class="btn" id="clGo" style="background:#a33">ล้างข้อมูลตามที่เลือก</button></div>
     </div>
     <div class="hint" id="clStat" style="margin-top:8px">สำรองอัตโนมัติก่อนล้างทุกครั้ง</div>
@@ -1228,17 +1226,21 @@ function buildSummary(){
   hc('hcImp',impChips());
   hc('hcExp',`<span class="ph-chip">● เดือนล่าสุด <b>${latestLabel}</b></span>
     <span class="ph-chip">${LIVE.on?'☁ รวมคลังสดแล้ว':'⚠ ยังไม่ได้เชื่อมคลัง'}</span>`);
-  hc('hcSys',`<span class="ph-chip">เวอร์ชัน <b>3.9</b></span>
-    <span class="ph-chip">อัปเดต 16 ส.ค. 2569</span>`);
+  hc('hcSys',`<span class="ph-chip">เวอร์ชัน <b>4.0</b></span>
+    <span class="ph-chip">อัปเดต 18 ส.ค. 2569</span>`);
   const nRowsLast = P.series.filter(s=>s[4][LAST]!=null).length;
+  /* พร้อมใช้ = มีราคาเดือนล่าสุด หรือมีราคาเดือนก่อนหน้าให้ยกยอด (ตามหลักเกณฑ์ยกยอดของระบบ)
+     กันเคสตัวเลขหลอก: นำเข้าราคาเดือนใหม่ไม่กี่รายการ ระบบนับเดือนใหม่เป็นเดือนล่าสุด
+     แล้วรายการอื่นทั้งคลังกลายเป็น 0% ทั้งที่ราคาเดือนก่อนยังใช้ได้อยู่ */
+  const nReady = P.series.filter(s=>s[4].some(v=>v!=null)).length;
   const nSrc = P.srcs.filter(s=>s).length;
   const nMatsUsed = new Set(P.series.map(s=>s[0])).size;
-  const pct = Math.round(nRowsLast/P.series.length*100);
+  const pct = Math.round(nReady/Math.max(1,P.series.length)*100);
   $('sumKpis').innerHTML = [
     ['▤', nMatsUsed.toLocaleString(), 'รายการวัสดุทั้งหมด'],
     ['⚑', nSrc, 'แหล่งที่มาของราคา'],
     ['🗓', latestLabel, 'อัปเดตล่าสุด'],
-    ['✓', pct+'%', `เดือนนี้มีราคาแล้ว ${nRowsLast.toLocaleString()} จาก ${P.series.length.toLocaleString()} รายการ`],
+    ['✓', pct+'%', `ราคาพร้อมใช้ ${nReady.toLocaleString()} จาก ${P.series.length.toLocaleString()} คู่ราคา · เป็นราคาใหม่ของ ${latestLabel} จำนวน ${nRowsLast.toLocaleString()} · ที่เหลือยกยอดเดือนก่อนตามหลักเกณฑ์`],
   ].map(k=>`<div class="kpill"><div class="k-ico">${k[0]}</div><div><div class="k-val" data-v="${k[1]}">${k[1]}</div><div class="k-lab">${k[2]}</div></div></div>`).join('');
   $('sumKpis').querySelectorAll('.k-val').forEach(e=>countUp(e,e.dataset.v));
 
@@ -1420,6 +1422,25 @@ function dieselIdx(){ let v=parseFloat($('dDiesel').value)||37.98; let b=Math.fl
 async function fetchOil(silent){
   const id=($('cfgSheet').value||'').trim(); const st=$('oilStat'); const prov=$('dProv').value;
   if(!id){ if(!silent) st.innerHTML='<span class="pill warn">ยังไม่ตั้งค่า Sheet (หน้า ระบบ)</span>'; return; }
+  /* ทางที่ 1: สั่ง WebApp ดึงราคาสดจาก ปตท. เดี๋ยวนี้ (Code.gs รุ่น 11 ขึ้นไป) — ไม่ต้องรอทริกเกอร์รายวัน */
+  if(!silent){
+    const url=($('cfgUrl').value||'').trim();
+    if(url){
+      st.textContent='กำลังดึงราคาสดจาก ปตท. …';
+      try{
+        const r=await fetch(url,{method:'POST',headers:{'Content-Type':'text/plain;charset=utf-8'},
+          body:JSON.stringify({token:WTOKEN,action:'oil_now',prov})});
+        const res=await r.json();
+        if(res.ok&&res.price>=20&&res.price<70){
+          $('dDiesel').value=(+res.price).toFixed(2); oilMeta={date:res.date,prov:res.prov};
+          st.innerHTML=`<span class="pill ok">สดจาก ปตท. · ${esc(res.prov)} · ${esc(res.date)}</span> บันทึกเข้าชีท OIL แล้ว`;
+          dieselIdx(); renderAll(); return;
+        }
+        if(res.error&&/action/i.test(res.error))
+          st.innerHTML='<span class="pill warn">Code.gs ยังเป็นรุ่นเก่า (ต้องรุ่น 11) — ลองอ่านจากชีทแทน…</span>';
+      }catch(e){ /* ตกไปอ่านชีทตามเดิม */ }
+    }
+  }
   if(!silent) st.textContent='กำลังอ่านชีท OIL …';
   try{
     const r=await fetch(`https://docs.google.com/spreadsheets/d/${id}/gviz/tq?tqx=out:csv&sheet=OIL`);
@@ -2315,8 +2336,8 @@ function sysInit(){
       <td class="num">${new Set(rs.map(s=>s[0])).size.toLocaleString()}</td>
       <td class="num">${new Set(rs.map(s=>s[1])).size}</td></tr>`;});
   $('tblSysStat').innerHTML=h+'</tbody>';
-  const cm=$('cMeta'); if(cm) cm.innerHTML='เริ่มพัฒนา สิงหาคม 2569 · เวอร์ชันปัจจุบัน v3.9 · '+(LIVE.on?'เชื่อมคลังข้อมูลแล้ว':'ยังไม่ได้เชื่อมคลัง');
-  $('sysInfo').innerHTML=`เวอร์ชัน: 3.9 · อัปเดต: 17 ส.ค. 2569<br>
+  const cm=$('cMeta'); if(cm) cm.innerHTML='เริ่มพัฒนา สิงหาคม 2569 · เวอร์ชันปัจจุบัน v4.0 · '+(LIVE.on?'เชื่อมคลังข้อมูลแล้ว':'ยังไม่ได้เชื่อมคลัง');
+  $('sysInfo').innerHTML=`เวอร์ชัน: 4.0 · อัปเดต: 18 ส.ค. 2569<br>
     การเชื่อมราคาน้ำมันอัตโนมัติ: สร้างแท็บชื่อ <b>OIL</b> ในชีทคลังข้อมูล คอลัมน์ A=วันที่ B=จังหวัด C=ราคาดีเซล (หรือ A=วันที่ B=ราคา ถ้ามีเฉพาะขอนแก่น) แชร์แบบ อ่านได้ทุกคนที่มีลิงก์ — หน้าคำนวณระยะขนส่งจะอ่านราคาล่าสุดของจังหวัดที่เลือกให้เอง<br>
     ขอบเขตข้อมูลที่ฝังในไฟล์นี้: ${mLabI(0)} – ${mLabI(LAST)} (${P.series.length.toLocaleString()} คู่ราคา)<br>
     ชีทกลาง: 01.0 คลังข้อมูลวัสดุก่อสร้าง (แท็บ PRICES + OIL + REGISTRY) · เปิดหน้าเว็บครั้งใด ระบบอ่านแท็บ PRICES มารวมกับข้อมูลฝังให้อัตโนมัติ — ราคา TPSO เดือนใหม่และราคากรอกเองจึงขึ้นจอโดยไม่ต้องแก้ไฟล์นี้<br>
@@ -2406,7 +2427,7 @@ function clearInit(){
   sc.onchange=opts; opts();
   $('clGo').onclick=async()=>{
     const url=($('cfgUrl').value||'').trim(), st=$('clStat');
-    if($('clYes').value.trim()!=='ล้าง'){ st.innerHTML='<span class="up">พิมพ์คำว่า ล้าง ในช่องยืนยันก่อน</span>'; return; }
+    if($('clYes').value!=='Drrkk1146'){ st.innerHTML='<span class="up">รหัสผู้ดูแลไม่ถูกต้อง</span>'; $('clYes').value=''; return; }
     if(!url){ st.innerHTML='<span class="up">ยังไม่ตั้ง WebApp URL</span>'; return; }
     const scope=sc.value; const opt={};
     if(scope==='prices_month'){ opt.be=+$('clY').value; opt.mo=+$('clM').value; }
