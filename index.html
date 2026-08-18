@@ -3,7 +3,11 @@
 <head>
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width,initial-scale=1">
-<title>ระบบฐานข้อมูลวัสดุ — แขวงทางหลวงชนบทขอนแก่น</title>
+<title>CostBase — ฐานข้อมูลราคาวัสดุ ขทช.ขอนแก่น</title>
+<meta name="description" content="CostBase — ระบบฐานข้อมูลราคาวัสดุก่อสร้างและค่าขนส่งตาม ว 477 · แขวงทางหลวงชนบทขอนแก่น">
+<meta name="theme-color" content="#1B2A4A">
+<link rel="icon" type="image/svg+xml" href="data:image/svg+xml,%3Csvg%20xmlns%3D%27http%3A%2F%2Fwww.w3.org%2F2000%2Fsvg%27%20viewBox%3D%270%200%2064%2064%27%3E%3Crect%20width%3D%2764%27%20height%3D%2764%27%20rx%3D%2714%27%20fill%3D%27%231B2A4A%27%2F%3E%3Crect%20x%3D%2713%27%20y%3D%2734%27%20width%3D%277%27%20height%3D%2716%27%20rx%3D%272%27%20fill%3D%27%230d9488%27%2F%3E%3Crect%20x%3D%2724%27%20y%3D%2726%27%20width%3D%277%27%20height%3D%2724%27%20rx%3D%272%27%20fill%3D%27%233fb9a8%27%2F%3E%3Crect%20x%3D%2735%27%20y%3D%2718%27%20width%3D%277%27%20height%3D%2732%27%20rx%3D%272%27%20fill%3D%27%23C99B3F%27%2F%3E%3Cpath%20d%3D%27M46%2020%20L52%2014%20M52%2014%20L52%2020%20M52%2014%20L46%2014%27%20stroke%3D%27%23C99B3F%27%20stroke-width%3D%273%27%20stroke-linecap%3D%27round%27%20stroke-linejoin%3D%27round%27%20fill%3D%27none%27%2F%3E%3C%2Fsvg%3E">
+<link rel="apple-touch-icon" href="data:image/svg+xml,%3Csvg%20xmlns%3D%27http%3A%2F%2Fwww.w3.org%2F2000%2Fsvg%27%20viewBox%3D%270%200%2064%2064%27%3E%3Crect%20width%3D%2764%27%20height%3D%2764%27%20rx%3D%2714%27%20fill%3D%27%231B2A4A%27%2F%3E%3Crect%20x%3D%2713%27%20y%3D%2734%27%20width%3D%277%27%20height%3D%2716%27%20rx%3D%272%27%20fill%3D%27%230d9488%27%2F%3E%3Crect%20x%3D%2724%27%20y%3D%2726%27%20width%3D%277%27%20height%3D%2724%27%20rx%3D%272%27%20fill%3D%27%233fb9a8%27%2F%3E%3Crect%20x%3D%2735%27%20y%3D%2718%27%20width%3D%277%27%20height%3D%2732%27%20rx%3D%272%27%20fill%3D%27%23C99B3F%27%2F%3E%3Cpath%20d%3D%27M46%2020%20L52%2014%20M52%2014%20L52%2020%20M52%2014%20L46%2014%27%20stroke%3D%27%23C99B3F%27%20stroke-width%3D%273%27%20stroke-linecap%3D%27round%27%20stroke-linejoin%3D%27round%27%20fill%3D%27none%27%2F%3E%3C%2Fsvg%3E">
 <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/leaflet/1.9.4/leaflet.min.css">
 <style>
 @import url('https://fonts.googleapis.com/css2?family=Sarabun:wght@400;600;700&display=swap');
@@ -79,7 +83,8 @@ a{color:var(--teal)}
   display:flex;flex-direction:column;z-index:1100;box-shadow:var(--sh-rail);
 }
 .brand{padding:18px 16px 14px;border-bottom:1px solid rgba(255,255,255,.12)}
-.brand h1{margin:0;font-size:15px;font-weight:700;letter-spacing:.2px}
+.brand h1{margin:0;font-size:16px;font-weight:700;letter-spacing:.3px;display:flex;align-items:center;gap:8px}
+.blogo{width:22px;height:22px;flex:none;border-radius:6px;background:url("data:image/svg+xml,%3Csvg%20xmlns%3D%27http%3A%2F%2Fwww.w3.org%2F2000%2Fsvg%27%20viewBox%3D%270%200%2064%2064%27%3E%3Crect%20width%3D%2764%27%20height%3D%2764%27%20rx%3D%2714%27%20fill%3D%27%231B2A4A%27%2F%3E%3Crect%20x%3D%2713%27%20y%3D%2734%27%20width%3D%277%27%20height%3D%2716%27%20rx%3D%272%27%20fill%3D%27%230d9488%27%2F%3E%3Crect%20x%3D%2724%27%20y%3D%2726%27%20width%3D%277%27%20height%3D%2724%27%20rx%3D%272%27%20fill%3D%27%233fb9a8%27%2F%3E%3Crect%20x%3D%2735%27%20y%3D%2718%27%20width%3D%277%27%20height%3D%2732%27%20rx%3D%272%27%20fill%3D%27%23C99B3F%27%2F%3E%3Cpath%20d%3D%27M46%2020%20L52%2014%20M52%2014%20L52%2020%20M52%2014%20L46%2014%27%20stroke%3D%27%23C99B3F%27%20stroke-width%3D%273%27%20stroke-linecap%3D%27round%27%20stroke-linejoin%3D%27round%27%20fill%3D%27none%27%2F%3E%3C%2Fsvg%3E") center/contain no-repeat;box-shadow:0 1px 4px rgba(0,0,0,.35)}
 .brand .sub{font-size:11px;color:#8d9cba;margin-top:3px}
 .brand .chips{display:flex;gap:6px;flex-wrap:wrap;margin-top:6px}
 .brand .chip{background:rgba(255,255,255,.14);border:1px solid rgba(255,255,255,.25);
@@ -540,9 +545,9 @@ canvas{max-width:100%}
 
 <aside class="sidebar no-print">
   <div class="brand">
-    <h1>ระบบฐานข้อมูลวัสดุ</h1>
-    <div class="sub">แขวงทางหลวงชนบทขอนแก่น</div>
-    <div class="chips"><span class="chip" id="bLatest">—</span><span class="chip">v5.9</span></div>
+    <h1><span class="blogo" aria-hidden="true"></span>CostBase</h1>
+    <div class="sub">ฐานข้อมูลราคาวัสดุ · แขวงทางหลวงชนบทขอนแก่น</div>
+    <div class="chips"><span class="chip" id="bLatest">—</span><span class="chip" id="bVer">v6.0</span></div>
   </div>
   <nav class="nav" id="nav">
     <button data-p="sum" class="active"><span class="ico">▦</span>หน้าสรุป</button>
@@ -1042,7 +1047,7 @@ canvas{max-width:100%}
     <div class="hint" id="regStat" style="margin-top:8px">เลือกไฟล์ บัญชีคุมวัสดุ.xlsx แล้วกดอัปโหลด</div>
   </div>
   <div class="credit">
-    <div class="c-top">ระบบฐานข้อมูลวัสดุ — แขวงทางหลวงชนบทขอนแก่น</div>
+    <div class="c-top">CostBase — ฐานข้อมูลราคาวัสดุ · แขวงทางหลวงชนบทขอนแก่น</div>
     <div class="c-name">คิดค้นและพัฒนาโดย นายสิษฐ์ชกรณ์ ซึ้งสัมปทาน</div>
     <div class="c-unit">กลุ่มวิชาการ แขวงทางหลวงชนบทขอนแก่น · กรมทางหลวงชนบท</div>
     <div class="c-meta" id="cMeta"></div>
@@ -1096,7 +1101,11 @@ const EMPTY = () => P.series.length===0;
 let LIVE = {on:false, added:0};
 const fmt = n => n==null?'—':Number(n).toLocaleString('th-TH',{minimumFractionDigits:2,maximumFractionDigits:2});
 const $ = id => document.getElementById(id);
-const esc = s => String(s).replace(/&/g,'&amp;').replace(/</g,'&lt;');
+const APPVER='6.0';        /* เลขรุ่นที่เดียว — ที่อื่นดึงจากตัวนี้ */
+/* ต้อง escape ทั้ง " และ ' ด้วย — ชื่อวัสดุในบัญชีคุมมีเครื่องหมายนิ้ว (") 1,687 ชื่อ และฟุต (') 71 ชื่อ
+   ถ้าไม่ escape ค่าใน value="..." จะถูกตัดกลางคัน แล้วชื่อที่โดนตัดจะไหลเข้าคลังเป็นวัสดุใหม่ปลอม ๆ */
+const esc = s => String(s).replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;')
+  .replace(/"/g,'&quot;').replace(/'/g,'&#39;');
 
 /* series helpers */
 function latestVal(v){ for(let i=NM-1;i>=0;i--) if(v[i]!=null) return {p:v[i],m:i}; return null; }
@@ -1150,7 +1159,7 @@ const ymKey = i => P.ylist[i]*100+P.months[i];
 function chanPer(o){ const a=[]; for(let i=0;i<NM;i++) a[i]=o.ym[ymKey(i)]||0; return a; }
 function chanDocs(o,i){ const s=o.docs[ymKey(i)]; return s?[...s].filter(Boolean):[]; }
 function mergeLive(rows){
-  const serIdx={}; P.series.forEach((s,i)=>{ serIdx[s[0]+'|'+s[1]]=i; });
+  const serIdx={}; P.series.forEach((s,i)=>{ serIdx[s[0]+'|'+s[1]+'|'+s[2]]=i; });
   CHAN={};
   let added=0;
   rows.forEach(r=>{
@@ -1164,9 +1173,11 @@ function mergeLive(rows){
       chanBump(chanHead(chRaw), y*100+m, parts.slice(1).join(' · '), name); }
     /* ถ้าอ่านบัญชีคุมแล้ว ใช้ชื่อมาตรฐานตั้งแต่ตอนรวมข้อมูล */
     const std=REG.on?regStd(name):null;
-    const a=idxOf(P.mats,std||name), b=idxOf(P.srcs,src);
-    let si=serIdx[a+'|'+b];
-    if(si==null){ P.series.push([a,b,idxOf(P.units,unit),idxOf(P.types,typ),Array(NM).fill(null)]); si=P.series.length-1; serIdx[a+'|'+b]=si; }
+    const a=idxOf(P.mats,std||name), b=idxOf(P.srcs,src), u=idxOf(P.units,unit);
+    /* คีย์ต้องมีหน่วยด้วย — วัสดุ+แหล่งเดียวกันแต่คนละหน่วย (ถุง/ตัน) ต้องเป็นคนละเส้น
+       ไม่งั้นราคาต่อถุงกับต่อตันจะถูกยุบรวมเป็นเส้นเดียว แล้วโชว์ % เปลี่ยนแปลงมั่ว */
+    let si=serIdx[a+'|'+b+'|'+u];
+    if(si==null){ P.series.push([a,b,u,idxOf(P.types,typ),Array(NM).fill(null)]); si=P.series.length-1; serIdx[a+'|'+b+'|'+u]=si; }
     const s=P.series[si];
     while(s[4].length<NM) s[4].push(null);
     if(s[4][mi]!==price){ if(s[4][mi]==null) added++; s[4][mi]=price; }
@@ -1250,7 +1261,7 @@ function applyRegistry(rows){
   P.mats=mats2;
   const bySer={}, out=[];
   P.series.forEach(sr=>{
-    const a=remap[sr[0]], key=a+'|'+sr[1];
+    const a=remap[sr[0]], key=a+'|'+sr[1]+'|'+sr[2];   /* รวมหน่วยในคีย์ กันยุบคนละหน่วยเข้าด้วยกัน */
     let t=bySer[key];
     if(!t){ t=[a,sr[1],sr[2],sr[3],sr[4].slice()]; bySer[key]=t; out.push(t); }
     else sr[4].forEach((v,i)=>{ if(v!=null&&t[4][i]==null) t[4][i]=v; });
@@ -1261,6 +1272,9 @@ function applyRegistry(rows){
   matSel=matSel.map(i=>remap[i]??i);
   if(matActive!=null) matActive=remap[matActive]??matActive;
   const cs={}; Object.keys(cmpState).forEach(k=>{ cs[remap[k]??k]=cmpState[k]; }); cmpState=cs;
+  /* ค่าขนขึ้น-ลง / ค่าดัด ที่ผู้ใช้พิมพ์ไว้ ผูกกับดัชนีวัสดุ ต้องย้ายตามด้วย
+     ไม่งั้นจะไปเกาะวัสดุตัวอื่นแล้วบวกเข้าราคารวมในใบพิมพ์ */
+  const ce={}; Object.keys(cmpExtra).forEach(k=>{ ce[remap[k]??k]=cmpExtra[k]; }); cmpExtra=ce;
   if(typeof sSel!=='undefined'&&sSel.mat>=0){ sSel.mat=remap[sSel.mat]??sSel.mat; }
   REG.on=true;
 }
@@ -1333,7 +1347,9 @@ async function loadLive(){
   }
 }
 function rerender(){
-  [buildSummary, matInit, statInit, buildMovers, covInit, impInit, drawNoGeo, relabelInit, expInit, sysInit, drawMatChips]
+  try{ refreshCmpState(); }catch(e){}      /* ปรับราคา/เดือนในตารางเปรียบเทียบให้ตรงคลังใหม่ก่อนวาดอย่างอื่น */
+  [buildSummary, matInit, statInit, buildMovers, covInit, impInit, drawNoGeo, relabelInit, expInit, sysInit, drawMatChips,
+   ()=>{ if(matSel.length){ renderCmp(); buildCalcSheet(); } }]
     .forEach(f=>{ try{ f(); }catch(e){ console.error('rerender:', f.name, e); } });
   kddAll(); kfreeAll(); paintIcons(); drawConn();
   try{ sortableAll(); countUpAll(); }catch(e){}
@@ -1623,7 +1639,7 @@ function buildSummary(){
   hc('hcImp',impChips());
   hc('hcExp',`<span class="ph-chip">● เดือนล่าสุด <b>${latestLabel}</b></span>
     <span class="ph-chip">${LIVE.on?'☁ รวมคลังสดแล้ว':'⚠ ยังไม่ได้เชื่อมคลัง'}</span>`);
-  hc('hcSys',`<span class="ph-chip">เวอร์ชัน <b>5.1</b></span>
+  hc('hcSys',`<span class="ph-chip">เวอร์ชัน <b>${APPVER}</b></span>
     <span class="ph-chip">อัปเดต 18 ส.ค. 2569</span>`);
   const nRowsLast = P.series.filter(s=>s[4][LAST]!=null).length;
   /* พร้อมใช้ = มีราคาเดือนล่าสุด หรือมีราคาเดือนก่อนหน้าให้ยกยอด (ตามหลักเกณฑ์ยกยอดของระบบ)
@@ -2043,11 +2059,29 @@ function cmpRowsFor(mi){
     const sc=findSrc(nm);
     const dc=sc?distCache[sc.name]:null;
     const L0=dc?dc.L:0;
-    rows.push({nm,sc,price:lv.p,pm:lv.m,unit,tU,
+    rows.push({nm,sc,si:s,price:lv.p,pm:lv.m,py:P.ylist[lv.m],pmo:P.months[lv.m],unit,tU,
       L:L0, Lmax:dc?dc.L:null, mode:dc?dc.mode:(sc?null:'manual'),
       legs:[newLeg(L0,'10')]});
   });
   cmpState[mi]=rows; return rows;
+}
+/* ⚠ แถวเปรียบเทียบถูกแคชไว้ใน cmpState เพราะเก็บระยะทาง/ช่วงรถที่ผู้ใช้พิมพ์เอง
+   แต่ pm เป็น "เลขลำดับเดือน" ซึ่งเลื่อนได้เมื่อ ensureMonth() แทรกเดือนใหม่กลางอาเรย์
+   และราคาที่แคชไว้ก็ไม่รู้ว่ามีราคาใหม่เข้ามาแล้ว
+   ตัวนี้ไล่ปรับ ราคา+เดือน ให้ตรงคลังปัจจุบัน โดยไม่แตะค่าที่ผู้ใช้กรอก (L / legs / mode) */
+function refreshCmpState(){
+  Object.keys(cmpState).forEach(k=>{
+    const mi=+k, rows=cmpState[k]; if(!rows) return;
+    rows.forEach(r=>{
+      const ser=P.series.find(s=>s[0]===mi && (P.srcs[s[1]]||'(ไม่ระบุ)')===r.nm && (P.units[s[2]]||'')===r.unit);
+      if(!ser){ /* คู่ราคานี้หายไปจากคลังแล้ว — คงเลขเดิมไว้ แต่หาเดือนใหม่ให้ถ้าทำได้ */
+        const i=P.ylist.findIndex((y,j)=>y===r.py&&P.months[j]===r.pmo);
+        if(i>=0) r.pm=i;
+        return; }
+      const lv=latestVal(ser[4]); if(!lv) return;
+      r.price=lv.p; r.pm=lv.m; r.py=P.ylist[lv.m]; r.pmo=P.months[lv.m];
+    });
+  });
 }
 let cmpExtra={};
 function exOf(mi){ return cmpExtra[mi]||(cmpExtra[mi]={up:0,bend:0}); }
@@ -2122,17 +2156,26 @@ function renderCmp(){
 }
 function cmpRef(key){
   const [mi,ri]=key.split('|');
-  return sortedCalc(mi,dieselIdx())[+ri].r;
+  /* +mi สำคัญ — cmpRowsFor เทียบ s[0]===mi แบบเข้มงวด ถ้าเป็นสตริงจะได้อาเรย์ว่างเสมอ
+     และต้องกันดัชนีเกินขอบ เผื่อคลังโหลดใหม่แล้วจำนวนแหล่งลดลง */
+  const list=sortedCalc(+mi,dieselIdx());
+  const row=list[+ri];
+  return row?row.r:null;
 }
 function truckSeg(key,li,cur){
   return `<span class="tseg">${TRUCKS.map(x=>`<button class="ts ${cur===x[0]?'on':''}" data-tk="${key}" data-li="${li}" data-v="${x[0]}" title="${x[2]}">${x[1]}</button>`).join('')}</span>`;
 }
 function bindCmpInputs(){
+  const stale=()=>{ toast('ข้อมูลในคลังเปลี่ยนไปแล้ว — กำลังคำนวณใหม่ให้'); renderCmp(); buildCalcSheet(); };
   document.querySelectorAll('#cmpCards .clinp').forEach(e=>e.onchange=()=>{const r=cmpRef(e.dataset.cl);
+    if(!r) return stale();
     setRowL(r,parseFloat(e.value)||0); renderCmp(); buildCalcSheet();});
-  document.querySelectorAll('#cmpCards .ts').forEach(e=>e.onclick=()=>{const r=cmpRef(e.dataset.tk); r.legs[+e.dataset.li].truck=e.dataset.v; renderCmp(); buildCalcSheet();});
+  document.querySelectorAll('#cmpCards .ts').forEach(e=>e.onclick=()=>{const r=cmpRef(e.dataset.tk);
+    if(!r) return stale();
+    r.legs[+e.dataset.li].truck=e.dataset.v; renderCmp(); buildCalcSheet();});
   document.querySelectorAll('#cmpCards [data-ed]').forEach(e=>e.onclick=()=>{const key=e.dataset.ed;
-    openLegModal(+key.split('|')[0], cmpRef(key));});
+    const r=cmpRef(key); if(!r) return stale();
+    openLegModal(+key.split('|')[0], r);});
   document.querySelectorAll('#cmpCards [data-exu]').forEach(e=>e.onchange=()=>{exOf(+e.dataset.exu).up=parseFloat(e.value)||0; renderCmp(); buildCalcSheet();});
   document.querySelectorAll('#cmpCards [data-exb]').forEach(e=>e.onchange=()=>{exOf(+e.dataset.exb).bend=parseFloat(e.value)||0; renderCmp(); buildCalcSheet();});
 }
@@ -2815,8 +2858,9 @@ function covInit(){
   });
   const cats = REG.on ? [...new Set(Object.values(P.matCat||{}))].sort((a,b)=>a.localeCompare(b,'th'))
                       : P.types.filter(Boolean);
+  const prevCat=$('covCat').value;      /* covInit ถูกเรียกซ้ำทุกครั้งที่โหลดคลัง — ต้องคงหมวดที่เลือกไว้ */
   $('covCat').innerHTML='<option value="-1">ทุกหมวด</option>'
-    + cats.map(c=>`<option value="${esc(c)}">${esc(c)}</option>`).join('');
+    + cats.map(c=>`<option value="${esc(c)}" ${c===prevCat?'selected':''}>${esc(c)}</option>`).join('');
   $('covCat').onchange=drawCov;
   $('covMode').onchange=drawCov;
   let t=null; $('covQ').oninput=()=>{ clearTimeout(t); t=setTimeout(drawCov,220); };
@@ -2894,7 +2938,8 @@ function sortableAll(){
 
 /* ตัวเลข KPI นับขึ้นให้ดูมีชีวิต — เรียกหลังวาดการ์ดเสร็จ */
 function countUp(el){
-  const raw=el.dataset.cu; if(raw==null) return;
+  const raw = el.dataset.cu != null ? el.dataset.cu : el.dataset.v;   /* รับได้ทั้ง data-cu และ data-v */
+  if(raw==null) return;
   const end=parseFloat(raw); if(!isFinite(end)) return;
   const dec=(raw.split('.')[1]||'').length;
   const t0=performance.now(), dur=520;
@@ -2906,7 +2951,7 @@ function countUp(el){
   requestAnimationFrame(step);
 }
 function countUpAll(root){
-  (root||document).querySelectorAll('[data-cu]').forEach(el=>{ if(el._cu) return; el._cu=1; countUp(el); });
+  (root||document).querySelectorAll('[data-cu],[data-v]').forEach(el=>{ if(el._cu) return; el._cu=1; countUp(el); });
 }
 
 /* เด้งไปหน้าสถิติราคา พร้อมตั้งรายการ (และแหล่ง ถ้าระบุ) ให้เรียบร้อย
@@ -2958,7 +3003,7 @@ function impInit(){
   $('mSrcSel').onchange=srcTog; srcTog();
   /* ช่องทางเว็บร้านค้า → โชว์ช่องวางลิงก์หน้าสินค้า (ผนวกเข้าหมายเหตุ/ที่มาให้เอง) */
   const urlTog=()=>{ $('mUrlBox').style.display=$('mChan').value==='เว็บร้านค้า'?'':'none'; };
-  $('mChan').addEventListener('change',urlTog); urlTog();
+  $('mChan').onchange=urlTog; urlTog();   /* ต้องเป็น onchange= ไม่ใช่ addEventListener — impInit ถูกเรียกซ้ำทุกครั้งที่โหลดคลังใหม่ */
   /* วัสดุ: หมวดกรองรายการให้สั้นลง */
   const prevCat=$('mCat').value;
   const mcats=REG.on?[...new Set(Object.values(REG.cat))].sort((a,b)=>a.localeCompare(b,'th')):P.types.filter(Boolean);
@@ -3120,7 +3165,7 @@ function impInit(){
         body:JSON.stringify({token:WTOKEN,action:'submit',rows,by})});
       const res=await r.json();
       if(!res.ok) throw new Error(res.error||'ส่งไม่สำเร็จ');
-      if(res.batch===undefined) throw new Error('ชีทยังใช้ Code.gs รุ่นเก่า — ต้องรุ่น 17 ขึ้นไป');
+      if(res.batch===undefined) throw new Error('ชีทยังใช้ Code.gs รุ่นเก่า — ต้องรุ่น 22 ขึ้นไป');
       st.innerHTML='<span class="pill ok">ส่งขออนุมัติแล้ว</span> ชุด <b>'+esc(res.batch)+'</b> · '+res.added+' รายการ'
         +(res.mailed?' · แจ้งอีเมลผู้อนุมัติแล้ว':' · <span class="up">ส่งอีเมลไม่ผ่าน (ดูสิทธิ์ใน Apps Script)</span>')
         +'<br>ราคายังไม่เข้าคลัง รอผู้ดูแลกดอนุมัติที่การ์ด "รายการรออนุมัติ"';
@@ -3205,7 +3250,7 @@ function noGeoInit(){
         body:JSON.stringify({token:WTOKEN,action:'sources',mode:'upsert',rows})});
       const res=await r.json();
       if(!res.ok) throw new Error(res.error||'ส่งไม่สำเร็จ');
-      if(res.added===undefined) throw new Error('ชีทยังใช้ Code.gs รุ่นเก่า — ต้องรุ่น 19 ขึ้นไป');
+      if(res.added===undefined) throw new Error('ชีทยังใช้ Code.gs รุ่นเก่า — ต้องรุ่น 22 ขึ้นไป');
       msg.innerHTML='<span class="pill ok">บันทึกแล้ว</span> '+rows.length+' แหล่งขึ้นแท็บ SOURCES · กำลังโหลดคลังใหม่…';
       GEOQ=GEOQ.filter(g=>!rows.some(x=>x[0]===g.name));
       await loadLive(); drawNoGeo();
@@ -3424,8 +3469,10 @@ function sysInit(){
       <td class="num">${new Set(rs.map(s=>s[0])).size.toLocaleString()}</td>
       <td class="num">${new Set(rs.map(s=>s[1])).size}</td></tr>`;});
   $('tblSysStat').innerHTML=h+'</tbody>';
-  const cm=$('cMeta'); if(cm) cm.innerHTML='เริ่มพัฒนา สิงหาคม 2569 · เวอร์ชันปัจจุบัน v5.9 · '+(LIVE.on?'เชื่อมคลังข้อมูลแล้ว':'ยังไม่ได้เชื่อมคลัง');
-  $('sysInfo').innerHTML=`เวอร์ชัน: 5.1 · อัปเดต: 18 ส.ค. 2569<br>
+  const cm=$('cMeta'); if(cm) cm.innerHTML='เริ่มพัฒนา สิงหาคม 2569 · เวอร์ชันปัจจุบัน v'+APPVER+' · '+(LIVE.on?'เชื่อมคลังข้อมูลแล้ว':'ยังไม่ได้เชื่อมคลัง');
+  $('sysInfo').innerHTML=`ชื่อระบบ: <b>CostBase</b> — ฐานข้อมูลราคาวัสดุ แขวงทางหลวงชนบทขอนแก่น<br>
+    ที่อยู่เว็บ: <a href="https://kkn-datahub.github.io/CostBase/" target="_blank" rel="noopener">kkn-datahub.github.io/CostBase/</a><br>
+    เวอร์ชัน: ${APPVER} · อัปเดต: 18 ส.ค. 2569<br>
     การเชื่อมราคาน้ำมันอัตโนมัติ: สร้างแท็บชื่อ <b>OIL</b> ในชีทคลังข้อมูล คอลัมน์ A=วันที่ B=จังหวัด C=ราคาดีเซล (หรือ A=วันที่ B=ราคา ถ้ามีเฉพาะขอนแก่น) แชร์แบบ อ่านได้ทุกคนที่มีลิงก์ — หน้าคำนวณระยะขนส่งจะอ่านราคาล่าสุดของจังหวัดที่เลือกให้เอง<br>
     ขอบเขตข้อมูลที่ฝังในไฟล์นี้: ${mLabI(0)} – ${mLabI(LAST)} (${P.series.length.toLocaleString()} คู่ราคา)<br>
     ชีทกลาง: 01.0 คลังข้อมูลวัสดุก่อสร้าง (แท็บ PRICES + OIL + REGISTRY) · เปิดหน้าเว็บครั้งใด ระบบอ่านแท็บ PRICES มารวมกับข้อมูลฝังให้อัตโนมัติ — ราคา TPSO เดือนใหม่และราคากรอกเองจึงขึ้นจอโดยไม่ต้องแก้ไฟล์นี้<br>
@@ -3437,7 +3484,7 @@ function sysInit(){
     <b>นำเข้าข้อมูล</b> — ช่องทางข้อมูลทั้ง 5 ช่อง สถานะการเชื่อม และแบบฟอร์มกรอกราคาที่เทียบชื่อกับบัญชีคุมให้อัตโนมัติ<br>
     <b>เกร็ดการใช้หน้าคำนวณระยะขนส่ง</b> — เลือกวัสดุได้หลายรายการ จอแสดงทีละวัสดุ สลับจากป้ายชื่อในช่อง 3 (เอกสารพิมพ์รวมทุกวัสดุที่เลือก) · ระยะทางกรอกได้ไม่เกินค่าที่วัดจากแผนที่ · ในหน้าต่างรายละเอียดคำนวณ ช่องขอบเขียวคือช่องกรอก ช่องเทา (ที่ราบ ลาดยาง/คอนกรีต) ระบบคำนวณให้เป็นส่วนที่เหลือของระยะช่วง · ค่าขนขึ้น-ลง และค่าดัด/แปรรูป กรอกครั้งเดียวต่อวัสดุ ระบบบวกเข้าราคารวมให้ทุกแหล่ง<br>
     <b>ส่งออกข้อมูล</b> — รวมราคาทุกช่องทาง (TPSO + กรอกเอง + คลังสดบนชีท) แล้วสร้างไฟล์ราคาประจำเดือน 5 คอลัมน์ (ชีตชื่อ Sheet1) สำหรับไฟล์ประมาณราคา เลือกเปิด/ปิดการยกยอดราคาเดือนก่อนได้ รายการที่ยกยอดแนบชีต หมายเหตุยกยอด ไว้ในไฟล์ .xlsx เดียวกันโดยไม่กระทบ Sheet1<br>
-    <b>นำเข้า→คลังโดยตรง</b> — ราคาที่กรอกในหน้า นำเข้าข้อมูล กดปุ่ม ส่งขึ้นคลัง (PRICES) ระบบบันทึกเข้าชีทกลางทันที (กันแถวซ้ำให้) แล้วอ่านกลับมาแสดงบนจอ · บัญชีคุมอัปโหลดขึ้นแท็บ REGISTRY ได้จากหน้า ระบบ`;
+    <b>นำเข้า→รออนุมัติ→คลัง</b> — ราคาที่กรอกหรือนำเข้าจากไฟล์ กดปุ่ม ส่งขออนุมัติขึ้นคลัง จะเข้าแท็บ PENDING ก่อน พร้อมส่งอีเมลแจ้งผู้อนุมัติ · ราคาจะเข้าแท็บ PRICES จริงก็ต่อเมื่อผู้ดูแลกดอนุมัติที่การ์ด "รายการรออนุมัติ" (กันแถวซ้ำให้ · ราคาเดิมที่แก้ใหม่จะเขียนทับให้) · บัญชีคุมอัปโหลดขึ้นแท็บ REGISTRY ได้จากหน้า ระบบ`;
 }
 
 /* ============ อัปโหลดบัญชีคุม (REGISTRY) ============ */
@@ -3530,7 +3577,7 @@ function relabelInit(){
         body:JSON.stringify({token:WTOKEN,action:'relabel',pass,from,to,y,m})});
       const res=await r.json();
       if(!res.ok) throw new Error(res.error||'ไม่สำเร็จ');
-      if(res.changed===undefined) throw new Error('ชีทยังใช้ Code.gs รุ่นเก่า — ต้องรุ่น 21 ขึ้นไป');
+      if(res.changed===undefined) throw new Error('ชีทยังใช้ Code.gs รุ่นเก่า — ต้องรุ่น 22 ขึ้นไป');
       st.innerHTML='<span class="pill ok">เปลี่ยนแล้ว '+fmtInt(res.changed)+' แถว</span>'
         +(res.backup?' · สำรองไว้ที่แท็บ '+esc(res.backup):'')+' — กำลังโหลดคลังใหม่…';
       $('rlPass').value='';
@@ -3554,8 +3601,11 @@ function clearInit(){
         +'<select id="clM"></select></div>';
       $('clM').innerHTML=TH_M.map((t,i)=>`<option value="${i+1}" ${i+1===P.months[LAST]?'selected':''}>${t}</option>`).join('');
     } else if(v==='prices_channel'){
-      box.innerHTML='<label class="f">ช่องทาง</label><div style="max-width:220px"><select id="clC">'
-        +['TPSO','หน่วยงานราชการ','เว็บร้านค้า','กรอกเอง'].map(x=>`<option>${x}</option>`).join('')+'</select></div>';
+      /* ต้องตรงกับ CHAN_OPTS ที่หน้านำเข้าใช้ + ช่องทางที่มีจริงในคลัง ไม่งั้นบางช่องทางล้างไม่ได้เลย */
+      const have=Object.keys(CHAN||{});
+      const opts=[...new Set(['TPSO','ใบเสนอราคา','หน่วยงานราชการ','เว็บร้านค้า','กรอกเอง'].concat(have))];
+      box.innerHTML='<label class="f">ช่องทาง</label><div style="max-width:260px"><select id="clC">'
+        +opts.map(x=>`<option>${esc(x)}</option>`).join('')+'</select></div>';
     } else box.innerHTML='<div class="hint" style="padding-bottom:9px">ล้างทั้งแท็บ</div>';
     kddAll();
   };
@@ -3574,7 +3624,7 @@ function clearInit(){
     $('clGo').disabled=true; st.textContent='กำลังล้าง…';
     try{
       const r=await fetch(url,{method:'POST',headers:{'Content-Type':'text/plain;charset=utf-8'},
-        body:JSON.stringify({token:WTOKEN,action:'clear',scope,opt})});
+        body:JSON.stringify({token:WTOKEN,action:'clear',scope,opt,pass:$('clYes').value})});
       const res=await r.json();
       if(!res.ok) throw new Error(res.error||'ไม่สำเร็จ');
       st.innerHTML='<span class="pill ok">ล้างแล้ว</span> '+label+' · เอาออก <b>'+(res.removed||0).toLocaleString()
@@ -3591,7 +3641,8 @@ function clearInit(){
 }
 
 /* ============ boot ============ */
-[buildSummary, lawInit, provInit, matInit, initMap, statInit, covInit, impInit, noGeoInit, relabelInit, sortableAll, countUpAll, expInit, sysInit, regInit, clearInit, fullInit, distTabs, dieselIdx, drawMatChips, usageInit]
+[buildSummary, lawInit, provInit, matInit, initMap, statInit, covInit, impInit, noGeoInit, relabelInit, expInit, sysInit, regInit, clearInit, fullInit, distTabs, dieselIdx, drawMatChips, usageInit,
+ sortableAll, countUpAll]   /* สองตัวนี้ต้องอยู่ท้ายสุด — ต้องรอให้ทุกตารางถูกวาดก่อน */
   .forEach(f=>{ try{ f(); }catch(e){ console.error('init:', f.name, e); } });
 kddAll(); kfreeAll(); paintIcons();
 try{ fetchOil(true); }catch(e){}
