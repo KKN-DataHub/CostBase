@@ -439,6 +439,10 @@ tr.detail>td{background:#F8F7F3;border-top:none;padding:10px 14px}
 .barlab{font-size:11px;margin-left:7px;color:var(--ink2);font-variant-numeric:tabular-nums}
 .barlab.up{color:#b23b3b;font-weight:600}
 .barlab.dn{color:#0b6b57;font-weight:600}
+/* กล่องกราฟ — ล็อกความสูงไม่ให้กราฟกินพื้นที่จนไม่เห็นตารางข้างล่าง */
+.chartbox{position:relative;height:300px}
+@media(max-width:900px){.chartbox{height:240px}}
+@media print{.chartbox{height:240px}}
 /* คอลัมน์ชื่อค้างไว้ตอนเลื่อนตารางกว้าง */
 #tblCov tbody td:first-child,#tblCovChan tbody td:first-child,#tblCovCat tbody td:first-child{
   position:sticky;left:0;background:#fff;z-index:2}
@@ -531,7 +535,7 @@ canvas{max-width:100%}
   <div class="brand">
     <h1>ระบบฐานข้อมูลวัสดุ</h1>
     <div class="sub">แขวงทางหลวงชนบทขอนแก่น</div>
-    <div class="chips"><span class="chip" id="bLatest">—</span><span class="chip">v5.6</span></div>
+    <div class="chips"><span class="chip" id="bLatest">—</span><span class="chip">v5.7</span></div>
   </div>
   <nav class="nav" id="nav">
     <button data-p="sum" class="active"><span class="ico">▦</span>หน้าสรุป</button>
@@ -710,7 +714,7 @@ canvas{max-width:100%}
   </div>
   <div class="card" style="margin-top:12px">
     <h2 data-ic="chart" id="sTitle">เทรนด์ราคา</h2>
-    <canvas id="sChart" height="110"></canvas>
+    <div class="chartbox"><canvas id="sChart"></canvas></div>
     <div class="cap" id="sCap"></div>
   </div>
   <div class="grid2" style="margin-top:12px">
@@ -1084,14 +1088,21 @@ function idxOf(arr,val){ let i=arr.indexOf(val); if(i<0){ arr.push(val); i=arr.l
    "หน่วยงานราชการ · ใบเสนอราคา SQ.690801 ลว. 10 ส.ค. 69 · ไม่รวม VAT"
    ตัดเอาเฉพาะคำแรกหน้า " · " เป็นชื่อช่องทาง ส่วนที่เหลือคือเอกสารอ้างอิง */
 const chanHead = s => String(s||'').split('·')[0].trim() || 'ไม่ระบุช่องทาง';
-let CHAN = {};        /* ช่องทาง → {per:[จำนวนแถวต่อเดือน], docs:{เดือน→Set(เอกสาร)}, mats:Set} */
-function chanBump(ch, mi, doc, mat){
+/* ⚠ ต้องเก็บด้วยคีย์ ปี*100+เดือน ห้ามเก็บด้วยเลขลำดับเดือน
+   เพราะ ensureMonth() แทรกเดือนใหม่กลางอาเรย์ได้ (ถ้าอ่านเดือนหลังก่อนเดือนหน้า)
+   เลขลำดับของเดือนที่บันทึกไว้ก่อนหน้าจะเลื่อนตามไปหมด → นับไปลงผิดเดือน */
+let CHAN = {};        /* ช่องทาง → {ym:{ปีเดือน→จำนวนแถว}, docs:{ปีเดือน→Set(เอกสาร)}, mats:Set} */
+function chanBump(ch, key, doc, mat){
   let o=CHAN[ch];
-  if(!o){ o={per:[], docs:{}, mats:new Set()}; CHAN[ch]=o; }
-  o.per[mi]=(o.per[mi]||0)+1;
-  if(doc){ (o.docs[mi]=o.docs[mi]||new Set()).add(doc); }
+  if(!o){ o={ym:{}, docs:{}, mats:new Set()}; CHAN[ch]=o; }
+  o.ym[key]=(o.ym[key]||0)+1;
+  if(doc){ (o.docs[key]=o.docs[key]||new Set()).add(doc); }
   if(mat) o.mats.add(mat);
 }
+/* แปลง {ปีเดือน→จำนวน} เป็นอาเรย์เรียงตามเดือนบนจอ ณ เวลาที่วาด */
+const ymKey = i => P.ylist[i]*100+P.months[i];
+function chanPer(o){ const a=[]; for(let i=0;i<NM;i++) a[i]=o.ym[ymKey(i)]||0; return a; }
+function chanDocs(o,i){ const s=o.docs[ymKey(i)]; return s?[...s].filter(Boolean):[]; }
 function mergeLive(rows){
   const serIdx={}; P.series.forEach((s,i)=>{ serIdx[s[0]+'|'+s[1]]=i; });
   CHAN={};
@@ -1104,7 +1115,7 @@ function mergeLive(rows){
     if(!y||y<2500||!m||m<1||m>12||!name||!(price>0)) return;
     const mi=ensureMonth(y,m);
     { const parts=chRaw.split('·').map(x=>x.trim()).filter(Boolean);
-      chanBump(chanHead(chRaw), mi, parts.slice(1).join(' · '), name); }
+      chanBump(chanHead(chRaw), y*100+m, parts.slice(1).join(' · '), name); }
     /* ถ้าอ่านบัญชีคุมแล้ว ใช้ชื่อมาตรฐานตั้งแต่ตอนรวมข้อมูล */
     const std=REG.on?regStd(name):null;
     const a=idxOf(P.mats,std||name), b=idxOf(P.srcs,src);
@@ -1377,7 +1388,7 @@ function kdd(sel){
   inp.onfocus=()=>{ if(Date.now()-justShut<250) return;
     if(!wrap.classList.contains('open')) open(); };
   inp.oninput=()=>{ if(!wrap.classList.contains('open')) wrap.classList.add('open'); render(inp.value); };
-  inp.onblur=()=>setTimeout(()=>{ if(wrap.classList.contains('open')) shut(); },60);
+  inp.onblur=()=>setTimeout(()=>{ if(KDD_HOLD) return; if(wrap.classList.contains('open')) shut(); },60);
   inp.onkeydown=e=>{
     if(e.key==='ArrowDown'){ e.preventDefault(); if(!wrap.classList.contains('open')) open(); setAct(act+1); }
     else if(e.key==='ArrowUp'){ e.preventDefault(); setAct(act-1); }
@@ -1420,11 +1431,20 @@ function kfree(inp){
   };
   inp.onfocus=open;
   inp.oninput=()=>{ if(!wrap.classList.contains('open')) wrap.classList.add('open'); render(); };
-  inp.onblur=()=>setTimeout(()=>{ if(wrap.classList.contains('open')) shut(); },120);
+  inp.onblur=()=>setTimeout(()=>{ if(KDD_HOLD) return; if(wrap.classList.contains('open')) shut(); },120);
   inp.onkeydown=e=>{ if(e.key==='Escape'){ e.preventDefault(); shut(); inp.blur(); } };
 }
 function kfreeAll(){ document.querySelectorAll('input[list]').forEach(kfree); }
-document.addEventListener('mousedown',()=>document.querySelectorAll('.kdd.open').forEach(w=>w._close&&w._close()));
+/* ปิดดรอปดาวน์เมื่อคลิกที่อื่น — แต่ต้องไม่ปิดถ้าคลิกอยู่ในตัวมันเอง
+   (ลากแถบเลื่อนของ panel นับเป็น mousedown ที่ panel ด้วย เดิมจึงปิดทันทีจนลากไม่ได้) */
+document.addEventListener('mousedown',e=>{
+  document.querySelectorAll('.kdd.open').forEach(w=>{ if(!w.contains(e.target)&&w._close) w._close(); });
+});
+/* ระหว่างลากแถบเลื่อนใน panel ห้ามปิดจากเหตุการณ์ blur */
+let KDD_HOLD=0;
+document.addEventListener('mousedown',e=>{ if(e.target&&e.target.closest&&e.target.closest('.kdd-panel')) KDD_HOLD=1; },true);
+document.addEventListener('mouseup',()=>{ if(KDD_HOLD){ KDD_HOLD=0;
+  const w=document.querySelector('.kdd.open'); const i=w&&w.querySelector('.kdd-inp'); if(i) i.focus(); } },true);
 setInterval(()=>{ document.querySelectorAll('select[data-kdd]').forEach(sel=>{
   const w=sel.closest('.kdd'); if(!w||w.classList.contains('open')) return;
   const i=w.querySelector('.kdd-inp'); const o=sel.options[sel.selectedIndex];
@@ -2584,9 +2604,21 @@ function drawStat(){
   const data={labels,datasets:ss.map((s,i)=>({label:P.srcs[s[1]]||'(ไม่ระบุ)',data:s[4],borderColor:PALETTE[i%PALETTE.length],backgroundColor:PALETTE[i%PALETTE.length],spanGaps:true,tension:.25,pointRadius:3}))};
   if(typeof Chart==='undefined'){ $('sCap').textContent='กราฟต้องต่ออินเทอร์เน็ตเพื่อโหลดตัววาดครั้งแรก · ตารางด้านล่างใช้ได้ตามปกติ'; fillSeriesTable(ss); return; }
   if(sChart) sChart.destroy();
+  const unitTxt=ss.length?(P.units[ss[0][2]]||''):'';
   sChart=new Chart($('sChart'),{type:'line',data,options:{
-    responsive:true,interaction:{mode:'index',intersect:false},
-    plugins:{legend:{labels:{font:{family:'Sarabun'},boxWidth:14}}},
+    responsive:true, maintainAspectRatio:false,
+    /* nearest = ชี้ตรงไหนบอกเส้นนั้นเส้นเดียว (เดิม index = เหมารวมทุกเส้นในเดือนนั้น อ่านยาก) */
+    interaction:{mode:'nearest',intersect:false,axis:'xy'},
+    elements:{point:{hoverRadius:7,hitRadius:12}},
+    plugins:{
+      legend:{labels:{font:{family:'Sarabun'},boxWidth:14,usePointStyle:true,pointStyle:'line'}},
+      tooltip:{displayColors:true,padding:9,titleFont:{family:'Sarabun',size:12.5},
+        bodyFont:{family:'Sarabun',size:12.5},
+        callbacks:{
+          title:c=>c.length?(c[0].dataset.label||''):'',
+          label:c=>mLabI(c.dataIndex)+' · '+Number(c.parsed.y).toLocaleString('th-TH',
+                    {minimumFractionDigits:2,maximumFractionDigits:2})+(unitTxt?' บาท/'+unitTxt:'')
+        }}},
     scales:{y:{grid:{color:'#e1e0d9'},ticks:{font:{family:'Sarabun'}}},x:{grid:{display:false},ticks:{font:{family:'Sarabun'}}}}}});
   const unit=ss.length?('บาท/'+(P.units[ss[0][2]]||'-')):'';
   $('sCap').textContent=ss.length?`${ss.length} แหล่ง · หน่วย ${unit} · ช่องว่างของเส้น = เดือนที่ไม่มีข้อมูล`:'ไม่พบข้อมูล';
@@ -2674,10 +2706,8 @@ function drawCov(){
 /* ── มุมมองที่ 1: ช่องทางที่มา × เดือน — ตอบคำถาม "พาณิชย์/ยาง/เว็บ แอดเข้าเดือนไหนแล้วบ้าง" ── */
 function drawCovChan(){
   if(!$('tblCovChan')) return;
-  const names=Object.keys(CHAN).sort((a,b)=>{
-    const s=(CHAN[b].per.reduce((x,y)=>x+(y||0),0))-(CHAN[a].per.reduce((x,y)=>x+(y||0),0));
-    return s||a.localeCompare(b,'th');
-  });
+  const sumOf=o=>Object.values(o.ym).reduce((x,y)=>x+y,0);
+  const names=Object.keys(CHAN).sort((a,b)=>(sumOf(CHAN[b])-sumOf(CHAN[a]))||a.localeCompare(b,'th'));
   if(!names.length){
     $('tblCovChan').innerHTML='<tbody><tr><td class="hint">ยังไม่ได้เชื่อมคลัง หรือแท็บ PRICES ยังไม่มีข้อมูล</td></tr></tbody>';
     return;
@@ -2686,13 +2716,12 @@ function drawCovChan(){
       + P.months.map((_,i)=>`<th class="num">${mLabI(i)}</th>`).join('')
       + '<th class="num">รวม</th><th class="num">รายการ</th><th>ล่าสุด</th></tr></thead><tbody>';
   names.forEach(n=>{
-    const o=CHAN[n];
-    const tot=o.per.reduce((x,y)=>x+(y||0),0);
-    let last=-1; for(let i=NM-1;i>=0;i--) if(o.per[i]){ last=i; break; }
+    const o=CHAN[n], per=chanPer(o);
+    const tot=sumOf(o);
+    let last=-1; for(let i=NM-1;i>=0;i--) if(per[i]){ last=i; break; }
     h+=`<tr><td><b>${esc(n)}</b></td>`
-      + P.months.map((_,i)=>{
-          const v=o.per[i]||0;
-          const docs=o.docs[i]?[...o.docs[i]].filter(Boolean):[];
+      + per.map((v,i)=>{
+          const docs=chanDocs(o,i);
           const tip=v? esc((docs.length?docs.join('\n'):'ไม่ได้ระบุเอกสารอ้างอิง')) : 'เดือนนี้ยังไม่ได้เอาข้อมูลของช่องทางนี้เข้า';
           return `<td class="cov"><span class="covc ${v?'full':'none'}" title="${tip}">${v?fmtInt(v):'—'}</span></td>`;
         }).join('')
@@ -2754,10 +2783,10 @@ function covInit(){
     const wb=XLSX.utils.book_new();
     /* ชีต 1 — ช่องทางที่มา × เดือน */
     const aoaC=[['ช่องทางที่มา',...P.months.map((_,i)=>mLabI(i)),'รวมแถว','จำนวนรายการ','เดือนล่าสุดที่มีข้อมูล','เอกสารอ้างอิงที่ใช้']];
-    Object.keys(CHAN).forEach(n=>{ const o=CHAN[n];
-      let last=-1; for(let i=NM-1;i>=0;i--) if(o.per[i]){ last=i; break; }
+    Object.keys(CHAN).forEach(n=>{ const o=CHAN[n], per=chanPer(o);
+      let last=-1; for(let i=NM-1;i>=0;i--) if(per[i]){ last=i; break; }
       const docs=[]; Object.keys(o.docs).forEach(k=>o.docs[k].forEach(d=>{ if(d&&docs.indexOf(d)<0) docs.push(d); }));
-      aoaC.push([n,...P.months.map((_,i)=>o.per[i]||0), o.per.reduce((x,y)=>x+(y||0),0), o.mats.size,
+      aoaC.push([n,...per, per.reduce((x,y)=>x+y,0), o.mats.size,
                  last<0?'—':mLabI(last), docs.join(' | ')]); });
     const wsC=XLSX.utils.aoa_to_sheet(aoaC);
     wsC['!cols']=[{wch:24},...P.months.map(()=>({wch:9})),{wch:10},{wch:12},{wch:18},{wch:70}];
@@ -2942,14 +2971,20 @@ function impInit(){
     const ci={y:col('ปี'),m:col('เดือน'),mat:col('รายการ'),unit:col('หน่วย'),pr:col('ราคา'),src:col('แหล่ง'),typ:col('ประเภท'),ref:col('หมายเหตุ')};
     if(ci.mat<0||ci.pr<0) throw new Error('หัวตารางไม่ครบ — ต้องมีอย่างน้อย รายการวัสดุ และ ราคา (กดปุ่ม ดาวน์โหลดแบบฟอร์ม ดูตัวอย่าง)');
     let ok=0,skip=0;
+    /* นับว่าไฟล์นี้เป็นของเดือนไหนบ้าง + มีกี่แถวที่ไม่ได้ระบุเดือน (ระบบเดาให้) — เอาไปเตือนหลังนำเข้า */
+    const mCount={}, noM={n:0};
     aoa.slice(1).forEach(r=>{
       const mat=String(r[ci.mat]||'').trim();
       const price=parseFloat(String(r[ci.pr]).replace(/,/g,''));
       if(!mat||!(price>0)){ if(mat||r[ci.pr]) skip++; return; }
+      /* ปี/เดือน ยึดตามคอลัมน์ในไฟล์ Excel เป็นหลักเสมอ
+         ช่องปี/เดือนบนหน้าจอเป็นแค่ค่าสำรอง ใช้เฉพาะตอนไฟล์ไม่มีคอลัมน์ หรือกรอกมาไม่ถูกต้อง */
       let y=ci.y>=0?parseInt(r[ci.y]):P.ylist[LAST]; if(!(y>=2500)) y=P.ylist[LAST];
-      let mo=ci.m>=0?r[ci.m]:P.months[LAST];
+      let mo=ci.m>=0?r[ci.m]:'';
       if(typeof mo==='string'){ const t=mo.trim(); mo=TH_ABBR[t]||parseInt(t); }
-      mo=+mo; if(!(mo>=1&&mo<=12)) mo=P.months[LAST];
+      mo=+mo;
+      if(!(mo>=1&&mo<=12)){ mo=P.months[LAST]; noM.n++; }   /* ไฟล์ไม่ได้ระบุเดือน - ระบบเดาให้ ต้องเตือน */
+      mCount[y*100+mo]=(mCount[y*100+mo]||0)+1;
       const src=ci.src>=0?String(r[ci.src]||'').trim():'';
       if(!src){ skip++; return; }
       queue.push({y,mo,mat,unit:ci.unit>=0?String(r[ci.unit]||'').trim():'',price,src,
@@ -2960,7 +2995,10 @@ function impInit(){
     });
     renderQueue();
     try{ drawNoGeo(); }catch(e){}
-    return {read:aoa.length-1,ok,skip,geo};
+    const TH_MS=['ม.ค.','ก.พ.','มี.ค.','เม.ย.','พ.ค.','มิ.ย.','ก.ค.','ส.ค.','ก.ย.','ต.ค.','พ.ย.','ธ.ค.'];
+    const months=Object.keys(mCount).sort().map(k=>({
+      lab: TH_MS[(+k%100)-1]+' '+String(Math.floor(+k/100)).slice(-2), n: mCount[k] }));
+    return {read:aoa.length-1,ok,skip,geo,months,noMonth:noM.n,sheet:priceSheet};
   };
   $('impXl').onclick=()=>$('impFile').click();
   $('impFile').onchange=async()=>{
@@ -2969,8 +3007,12 @@ function impInit(){
     if(typeof XLSX==='undefined'){ st.textContent='ตัวอ่าน .xlsx ยังไม่โหลด — ต่ออินเทอร์เน็ตแล้วรีเฟรช'; return; }
     try{
       const res=parseImpWb(XLSX.read(await f.arrayBuffer(),{type:'array'}));
-      st.innerHTML='อ่าน '+res.read+' แถว เข้าคิว '+res.ok+' รายการ'+(res.skip?' (ข้าม '+res.skip+' แถวไม่สมบูรณ์)':'')
-        +(res.geo?' · อ่านพิกัดจากชีต "แหล่งวัสดุ" '+res.geo+' แหล่ง — ดูการ์ด <b>แหล่งที่ยังไม่มีพิกัด</b>':'');
+      const ms=(res.months||[]).map(m=>m.lab+' ('+m.n.toLocaleString()+' แถว)').join(' · ');
+      st.innerHTML='อ่านชีต "'+esc(res.sheet||'')+'" '+res.read+' แถว เข้าคิว '+res.ok+' รายการ'+(res.skip?' (ข้าม '+res.skip+' แถวไม่สมบูรณ์)':'')
+        +(res.geo?' · อ่านพิกัดจากชีต "แหล่งวัสดุ" '+res.geo+' แหล่ง — ดูการ์ด <b>แหล่งที่ยังไม่มีพิกัด</b>':'')
+        +(ms?'<br><b>ไฟล์นี้เป็นราคาของเดือน:</b> '+esc(ms)+' <span class="hint">(ยึดตามคอลัมน์ "เดือน" ในไฟล์ ไม่ใช่ช่องเดือนบนหน้าจอ)</span>':'')
+        +(res.noMonth?'<br><span class="pill bad">'+res.noMonth+' แถวไม่ได้ระบุเดือนในไฟล์</span> ระบบใส่ '
+            +mLabI(LAST)+' ให้แทน — ตรวจคอลัมน์ "เดือน" ในไฟล์ก่อนส่งขึ้นคลัง':'');
     }catch(e){ st.textContent='อ่านไม่ได้: '+e.message; }
     $('impFile').value='';
   };
@@ -3282,7 +3324,7 @@ function sysInit(){
       <td class="num">${new Set(rs.map(s=>s[0])).size.toLocaleString()}</td>
       <td class="num">${new Set(rs.map(s=>s[1])).size}</td></tr>`;});
   $('tblSysStat').innerHTML=h+'</tbody>';
-  const cm=$('cMeta'); if(cm) cm.innerHTML='เริ่มพัฒนา สิงหาคม 2569 · เวอร์ชันปัจจุบัน v5.6 · '+(LIVE.on?'เชื่อมคลังข้อมูลแล้ว':'ยังไม่ได้เชื่อมคลัง');
+  const cm=$('cMeta'); if(cm) cm.innerHTML='เริ่มพัฒนา สิงหาคม 2569 · เวอร์ชันปัจจุบัน v5.7 · '+(LIVE.on?'เชื่อมคลังข้อมูลแล้ว':'ยังไม่ได้เชื่อมคลัง');
   $('sysInfo').innerHTML=`เวอร์ชัน: 5.1 · อัปเดต: 18 ส.ค. 2569<br>
     การเชื่อมราคาน้ำมันอัตโนมัติ: สร้างแท็บชื่อ <b>OIL</b> ในชีทคลังข้อมูล คอลัมน์ A=วันที่ B=จังหวัด C=ราคาดีเซล (หรือ A=วันที่ B=ราคา ถ้ามีเฉพาะขอนแก่น) แชร์แบบ อ่านได้ทุกคนที่มีลิงก์ — หน้าคำนวณระยะขนส่งจะอ่านราคาล่าสุดของจังหวัดที่เลือกให้เอง<br>
     ขอบเขตข้อมูลที่ฝังในไฟล์นี้: ${mLabI(0)} – ${mLabI(LAST)} (${P.series.length.toLocaleString()} คู่ราคา)<br>
