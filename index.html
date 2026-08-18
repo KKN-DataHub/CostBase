@@ -439,6 +439,11 @@ tr.detail>td{background:#F8F7F3;border-top:none;padding:10px 14px}
 .barlab{font-size:11px;margin-left:7px;color:var(--ink2);font-variant-numeric:tabular-nums}
 .barlab.up{color:#b23b3b;font-weight:600}
 .barlab.dn{color:#0b6b57;font-weight:600}
+/* แถบเติมข้อมูลที่ไฟล์ขาด */
+.fixbar{border:1px solid #E4C98A;background:#FDF6E7;border-radius:10px;padding:10px 12px}
+.fixbar .fx-h{font-size:12.5px;font-weight:700;color:#8a6212;margin-bottom:8px}
+.fixbar .fx-b{display:grid;grid-template-columns:200px 1fr auto;gap:10px;align-items:end}
+@media(max-width:820px){.fixbar .fx-b{grid-template-columns:1fr}}
 /* กล่องกราฟ — ล็อกความสูงไม่ให้กราฟกินพื้นที่จนไม่เห็นตารางข้างล่าง */
 .chartbox{position:relative;height:300px}
 @media(max-width:900px){.chartbox{height:240px}}
@@ -535,7 +540,7 @@ canvas{max-width:100%}
   <div class="brand">
     <h1>ระบบฐานข้อมูลวัสดุ</h1>
     <div class="sub">แขวงทางหลวงชนบทขอนแก่น</div>
-    <div class="chips"><span class="chip" id="bLatest">—</span><span class="chip">v5.7</span></div>
+    <div class="chips"><span class="chip" id="bLatest">—</span><span class="chip">v5.8</span></div>
   </div>
   <nav class="nav" id="nav">
     <button data-p="sum" class="active"><span class="ico">▦</span>หน้าสรุป</button>
@@ -780,14 +785,36 @@ canvas{max-width:100%}
   </div>
   <div class="grid2">
     <div class="card">
-      <h2 data-ic="pen">กรอกราคาสืบ (จากหน่วยงานรัฐ / แหล่งภายนอก)</h2>
+      <h2 data-ic="pen">เพิ่มราคาเข้าคิว</h2>
+      <div class="tabbar no-print" id="impTabs" style="border-bottom:1px solid var(--hairline);gap:0;margin-bottom:10px">
+        <button class="tabbtn on" data-im="man">✎ กรอกทีละรายการ</button>
+        <button class="tabbtn" data-im="xl">⬇ นำเข้าจากไฟล์ Excel</button>
+      </div>
+
+      <!-- ── โหมด 2: ไฟล์ Excel — ไม่ยืมค่าจากฟอร์มกรอกมือแม้แต่ช่องเดียว ── -->
+      <div id="impModeXl" style="display:none">
+        <div class="hint" style="margin-bottom:10px">
+          โหมดนี้ <b>อ่านจากไฟล์อย่างเดียว</b> ทุกคอลัมน์ — ปี · เดือน · รายการ · หน่วย · ราคา · แหล่ง · ประเภท · <b>ช่องทาง</b> · หมายเหตุ
+          <br>ช่องกรอกมือด้านซ้ายไม่มีผลกับไฟล์เลย จะได้ไม่ต้องกรอกซ้ำและไม่มีค่าตั้งต้นแอบติดไปกับข้อมูล
+        </div>
+        <div class="statusline">
+          <button class="btn" id="impXl">เลือกไฟล์ Excel</button>
+          <button class="btn ghost" id="impTpl">ดาวน์โหลดแบบฟอร์มเปล่า</button>
+        </div>
+        <div class="hint" id="impXlStat" style="margin-top:10px"></div>
+        <div id="impFixBox" style="margin-top:10px"></div>
+      </div>
+
+      <!-- ── โหมด 1: กรอกทีละรายการ ── -->
+      <div id="impModeMan">
       <div class="frow ymc">
         <div><label class="f">ปี พ.ศ.</label><input type="number" id="mYear" min="2560" max="2600"></div>
         <div><label class="f">เดือน</label><select id="mMonth"></select></div>
         <div><label class="f">ช่องทาง</label><select id="mChan">
-          <option value="กรอกเอง">สืบราคา / กรอกเอง</option>
+          <option value="ใบเสนอราคา">ใบเสนอราคา / หนังสือจากผู้ผลิต</option>
           <option value="หน่วยงานราชการ">หน่วยงานราชการ</option>
           <option value="เว็บร้านค้า">เว็บร้านค้า</option>
+          <option value="กรอกเอง">สืบราคา / กรอกเอง</option>
         </select></div>
       </div>
       <div class="frow cm">
@@ -805,20 +832,22 @@ canvas{max-width:100%}
       </div>
       <div id="mUrlBox" style="display:none"><label class="f">ลิงก์หน้าสินค้า (URL เว็บที่สืบราคา)</label><input type="url" id="mUrl" placeholder="วางลิงก์หน้าสินค้า เช่น https://www.globalhouse.co.th/..."></div>
       <label class="f">หมายเหตุ / ที่มา (เลขหนังสือ · ใบเสนอราคา · หน่วยงาน)</label><input type="text" id="mRef" placeholder="เช่น ใบเสนอราคา SQ.690801 ลว. 10 ส.ค. 69 · ไม่รวม VAT">
-      <label class="f" style="margin-top:10px">ชื่อผู้กรอก (แนบไปในอีเมลแจ้งผู้อนุมัติ)</label>
-      <input type="text" id="mBy" placeholder="เช่น สมชาย · กลุ่มวิชาการ" style="max-width:320px">
       <div style="display:flex;gap:8px;margin-top:12px;flex-wrap:wrap">
         <button class="btn" id="mAdd">เพิ่มเข้าคิว</button>
-        <button class="btn gold" id="mPush">📤 ส่งขออนุมัติขึ้นคลัง</button>
-        <button class="btn ghost" id="mCopy">คัดลอกคิว</button>
       </div>
-      <div class="hint" id="mPushStat" style="margin-top:8px"></div>
-      <div style="display:flex;gap:8px;margin-top:10px;border-top:1px solid var(--grid);padding-top:12px">
-        <input type="file" id="impFile" accept=".xlsx" style="display:none">
-        <button class="btn ghost" id="impXl">นำเข้าจากไฟล์ Excel</button>
-        <button class="btn ghost" id="impTpl">ดาวน์โหลดแบบฟอร์ม</button>
-        <span class="hint" id="impXlStat" style="align-self:center"></span>
+      </div><!-- /impModeMan -->
+
+      <!-- ── ส่วนที่ใช้ร่วมกันทั้งสองโหมด ── -->
+      <div style="margin-top:14px;border-top:1px solid var(--grid);padding-top:12px">
+        <label class="f">ชื่อผู้กรอก (แนบไปในอีเมลแจ้งผู้อนุมัติ)</label>
+        <input type="text" id="mBy" placeholder="เช่น สมชาย · กลุ่มวิชาการ" style="max-width:320px">
+        <div style="display:flex;gap:8px;margin-top:12px;flex-wrap:wrap">
+          <button class="btn gold" id="mPush">📤 ส่งขออนุมัติขึ้นคลัง</button>
+          <button class="btn ghost" id="mCopy">คัดลอกคิว</button>
+        </div>
+        <div class="hint" id="mPushStat" style="margin-top:8px"></div>
       </div>
+      <input type="file" id="impFile" accept=".xlsx" style="display:none">
     </div>
     <div>
     <div class="card" style="margin-bottom:12px">
@@ -843,7 +872,7 @@ canvas{max-width:100%}
     </div>
     <div class="card">
       <h2 data-ic="clock">คิวรอส่งขึ้นคลังข้อมูล <span class="pill warn" id="qStat">0 รายการ</span></h2>
-      <div class="tw" style="max-height:340px"><table id="tblQueue"><thead><tr><th>เดือน</th><th>รายการ</th><th>หน่วย</th><th class="num">ราคา</th><th>แหล่ง</th><th>อ้างอิง</th><th>สถานะชื่อ</th></tr></thead><tbody id="qRows"></tbody></table></div>
+      <div class="tw" style="max-height:340px"><table id="tblQueue"><thead><tr><th>เดือน</th><th>รายการ</th><th>หน่วย</th><th class="num">ราคา</th><th>แหล่ง</th><th>ช่องทาง</th><th>อ้างอิง</th><th>สถานะชื่อ</th></tr></thead><tbody id="qRows"></tbody></table></div>
     </div>
     </div>
   </div>
@@ -2940,7 +2969,7 @@ function impInit(){
     if(!(y>=2560&&y<=2600)){ alert('ตรวจปี พ.ศ. อีกครั้ง'); return; }
     const _url=($('mUrl').value||'').trim();
     const _ref=(_url?_url+' · ':'')+$('mRef').value.trim();
-    queue.push({y,mo,mat,unit,price,src,ref:_ref,typ:$('mType').value,chan:$('mChan').value,known:P.mats.includes(mat)||!!regStd(mat)});
+    queue.push({y,mo,mat,unit,price,src,ref:_ref,typ:$('mType').value,chan:$('mChan').value,fromFile:0,known:P.mats.includes(mat)||!!regStd(mat)});
     $('mMat').value='';$('mPrice').value='';$('mRef').value='';
     renderQueue(); try{ drawNoGeo(); }catch(e){}
   };
@@ -2968,7 +2997,8 @@ function impInit(){
     if(!aoa.length){ try{drawNoGeo();}catch(e){} return {read:0,ok:0,skip:0,geo}; }
     const hd=aoa[0].map(x=>String(x).trim());
     const col=t=>hd.findIndex(h=>h.includes(t));
-    const ci={y:col('ปี'),m:col('เดือน'),mat:col('รายการ'),unit:col('หน่วย'),pr:col('ราคา'),src:col('แหล่ง'),typ:col('ประเภท'),ref:col('หมายเหตุ')};
+    const ci={y:col('ปี'),m:col('เดือน'),mat:col('รายการ'),unit:col('หน่วย'),pr:col('ราคา'),
+              src:col('แหล่ง'),typ:col('ประเภท'),chan:col('ช่องทาง'),ref:col('หมายเหตุ')};
     if(ci.mat<0||ci.pr<0) throw new Error('หัวตารางไม่ครบ — ต้องมีอย่างน้อย รายการวัสดุ และ ราคา (กดปุ่ม ดาวน์โหลดแบบฟอร์ม ดูตัวอย่าง)');
     let ok=0,skip=0;
     /* นับว่าไฟล์นี้เป็นของเดือนไหนบ้าง + มีกี่แถวที่ไม่ได้ระบุเดือน (ระบบเดาให้) — เอาไปเตือนหลังนำเข้า */
@@ -2987,10 +3017,13 @@ function impInit(){
       mCount[y*100+mo]=(mCount[y*100+mo]||0)+1;
       const src=ci.src>=0?String(r[ci.src]||'').trim():'';
       if(!src){ skip++; return; }
+      /* ทุกช่องมาจากไฟล์เท่านั้น — ไม่หยิบค่าจากฟอร์มกรอกมือ
+         ช่องทางที่ไฟล์ไม่ได้ระบุ ปล่อยว่างไว้ก่อน แล้วให้เติมที่แถบซ่อมข้อมูลก่อนส่งขึ้นคลัง */
       queue.push({y,mo,mat,unit:ci.unit>=0?String(r[ci.unit]||'').trim():'',price,src,
         ref:ci.ref>=0?String(r[ci.ref]||'').trim():'',
-        typ:ci.typ>=0&&String(r[ci.typ]||'').trim()?String(r[ci.typ]).trim():$('mType').value,
-        chan:$('mChan').value, known:P.mats.includes(mat)||!!regStd(mat)});
+        typ:ci.typ>=0?String(r[ci.typ]||'').trim():'',
+        chan:ci.chan>=0?String(r[ci.chan]||'').trim():'',
+        fromFile:1, known:P.mats.includes(mat)||!!regStd(mat)});
       ok++;
     });
     renderQueue();
@@ -3000,6 +3033,12 @@ function impInit(){
       lab: TH_MS[(+k%100)-1]+' '+String(Math.floor(+k/100)).slice(-2), n: mCount[k] }));
     return {read:aoa.length-1,ok,skip,geo,months,noMonth:noM.n,sheet:priceSheet};
   };
+  /* สลับโหมด กรอกมือ ↔ ไฟล์ Excel */
+  document.querySelectorAll('#impTabs .tabbtn').forEach(b=>b.onclick=()=>{
+    document.querySelectorAll('#impTabs .tabbtn').forEach(x=>x.classList.toggle('on',x===b));
+    $('impModeMan').style.display = b.dataset.im==='man'?'':'none';
+    $('impModeXl').style.display  = b.dataset.im==='xl' ?'':'none';
+  });
   $('impXl').onclick=()=>$('impFile').click();
   $('impFile').onchange=async()=>{
     const f=($('impFile').files||[])[0]; if(!f) return;
@@ -3021,9 +3060,14 @@ function impInit(){
     /* แบบฟอร์ม 2 ชีต — ชีต "ราคา" คู่กับชีต "แหล่งวัสดุ"
        ชื่อแหล่งในชีตราคา ต้องสะกดตรงกับชีตแหล่งวัสดุ ระบบจะได้จับคู่พิกัดให้อัตโนมัติ
        ไม่มีพิกัด = คำนวณระยะขนส่งไม่ได้ */
-    const aoa=[['ปี พ.ศ.','เดือน','รายการวัสดุ','หน่วย','ราคา','แหล่งวัสดุ','ประเภท','หมายเหตุ'],
-      [P.ylist[LAST],P.months[LAST],'ยางแอสฟัลต์อิมัลชัน CSS-1h','ตัน',36500,'บจก.ตัวอย่าง','ยางแอสฟัลต์','ใบเสนอราคา SQ.xxxx ลว. ... · ไม่รวม VAT'],
-      [P.ylist[LAST],'ส.ค.','หินคลุก','ลบ.ม.',250,'โรงโม่ตัวอย่าง','หิน','เดือนใส่เป็นเลขหรือตัวย่อไทยก็ได้']];
+    const aoa=[['ปี พ.ศ.','เดือน','รายการวัสดุ','หน่วย','ราคา','แหล่งวัสดุ','ประเภท','ช่องทาง','หมายเหตุ'],
+      [P.ylist[LAST],P.months[LAST],'ยางแอสฟัลต์อิมัลชัน CSS-1h','ตัน',36500,'บจก.ตัวอย่าง','ยางแอสฟัลต์','ใบเสนอราคา','ใบเสนอราคา SQ.xxxx ลว. ... · ไม่รวม VAT'],
+      [P.ylist[LAST],'ส.ค.','หินคลุก','ลบ.ม.',250,'โรงโม่ตัวอย่าง','หิน','เว็บร้านค้า','เดือนใส่เป็นเลขหรือตัวย่อไทยก็ได้'],
+      [],['หมายเหตุ:'],
+      ['· ไฟล์นี้เป็นตัวกำหนดทุกอย่าง — ระบบไม่ดึงค่าจากช่องกรอกมือบนหน้าจอเลย'],
+      ['· ช่องทาง ใส่ได้: ใบเสนอราคา · หน่วยงานราชการ · เว็บร้านค้า · TPSO · กรอกเอง (ว่างไว้ได้ ระบบจะให้เติมทีหลังก่อนส่งขึ้นคลัง)'],
+      ['· หมายเหตุ ใส่เลขที่หนังสือ/ใบเสนอราคา + เงื่อนไข เช่น "ใบเสนอราคา SQ.690801 ลว. 10 ส.ค. 69 · ไม่รวม VAT"'],
+      ['· เดือนใส่เลข 1-12 หรือตัวย่อไทย (ส.ค.) ก็ได้ · แต่ละแถวเป็นคนละเดือนกันได้']];
     const aoaS=[['ชื่อแหล่ง','ละติจูด','ลองจิจูด','หมายเหตุ / ที่อยู่'],
       ['บจก.ตัวอย่าง',16.432100,102.823600,'ชื่อต้องสะกดตรงกับคอลัมน์ แหล่งวัสดุ ในชีตราคา'],
       ['โรงโม่ตัวอย่าง',16.680000,101.980000,'พิกัดเอาจาก Google Maps → คลิกขวาที่จุด → คลิกตัวเลขคู่แรก'],
@@ -3033,7 +3077,7 @@ function impInit(){
       ['· ใส่พิกัดชุดเดียวกันนี้ในชีต "แหล่งวัสดุ" ของไฟล์บัญชีคุมด้วย จะได้เป็นแม่แบบถาวร']];
     const wb=XLSX.utils.book_new();
     const ws=XLSX.utils.aoa_to_sheet(aoa);
-    ws['!cols']=[{wch:9},{wch:9},{wch:44},{wch:9},{wch:12},{wch:26},{wch:14},{wch:46}];
+    ws['!cols']=[{wch:9},{wch:9},{wch:44},{wch:9},{wch:12},{wch:26},{wch:14},{wch:18},{wch:52}];
     XLSX.utils.book_append_sheet(wb,ws,'ราคา');
     const wsS=XLSX.utils.aoa_to_sheet(aoaS);
     wsS['!cols']=[{wch:30},{wch:13},{wch:13},{wch:66}];
@@ -3046,6 +3090,8 @@ function impInit(){
   $('mPush').onclick=async()=>{
     const url=($('cfgUrl').value||'').trim(), st=$('mPushStat');
     if(!queue.length){ st.textContent='คิวว่าง — เพิ่มรายการก่อน'; return; }
+    const noChan=queue.filter(q=>!String(q.chan||'').trim()).length;
+    if(noChan){ st.innerHTML='<span class="up">ยังมี '+noChan+' แถวไม่ได้ระบุช่องทาง</span> — เติมที่แถบเตือนในโหมดนำเข้าไฟล์ก่อน'; return; }
     if(!url){ st.textContent='ยังไม่ตั้ง WebApp URL (ดูหน้า ระบบ)'; return; }
     const by=($('mBy').value||'').trim();
     if(!by){ st.innerHTML='<span class="up">ใส่ชื่อผู้กรอกก่อนส่ง</span>'; $('mBy').focus(); return; }
@@ -3217,8 +3263,45 @@ function impChips(){
 function renderQueue(){
   $('qStat').textContent=queue.length+' รายการ';
   const hi=$('hcImp'); if(hi) hi.innerHTML=impChips();
-  $('qRows').innerHTML=queue.map(q=>`<tr><td>${TH_M[q.mo-1]} ${String(q.y).slice(2)}</td><td>${esc(q.mat)}</td><td>${esc(q.unit)}</td><td class="num">${fmt(q.price)}</td><td>${esc(q.src)}</td><td>${esc(q.ref||'—')}</td>
+  $('qRows').innerHTML=queue.map(q=>`<tr><td>${TH_M[q.mo-1]} ${String(q.y).slice(2)}</td><td>${esc(q.mat)}</td><td>${esc(q.unit)}</td><td class="num">${fmt(q.price)}</td><td>${esc(q.src)}</td>
+    <td>${q.chan?esc(q.chan):'<span class="pill bad">ยังไม่ระบุ</span>'}</td><td>${esc(q.ref||'—')}</td>
     <td>${q.known?'<span class="pill ok">ตรงบัญชีคุม</span>':'<span class="pill warn">ชื่อใหม่ — รอจับคู่</span>'}</td></tr>`).join('');
+  drawImpFix();
+}
+
+/* ══════ แถบซ่อมข้อมูลที่ไฟล์ไม่ได้ระบุ ══════
+   โผล่เฉพาะตอนที่ไฟล์ขาดจริง ๆ — ไม่ใช่ให้กรอกซ้ำกับสิ่งที่มีอยู่แล้วในไฟล์
+   ตราบใดที่ยังมีแถวขาดช่องทาง ปุ่มส่งขึ้นคลังจะกดไม่ได้ กัน "ค่าตั้งต้นแอบติดไปกับข้อมูล" */
+const CHAN_OPTS=['ใบเสนอราคา','หน่วยงานราชการ','เว็บร้านค้า','TPSO','กรอกเอง'];
+function drawImpFix(){
+  const box=$('impFixBox'); if(!box) return;
+  const need=queue.filter(q=>!String(q.chan||'').trim());
+  const btn=$('mPush');
+  if(!need.length){
+    box.innerHTML=''; 
+    if(btn){ btn.disabled=false; btn.title=''; }
+    return;
+  }
+  if(btn){ btn.disabled=true; btn.title='ยังมีแถวที่ไม่ได้ระบุช่องทาง'; }
+  const months=[...new Set(need.map(q=>TH_M[q.mo-1]+' '+String(q.y).slice(2)))].join(' · ');
+  box.innerHTML=`<div class="fixbar">
+    <div class="fx-h">⚠ มี <b>${need.length}</b> แถวที่ไฟล์ไม่ได้ระบุ "ช่องทาง" (${esc(months)})</div>
+    <div class="fx-b">
+      <div><label class="f">ช่องทางของแถวเหล่านี้</label>
+        <select id="fxChan">${CHAN_OPTS.map(c=>`<option>${c}</option>`).join('')}</select></div>
+      <div><label class="f">หมายเหตุ / เลขที่เอกสาร (เติมเฉพาะแถวที่ยังว่าง)</label>
+        <input type="text" id="fxRef" placeholder="เช่น ใบเสนอราคา SQ.690801 ลว. 10 ส.ค. 69 · ไม่รวม VAT"></div>
+      <div style="align-self:end"><button class="btn" id="fxGo">เติมให้ครบ</button></div>
+    </div>
+    <div class="hint">เติมครั้งเดียวได้ทั้งชุด · ถ้าไฟล์ระบุมาแล้วบางแถว ระบบจะไม่ไปทับของเดิม
+      · อยากไม่ต้องเติมทุกครั้ง ให้ใส่คอลัมน์ "ช่องทาง" ไว้ในไฟล์เลย (มีในแบบฟอร์มเปล่าแล้ว)</div>
+  </div>`;
+  kddAll();
+  $('fxGo').onclick=()=>{
+    const c=$('fxChan').value, r=($('fxRef').value||'').trim();
+    queue.forEach(q=>{ if(!String(q.chan||'').trim()){ q.chan=c; if(r&&!q.ref) q.ref=r; } });
+    renderQueue();
+  };
 }
 
 /* ============ ส่งออกข้อมูล ============ */
@@ -3324,7 +3407,7 @@ function sysInit(){
       <td class="num">${new Set(rs.map(s=>s[0])).size.toLocaleString()}</td>
       <td class="num">${new Set(rs.map(s=>s[1])).size}</td></tr>`;});
   $('tblSysStat').innerHTML=h+'</tbody>';
-  const cm=$('cMeta'); if(cm) cm.innerHTML='เริ่มพัฒนา สิงหาคม 2569 · เวอร์ชันปัจจุบัน v5.7 · '+(LIVE.on?'เชื่อมคลังข้อมูลแล้ว':'ยังไม่ได้เชื่อมคลัง');
+  const cm=$('cMeta'); if(cm) cm.innerHTML='เริ่มพัฒนา สิงหาคม 2569 · เวอร์ชันปัจจุบัน v5.8 · '+(LIVE.on?'เชื่อมคลังข้อมูลแล้ว':'ยังไม่ได้เชื่อมคลัง');
   $('sysInfo').innerHTML=`เวอร์ชัน: 5.1 · อัปเดต: 18 ส.ค. 2569<br>
     การเชื่อมราคาน้ำมันอัตโนมัติ: สร้างแท็บชื่อ <b>OIL</b> ในชีทคลังข้อมูล คอลัมน์ A=วันที่ B=จังหวัด C=ราคาดีเซล (หรือ A=วันที่ B=ราคา ถ้ามีเฉพาะขอนแก่น) แชร์แบบ อ่านได้ทุกคนที่มีลิงก์ — หน้าคำนวณระยะขนส่งจะอ่านราคาล่าสุดของจังหวัดที่เลือกให้เอง<br>
     ขอบเขตข้อมูลที่ฝังในไฟล์นี้: ${mLabI(0)} – ${mLabI(LAST)} (${P.series.length.toLocaleString()} คู่ราคา)<br>
