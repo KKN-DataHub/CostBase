@@ -268,7 +268,7 @@ h2.sec{font-size:16px;color:var(--navy);margin:18px 0 10px;font-weight:700}
 @media(max-width:700px){.grid2,.grid3{grid-template-columns:1fr}}
 .page{display:none}.page.active{display:block}
 label.f{display:block;font-size:11.5px;color:var(--ink2);margin:10px 0 4px;font-weight:600}
-input[type=text],input[type=number],select{
+input[type=text],input[type=number],input[type=url],input[type=password],select{
   width:100%;padding:8px 10px;border:1px solid var(--grid);border-radius:var(--r-btn);
   font-family:inherit;font-size:13px;background:#fff;color:var(--ink)}
 input:focus,select:focus{outline:none;border-color:var(--teal);box-shadow:0 0 0 3px rgba(13,148,136,.10)}
@@ -458,7 +458,7 @@ canvas{max-width:100%}
   <div class="brand">
     <h1>ระบบฐานข้อมูลวัสดุ</h1>
     <div class="sub">แขวงทางหลวงชนบทขอนแก่น</div>
-    <div class="chips"><span class="chip" id="bLatest">—</span><span class="chip">v4.1</span></div>
+    <div class="chips"><span class="chip" id="bLatest">—</span><span class="chip">v4.2</span></div>
   </div>
   <nav class="nav" id="nav">
     <button data-p="sum" class="active"><span class="ico">▦</span>หน้าสรุป</button>
@@ -1312,7 +1312,7 @@ function buildSummary(){
   hc('hcImp',impChips());
   hc('hcExp',`<span class="ph-chip">● เดือนล่าสุด <b>${latestLabel}</b></span>
     <span class="ph-chip">${LIVE.on?'☁ รวมคลังสดแล้ว':'⚠ ยังไม่ได้เชื่อมคลัง'}</span>`);
-  hc('hcSys',`<span class="ph-chip">เวอร์ชัน <b>4.1</b></span>
+  hc('hcSys',`<span class="ph-chip">เวอร์ชัน <b>4.2</b></span>
     <span class="ph-chip">อัปเดต 18 ส.ค. 2569</span>`);
   const nRowsLast = P.series.filter(s=>s[4][LAST]!=null).length;
   /* พร้อมใช้ = มีราคาเดือนล่าสุด หรือมีราคาเดือนก่อนหน้าให้ยกยอด (ตามหลักเกณฑ์ยกยอดของระบบ)
@@ -1508,49 +1508,55 @@ function dieselIdx(){ let v=parseFloat($('dDiesel').value)||37.98; let b=Math.fl
 async function fetchOil(silent){
   const id=($('cfgSheet').value||'').trim(); const st=$('oilStat'); const prov=$('dProv').value;
   if(!id){ if(!silent) st.innerHTML='<span class="pill warn">ยังไม่ตั้งค่า Sheet (หน้า ระบบ)</span>'; return; }
-  /* ทางที่ 1: สั่ง WebApp ดึงราคาสดจาก ปตท. เดี๋ยวนี้ (Code.gs รุ่น 11 ขึ้นไป) — ไม่ต้องรอทริกเกอร์รายวัน */
-  if(!silent){
-    const url=($('cfgUrl').value||'').trim();
-    if(url){
-      st.textContent='กำลังดึงราคาสดจาก ปตท. …';
-      try{
-        const r=await fetch(url,{method:'POST',headers:{'Content-Type':'text/plain;charset=utf-8'},
-          body:JSON.stringify({token:WTOKEN,action:'oil_now',prov})});
-        const res=await r.json();
-        if(res.ok&&res.price>=20&&res.price<70){
-          $('dDiesel').value=(+res.price).toFixed(2); oilMeta={date:res.date,prov:res.prov};
-          st.innerHTML=`<span class="pill ok">สดจาก ปตท. · ${esc(res.prov)} · ${esc(res.date)}</span> บันทึกเข้าชีท OIL แล้ว`;
-          dieselIdx(); renderAll(); return;
-        }
-        if(res.ok&&res.price===undefined){
-          st.innerHTML='<span class="pill bad">ชีทยังใช้ Code.gs รุ่นเก่า</span> วาง Code.gs รุ่น 11 (จากโฟลเดอร์ 01.ระบบ) ใน Apps Script'
-            +' → Deploy → Manage deployments → ✏ → <b>New version</b> แล้วกดปุ่มนี้อีกครั้ง'; return;
-        }
-        if(res.error){
-          st.innerHTML='<span class="pill bad">ดึงจาก ปตท. ไม่สำเร็จ</span> '+esc(res.error)
-            +' — รัน testOilFetch ใน Apps Script ดู Execution log'; return;
-        }
-      }catch(e){ /* ตกไปอ่านชีทตามเดิม */ }
-    }
-  }
+  const useHit=(dt,pv,pr,extra)=>{ $('dDiesel').value=(+pr).toFixed(2); oilMeta={date:dt,prov:pv};
+    st.innerHTML=`<span class="pill ok">${extra||'จากชีท OIL'} · ${esc(pv)} · ${esc(dt)}</span>`;
+    dieselIdx(); renderAll(); };
+  /* ขั้น 1 — อ่านชีท OIL ก่อนเสมอ (เร็ว ~1 วิ) · ถ้ามีราคาของวันนี้แล้ว จบเลยไม่ต้องยิงสด */
   if(!silent) st.textContent='กำลังอ่านชีท OIL …';
+  let hit=null;
   try{
     const r=await fetch(`https://docs.google.com/spreadsheets/d/${id}/gviz/tq?tqx=out:csv&sheet=OIL`);
-    if(!r.ok) throw 0;
-    const rows=(await r.text()).trim().split(/\r?\n/).map(l=>l.split(',').map(c=>c.replace(/^"|"$/g,'')));
-    for(let i=rows.length-1;i>=1;i--){
-      const c=rows[i];
-      let dt=c[0], pv=null, pr=null;
-      if(c.length>=3 && isNaN(parseFloat(c[1]))){ pv=c[1]; pr=parseFloat(c[2]); }
-      else { pv='ขอนแก่น'; pr=parseFloat(c[1]); }
-      if(!(pr>=20&&pr<70)) continue;
-      if(pv!==prov) continue;
-      $('dDiesel').value=pr.toFixed(2); oilMeta={date:dt,prov:pv};
-      st.innerHTML=`<span class="pill ok">อัตโนมัติจากชีท · ${esc(pv)} · ${esc(dt)}</span>`;
-      dieselIdx(); renderAll(); return;
+    if(r.ok){
+      const rows=(await r.text()).trim().split(/\r?\n/).map(l=>l.split(',').map(c=>c.replace(/^"|"$/g,'')));
+      for(let i=rows.length-1;i>=1;i--){
+        const c=rows[i];
+        let dt=c[0], pv=null, pr=null;
+        if(c.length>=3 && isNaN(parseFloat(c[1]))){ pv=c[1]; pr=parseFloat(c[2]); }
+        else { pv=PROVS[0]; pr=parseFloat(c[1]); }
+        if(!(pr>=20&&pr<70)) continue;
+        if(pv!==prov) continue;
+        hit={dt:String(dt).trim(),pv,pr}; break;
+      }
     }
-    st.innerHTML=`<span class="pill warn">ไม่พบราคา ${esc(prov)} ในชีท — กรอกเอง</span>`;
-  }catch(e){ st.innerHTML='<span class="pill warn">ยังเชื่อมชีทไม่ได้ — กรอกเอง</span>'; }
+  }catch(e){}
+  const _d=new Date();
+  const today=String(_d.getDate()).padStart(2,'0')+'/'+String(_d.getMonth()+1).padStart(2,'0')+'/'+(_d.getFullYear()+543);
+  if(hit&&(silent||hit.dt===today)){ useHit(hit.dt,hit.pv,hit.pr,hit.dt===today?'ราคาวันนี้จากชีท':'จากชีท OIL'); return; }
+  if(silent) return;
+  /* ขั้น 2 — ชีทยังไม่มีราคาวันนี้ → สั่ง WebApp ดึงสดจาก ปตท. (Code.gs รุ่น 11 ขึ้นไป · ครั้งแรกของวัน ~5-10 วิ) */
+  const url=($('cfgUrl').value||'').trim();
+  if(url){
+    st.textContent='ชีทยังไม่มีราคาวันนี้ — กำลังดึงสดจาก ปตท. (~5-10 วิ) …';
+    try{
+      const r=await fetch(url,{method:'POST',headers:{'Content-Type':'text/plain;charset=utf-8'},
+        body:JSON.stringify({token:WTOKEN,action:'oil_now',prov})});
+      const res=await r.json();
+      if(res.ok&&res.price>=20&&res.price<70){
+        useHit(res.date,res.prov,res.price,'สดจาก ปตท.');
+        st.innerHTML+=' บันทึกเข้าชีท OIL แล้ว — ครั้งต่อไปของวันนี้จะเร็วทันที'; return;
+      }
+      if(res.ok&&res.price===undefined){
+        st.innerHTML='<span class="pill bad">ชีทยังใช้ Code.gs รุ่นเก่า</span> วาง Code.gs รุ่นล่าสุดจากโฟลเดอร์ 01.ระบบ'
+          +' → Deploy → Manage deployments → ✏ → <b>New version</b>';
+      } else if(res.error){
+        st.innerHTML='<span class="pill bad">ดึงจาก ปตท. ไม่สำเร็จ</span> '+esc(res.error)
+          +' — เมนู ระบบวัสดุ ในชีท → ทดสอบดึงราคาน้ำมัน เพื่อดูรายละเอียด';
+      }
+    }catch(e){ st.innerHTML='<span class="pill warn">ต่อ WebApp ไม่ได้ — ตรวจ URL ที่หน้า ระบบ</span>'; }
+  }
+  if(hit){ st.innerHTML+=`<br><span class="pill warn">ใช้ราคาล่าสุดที่มีในชีทไปก่อน · ${esc(hit.pv)} · ${esc(hit.dt)}</span>`;
+    $('dDiesel').value=hit.pr.toFixed(2); oilMeta={date:hit.dt,prov:hit.pv}; dieselIdx(); renderAll(); return; }
+  if(!url) st.innerHTML=`<span class="pill warn">ไม่พบราคา ${esc(prov)} ในชีท — กรอกเอง</span>`;
 }
 function rateOf(truck,unit,km,di){const M=RATES[(unit==='v'?'v':'t')+truck];km=Math.max(1,Math.round(km));
   if(km>200)return M[200][di]*km; return M[km-1][di];}
@@ -2433,8 +2439,8 @@ function sysInit(){
       <td class="num">${new Set(rs.map(s=>s[0])).size.toLocaleString()}</td>
       <td class="num">${new Set(rs.map(s=>s[1])).size}</td></tr>`;});
   $('tblSysStat').innerHTML=h+'</tbody>';
-  const cm=$('cMeta'); if(cm) cm.innerHTML='เริ่มพัฒนา สิงหาคม 2569 · เวอร์ชันปัจจุบัน v4.1 · '+(LIVE.on?'เชื่อมคลังข้อมูลแล้ว':'ยังไม่ได้เชื่อมคลัง');
-  $('sysInfo').innerHTML=`เวอร์ชัน: 4.1 · อัปเดต: 18 ส.ค. 2569<br>
+  const cm=$('cMeta'); if(cm) cm.innerHTML='เริ่มพัฒนา สิงหาคม 2569 · เวอร์ชันปัจจุบัน v4.2 · '+(LIVE.on?'เชื่อมคลังข้อมูลแล้ว':'ยังไม่ได้เชื่อมคลัง');
+  $('sysInfo').innerHTML=`เวอร์ชัน: 4.2 · อัปเดต: 18 ส.ค. 2569<br>
     การเชื่อมราคาน้ำมันอัตโนมัติ: สร้างแท็บชื่อ <b>OIL</b> ในชีทคลังข้อมูล คอลัมน์ A=วันที่ B=จังหวัด C=ราคาดีเซล (หรือ A=วันที่ B=ราคา ถ้ามีเฉพาะขอนแก่น) แชร์แบบ อ่านได้ทุกคนที่มีลิงก์ — หน้าคำนวณระยะขนส่งจะอ่านราคาล่าสุดของจังหวัดที่เลือกให้เอง<br>
     ขอบเขตข้อมูลที่ฝังในไฟล์นี้: ${mLabI(0)} – ${mLabI(LAST)} (${P.series.length.toLocaleString()} คู่ราคา)<br>
     ชีทกลาง: 01.0 คลังข้อมูลวัสดุก่อสร้าง (แท็บ PRICES + OIL + REGISTRY) · เปิดหน้าเว็บครั้งใด ระบบอ่านแท็บ PRICES มารวมกับข้อมูลฝังให้อัตโนมัติ — ราคา TPSO เดือนใหม่และราคากรอกเองจึงขึ้นจอโดยไม่ต้องแก้ไฟล์นี้<br>
