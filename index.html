@@ -464,7 +464,7 @@ canvas{max-width:100%}
   <div class="brand">
     <h1>ระบบฐานข้อมูลวัสดุ</h1>
     <div class="sub">แขวงทางหลวงชนบทขอนแก่น</div>
-    <div class="chips"><span class="chip" id="bLatest">—</span><span class="chip">v4.9</span></div>
+    <div class="chips"><span class="chip" id="bLatest">—</span><span class="chip">v5.0</span></div>
   </div>
   <nav class="nav" id="nav">
     <button data-p="sum" class="active"><span class="ico">▦</span>หน้าสรุป</button>
@@ -1370,7 +1370,7 @@ function buildSummary(){
   hc('hcImp',impChips());
   hc('hcExp',`<span class="ph-chip">● เดือนล่าสุด <b>${latestLabel}</b></span>
     <span class="ph-chip">${LIVE.on?'☁ รวมคลังสดแล้ว':'⚠ ยังไม่ได้เชื่อมคลัง'}</span>`);
-  hc('hcSys',`<span class="ph-chip">เวอร์ชัน <b>4.9</b></span>
+  hc('hcSys',`<span class="ph-chip">เวอร์ชัน <b>5.0</b></span>
     <span class="ph-chip">อัปเดต 18 ส.ค. 2569</span>`);
   const nRowsLast = P.series.filter(s=>s[4][LAST]!=null).length;
   /* พร้อมใช้ = มีราคาเดือนล่าสุด หรือมีราคาเดือนก่อนหน้าให้ยกยอด (ตามหลักเกณฑ์ยกยอดของระบบ)
@@ -1425,28 +1425,30 @@ function buildSummary(){
       ['หินคลุก', /หินคลุก/], ['ลูกรัง', /ลูกรัง/], ['ดินถม', /ดินถม/],
       ['ทรายหยาบ', /ทรายหยาบ/]]],
     ['งานผิวทาง', [
-      ['ยางแอสฟัลต์ AC 40/50', /AC[ .-]?40\/50|เกรด ?40\/50/i],
-      ['ยางแอสฟัลต์ AC 60/70', /AC[ .-]?60\/70|เกรด ?60\/70/i],
-      ['ยาง EAP', /\bEAP\b|อีเอพี/i],
-      ['ยาง CRS-1', /CRS[ .-]?1\b/i],
-      ['ยาง Rejuvenator', /reju|รีจู/i]]],
+      ['ยางแอสฟัลต์ AC 40/50', /AC[ .-]?40\/50|เกรด ?40\/50/i, /ตัน/],
+      ['ยางแอสฟัลต์ AC 60/70', /AC[ .-]?60\/70|เกรด ?60\/70/i, /ตัน/],
+      ['ยาง EAP', /\bEAP\b|อีเอพี/i, /ตัน/],
+      ['ยาง CRS-2', /CRS[ .-]?2\b/i, /ตัน/],
+      ['ยาง Rejuvenator', /reju|รีจู/i, /ตัน/],
+      ['น้ำมันดีเซล', /ดีเซล/, /ลิตร/]]],
     ['งานโครงสร้าง', [
-      ['ปูนซีเมนต์ปอร์ตแลนด์', /ปอร์ตแลนด์/],
-      ['ปูนซีเมนต์ไฮดรอลิก', /ไฮดรอลิก/],
-      ['เหล็กเส้นกลม SR.24', /^(?![\s\S]*(ตะแกรง|wiremesh|ไวร์เมช))[\s\S]*(เหล็กเส้นกลมผิวเรียบ|SR\.? ?24)/i],
-      ['เหล็กข้ออ้อย SD.40', /^(?![\s\S]*(ตะแกรง|wiremesh|ไวร์เมช))[\s\S]*ข้ออ้อย[\s\S]*SD\.? ?40/i],
-      ['คอนกรีตผสมเสร็จ 350 ksc', /คอนกรีตผสมเสร็จ[\s\S]*350/],
+      ['ปูนซีเมนต์ปอร์ตแลนด์', /ปอร์ตแลนด์/, /ตัน/],
+      ['ปูนซีเมนต์ไฮดรอลิก', /^(?![\s\S]*ท่อ)[\s\S]*ไฮดรอลิก/, /ตัน/],
+      ['เหล็กเส้นกลม SR.24', /^(?![\s\S]*(ตะแกรง|wiremesh|ไวร์เมช))[\s\S]*(เหล็กเส้นกลมผิวเรียบ|SR\.? ?24)/i, /ตัน/],
+      ['เหล็กข้ออ้อย SD.40', /^(?![\s\S]*(ตะแกรง|wiremesh|ไวร์เมช))[\s\S]*ข้ออ้อย[\s\S]*SD\.? ?40/i, /ตัน/],
+      ['คอนกรีตผสมเสร็จ 350 ksc', /คอนกรีตผสมเสร็จ[\s\S]*350/, /ลบ\.?ม/],
       ['Wiremesh RB 6 @0.20 ม.', /(RB ?6\b|ผิวเรียบ[\s\S]*(ศก\.? ?6\b|6 ?มม))[\s\S]*0\.20? ?x ?0\.20?/i]]],
     ['งานไฟฟ้า', [
-      ['สาย CV 25 ตร.มม.', /\bCV\b[\s\S]*(x ?25\b|ขนาด ?25\b)/i],
-      ['สาย VCT-G 2.5', /VCT-?G[\s\S]*2\.5/i],
-      ['สาย NYY 25 ตร.มม.', /NYY[\s\S]*(x ?25\b|ขนาด ?25\b)/i],
-      ['RCBO 10A', /RCBO[\s\S]*10/i],
-      ['MCB 80A', /\bMCB\b[\s\S]*80|เมนเบรกเกอร์[\s\S]*80/i]]],
+      ['สาย CV 2x25 ตร.มม.', /\bCV\b[\s\S]*2 ?x ?25\b/i, /เมตร|ม\./],
+      ['สาย VCT-G 2x2.5', /VCT(-?G)?[\s\S]*2 ?x ?2\.5\b/i, /เมตร|ม\./],
+      ['สาย NYY 2x25 ตร.มม.', /NYY[\s\S]*2 ?x ?25\b/i, /เมตร|ม\./],
+      ['RCBO 10A', /RCBO[\s\S]*10 ?A/i],
+      ['MCB 1P 10A', /\bMCB\b[\s\S]*10 ?A|เบรกเกอร์ ขนาด ?10/i]]],
   ];
-  const kcard = ([label,re])=>{
+  const kcard = ([label,re,unitRe])=>{
     const mi = new Set(); P.mats.forEach((m,i)=>{ if(re.test(m)) mi.add(i); });
-    const ss = P.series.filter(s=>mi.has(s[0]));
+    let ss = P.series.filter(s=>mi.has(s[0]));
+    if(unitRe) ss = ss.filter(s=>unitRe.test(P.units[s[2]]||''));   /* ล็อกหน่วย กันคนละไอเท็ม (ถุง/ถัง/ชุด ปนตัน) */
     if(!ss.length) return `<div class="kcard"><div class="t">${label}</div><div class="v" style="color:var(--muted)">—</div><div class="s">ยังไม่มีในคลัง</div></div>`;
     /* cheapest at latest available month */
     let best=null, bestPrev=null;
@@ -2609,8 +2611,8 @@ function sysInit(){
       <td class="num">${new Set(rs.map(s=>s[0])).size.toLocaleString()}</td>
       <td class="num">${new Set(rs.map(s=>s[1])).size}</td></tr>`;});
   $('tblSysStat').innerHTML=h+'</tbody>';
-  const cm=$('cMeta'); if(cm) cm.innerHTML='เริ่มพัฒนา สิงหาคม 2569 · เวอร์ชันปัจจุบัน v4.9 · '+(LIVE.on?'เชื่อมคลังข้อมูลแล้ว':'ยังไม่ได้เชื่อมคลัง');
-  $('sysInfo').innerHTML=`เวอร์ชัน: 4.9 · อัปเดต: 18 ส.ค. 2569<br>
+  const cm=$('cMeta'); if(cm) cm.innerHTML='เริ่มพัฒนา สิงหาคม 2569 · เวอร์ชันปัจจุบัน v5.0 · '+(LIVE.on?'เชื่อมคลังข้อมูลแล้ว':'ยังไม่ได้เชื่อมคลัง');
+  $('sysInfo').innerHTML=`เวอร์ชัน: 5.0 · อัปเดต: 18 ส.ค. 2569<br>
     การเชื่อมราคาน้ำมันอัตโนมัติ: สร้างแท็บชื่อ <b>OIL</b> ในชีทคลังข้อมูล คอลัมน์ A=วันที่ B=จังหวัด C=ราคาดีเซล (หรือ A=วันที่ B=ราคา ถ้ามีเฉพาะขอนแก่น) แชร์แบบ อ่านได้ทุกคนที่มีลิงก์ — หน้าคำนวณระยะขนส่งจะอ่านราคาล่าสุดของจังหวัดที่เลือกให้เอง<br>
     ขอบเขตข้อมูลที่ฝังในไฟล์นี้: ${mLabI(0)} – ${mLabI(LAST)} (${P.series.length.toLocaleString()} คู่ราคา)<br>
     ชีทกลาง: 01.0 คลังข้อมูลวัสดุก่อสร้าง (แท็บ PRICES + OIL + REGISTRY) · เปิดหน้าเว็บครั้งใด ระบบอ่านแท็บ PRICES มารวมกับข้อมูลฝังให้อัตโนมัติ — ราคา TPSO เดือนใหม่และราคากรอกเองจึงขึ้นจอโดยไม่ต้องแก้ไฟล์นี้<br>
