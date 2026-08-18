@@ -316,11 +316,12 @@ h2 .ic{color:var(--teal)}
 .frow{display:grid;gap:10px;align-items:end}
 .frow.ymc{grid-template-columns:96px 150px minmax(160px,1fr)}
 .frow.cm{grid-template-columns:minmax(150px,.8fr) minmax(220px,2fr)}
-.frow.upt{grid-template-columns:minmax(120px,.9fr) 140px minmax(140px,1fr)}
+.frow.upt{grid-template-columns:110px 130px minmax(150px,1fr)}
 .frow.src{grid-template-columns:minmax(220px,1fr)}
 .frow.src.two{grid-template-columns:minmax(220px,1fr) minmax(200px,1fr)}
+.frow.cl{grid-template-columns:minmax(220px,1.1fr) minmax(180px,1fr)}
 #mYear{text-align:center}
-@media(max-width:900px){.frow.ymc,.frow.cm,.frow.upt,.frow.src.two{grid-template-columns:1fr}}
+@media(max-width:900px){.frow.ymc,.frow.cm,.frow.upt,.frow.src.two,.frow.cl{grid-template-columns:1fr}}
 .kdd{position:relative;width:100%}
 .kdd input.kdd-inp{width:100%;background:#fff;border:1.5px solid var(--grid);border-radius:10px;
   padding:9px 34px 9px 12px;font:inherit;font-size:13px;color:var(--ink);cursor:pointer;height:38px;
@@ -440,7 +441,7 @@ canvas{max-width:100%}
   <div class="brand">
     <h1>ระบบฐานข้อมูลวัสดุ</h1>
     <div class="sub">แขวงทางหลวงชนบทขอนแก่น</div>
-    <div class="chips"><span class="chip" id="bLatest">—</span><span class="chip">v3.7</span></div>
+    <div class="chips"><span class="chip" id="bLatest">—</span><span class="chip">v3.9</span></div>
   </div>
   <nav class="nav" id="nav">
     <button data-p="sum" class="active"><span class="ico">▦</span>หน้าสรุป</button>
@@ -465,12 +466,12 @@ canvas{max-width:100%}
   </div>
   <div class="kpis" id="sumKpis"></div>
   <div class="card" style="margin-bottom:12px">
-    <h2><span class="ic">${ICON.law}</span>หลักเกณฑ์ราคากลางที่ระบบใช้อ้างอิง</h2>
+    <h2 data-ic="law">หลักเกณฑ์ราคากลางที่ระบบใช้อ้างอิง</h2>
     <div class="lawgrid" id="lawGrid"></div>
   </div>
   <div class="grid2">
     <div class="card">
-      <h2>เช็คลิสต์การอัปเดต แยกตามประเภท</h2>
+      <h2 data-ic="check">เช็คลิสต์การอัปเดต แยกตามประเภท</h2>
       <div class="tw" style="max-height:330px"><table id="tblCheck"></table></div>
     </div>
     <div class="card">
@@ -486,9 +487,9 @@ canvas{max-width:100%}
     <div class="newsitem"><span class="nd">ม.ค. 69 · สนค. กระทรวงพาณิชย์</span><br><a href="https://www.tpso.go.th/news/2602-0000000007" target="_blank">ดัชนีสูงขึ้นเล็กน้อย</a> ราคาสินค้าวัสดุก่อสร้างเคลื่อนไหวในกรอบจำกัด</div>
     <div class="cap">ชุดข่าวอัปเดตพร้อมรอบข้อมูลรายเดือน · แหล่งข่าวหลัก: tpso.go.th (แถลงดัชนีทุกต้นเดือน) และหนังสือเวียนกรมบัญชีกลาง gprocurement.go.th</div>
   </div>
-  <h2 class="sec">สรุปราคาวัสดุหลักประจำเดือน — เอาแหล่งที่ถูกสุดขึ้นก่อน</h2>
+  <h2 class="sec" data-ic="tag">สรุปราคาวัสดุหลักประจำเดือน — เอาแหล่งที่ถูกสุดขึ้นก่อน</h2>
   <div id="keyCards"></div>
-  <h2 class="sec">ภาพรวมตามประเภท</h2>
+  <h2 class="sec" data-ic="grid">ภาพรวมตามประเภท</h2>
   <div class="card"><div class="tw" style="max-height:420px"><table id="tblTypes"></table></div></div>
 </section>
 
@@ -513,7 +514,7 @@ canvas{max-width:100%}
   <div class="gridT">
     <div class="no-print">
       <div class="card">
-        <h2>1 · โครงการ</h2>
+        <h2 data-ic="pin">1 · โครงการ</h2>
         <label class="f">พิกัดกึ่งกลางโครงการ</label>
         <input type="text" id="dDest" value="16.4419, 102.8360">
         <label class="f">ชื่อโครงการ</label>
@@ -535,10 +536,10 @@ canvas{max-width:100%}
         </div>
         <div class="hint" id="oilStat" style="margin-top:6px">—</div>
         <div class="hint" id="dBand">—</div>
-        <div class="hint">เทียบสอบ: <a href="https://www.pttor.com/th/oil_price" target="_blank">ปตท.</a> · <a href="https://app.yotathai.com/oil/" target="_blank">โยธาไทย</a></div>
+        <div class="hint">เทียบสอบ: <a href="https://www.pttor.com/th/oil_price" target="_blank">ปตท.</a></div>
       </div>
       <div class="card" style="margin-top:12px">
-        <h2>3 · วัสดุที่จะเปรียบเทียบ</h2>
+        <h2 data-ic="box">3 · วัสดุที่จะเปรียบเทียบ</h2>
         <label class="f">หมวด (ตามบัญชีคุม)</label>
         <select id="dCat"></select>
         <label class="f">รายการวัสดุ</label>
@@ -582,7 +583,7 @@ canvas{max-width:100%}
       </div>
       <div id="viewMap" style="display:none">
         <div class="card" style="position:relative" id="mapCard">
-          <h2>แผนที่แหล่งวัสดุ</h2>
+          <h2 data-ic="map">แผนที่แหล่งวัสดุ</h2>
           <div id="map" style="height:560px"></div>
           <div class="dragbox" id="dbox"><div class="db-h"><span id="dboxT">—</span><span class="db-x" onclick="this.closest('.dragbox').style.display='none'">✕</span></div><div id="dboxB"></div></div>
         </div>
@@ -601,7 +602,7 @@ canvas{max-width:100%}
     </div>
   </div>
   <div class="card no-print">
-    <h2>เลือกดูสถิติ</h2>
+    <h2 data-ic="filter">เลือกดูสถิติ</h2>
     <div class="grid3">
       <div><label class="f">ประเภท</label><select id="sType"></select></div>
       <div><label class="f">รายการวัสดุ (พิมพ์ค้นหาได้)</label><select id="sMat"></select></div>
@@ -609,17 +610,17 @@ canvas{max-width:100%}
     </div>
   </div>
   <div class="card" style="margin-top:12px">
-    <h2 id="sTitle">เทรนด์ราคา</h2>
+    <h2 data-ic="chart" id="sTitle">เทรนด์ราคา</h2>
     <canvas id="sChart" height="110"></canvas>
     <div class="cap" id="sCap"></div>
   </div>
   <div class="grid2" style="margin-top:12px">
     <div class="card">
-      <h2>ราคาที่ขยับมากสุดในเดือนล่าสุด</h2>
+      <h2 data-ic="trend">ราคาที่ขยับมากสุดในเดือนล่าสุด</h2>
       <div class="tw" style="max-height:340px"><table id="tblMovers"></table></div>
     </div>
     <div class="card">
-      <h2>ตารางราคาของรายการที่เลือก (ทุกแหล่ง ทุกเดือน)</h2>
+      <h2 data-ic="table">ตารางราคาของรายการที่เลือก (ทุกแหล่ง ทุกเดือน)</h2>
       <div class="tw" style="max-height:340px"><table id="tblSeries"></table></div>
     </div>
   </div>
@@ -635,7 +636,7 @@ canvas{max-width:100%}
   </div>
   <div class="grid2">
     <div class="card">
-      <h2>กรอกราคาสืบ (จากหน่วยงานรัฐ / แหล่งภายนอก)</h2>
+      <h2 data-ic="pen">กรอกราคาสืบ (จากหน่วยงานรัฐ / แหล่งภายนอก)</h2>
       <div class="frow ymc">
         <div><label class="f">ปี พ.ศ.</label><input type="number" id="mYear" min="2560" max="2600"></div>
         <div><label class="f">เดือน</label><select id="mMonth"></select></div>
@@ -673,7 +674,7 @@ canvas{max-width:100%}
       </div>
     </div>
     <div class="card">
-      <h2>คิวรอส่งขึ้นคลังข้อมูล <span class="pill warn" id="qStat">0 รายการ</span></h2>
+      <h2 data-ic="clock">คิวรอส่งขึ้นคลังข้อมูล <span class="pill warn" id="qStat">0 รายการ</span></h2>
       <div class="tw" style="max-height:340px"><table id="tblQueue"><thead><tr><th>เดือน</th><th>รายการ</th><th>หน่วย</th><th class="num">ราคา</th><th>แหล่ง</th><th>อ้างอิง</th><th>สถานะชื่อ</th></tr></thead><tbody id="qRows"></tbody></table></div>
     </div>
   </div>
@@ -689,7 +690,7 @@ canvas{max-width:100%}
   </div>
   <div class="gridT">
     <div class="card">
-      <h2>ตั้งค่าการส่งออก</h2>
+      <h2 data-ic="gear">ตั้งค่าการส่งออก</h2>
       <label class="f">เดือน</label><select id="eMonth"></select>
       <label class="f" style="margin-top:12px">ยกยอดราคาเดือนก่อน เมื่อเดือนที่เลือกไม่มีราคา</label>
       <select id="eCarry"><option value="1" selected>เปิด — ใช้ราคาล่าสุดที่มี (แนะนำ)</option><option value="0">ปิด — เดือนไหนไม่มี ตัดทิ้ง</option></select>
@@ -702,7 +703,7 @@ canvas{max-width:100%}
       <div class="notebox teal" style="font-size:11.5px">Sheet1 · 5 คอลัมน์ · ยกยอดแนบชีต "หมายเหตุยกยอด"</div>
     </div>
     <div class="card">
-      <h2>ตัวอย่างข้อมูลที่จะส่งออก</h2>
+      <h2 data-ic="table">ตัวอย่างข้อมูลที่จะส่งออก</h2>
       <div class="tw" style="max-height:480px"><table id="tblPrev"></table></div>
     </div>
   </div>
@@ -750,8 +751,8 @@ canvas{max-width:100%}
   </div>
   <div class="card" style="margin-top:12px">
     <h2 data-ic="trash">ล้างข้อมูลในคลัง</h2>
-    <div class="frow ymc">
-      <div style="grid-column:1/3"><label class="f">ขอบเขตที่จะล้าง</label><select id="clScope">
+    <div class="frow cl">
+      <div><label class="f">ขอบเขตที่จะล้าง</label><select id="clScope">
         <option value="prices_month">ราคา — เฉพาะเดือนที่ระบุ</option>
         <option value="prices_channel">ราคา — เฉพาะช่องทางที่ระบุ</option>
         <option value="prices">ราคา — ทั้งแท็บ PRICES (เริ่มนับหนึ่งใหม่)</option>
@@ -1012,18 +1013,18 @@ async function loadLive(){
 function rerender(){
   [buildSummary, matInit, statInit, buildMovers, impInit, expInit, sysInit, drawMatChips]
     .forEach(f=>{ try{ f(); }catch(e){ console.error('rerender:', f.name, e); } });
-  kddAll(); paintIcons(); drawConn();
+  kddAll(); kfreeAll(); paintIcons(); drawConn();
 }
 
 /* ============ ไอคอน (SVG เส้นบาง ชุดเดียวกันทั้งระบบ) ============ */
 const _sv = d => `<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8"
   stroke-linecap="round" stroke-linejoin="round">${d}</svg>`;
 const ICON = {
-  law:   _sv('<path d="M12 3v18M5 7h14M7 7l-3 6a3 3 0 0 0 6 0zM17 7l3 6a3 3 0 0 1-6 0z"/>'),
+  law:   _sv('<path d="M12 4v17M6 21h12M5 8h14M12 4l-7 4M12 4l7 4"/><path d="M5 8l-2.2 5a2.6 2.6 0 0 0 4.4 0zM19 8l-2.2 5a2.6 2.6 0 0 0 4.4 0z"/>'),
   cloud: _sv('<path d="M17.5 19a4.5 4.5 0 0 0 .5-8.97A6 6 0 0 0 6.1 11.1 3.5 3.5 0 0 0 6.5 19z"/>'),
   book:  _sv('<path d="M4 5a2 2 0 0 1 2-2h12v18H6a2 2 0 0 1-2-2z"/><path d="M8 7h7M8 11h7"/>'),
   pin:   _sv('<path d="M12 21s7-6.4 7-11a7 7 0 1 0-14 0c0 4.6 7 11 7 11z"/><circle cx="12" cy="10" r="2.5"/>'),
-  fuel:  _sv('<path d="M4 21V5a2 2 0 0 1 2-2h6a2 2 0 0 1 2 2v16M3 21h13M7 8h6"/><path d="M17 9l2.5 2.5V17a1.8 1.8 0 1 0 3.5 0V9.5L20 6"/>'),
+  fuel:  _sv('<path d="M4 20V5a2 2 0 0 1 2-2h5a2 2 0 0 1 2 2v15M3 20h11M6.5 8h4"/><path d="M15.5 10h2.2a1.3 1.3 0 0 1 1.3 1.3V16a1.5 1.5 0 0 0 3 0V9l-2.5-2.5"/>'),
   trash: _sv('<path d="M4 7h16M9 7V5a1 1 0 0 1 1-1h4a1 1 0 0 1 1 1v2M6 7l1 13a1 1 0 0 0 1 1h8a1 1 0 0 0 1-1l1-13"/>'),
   up:    _sv('<path d="M12 19V5M6 11l6-6 6 6M4 21h16"/>'),
   chart: _sv('<path d="M4 20V10M10 20V4M16 20v-7M22 20H2"/>'),
@@ -1031,6 +1032,18 @@ const ICON = {
   link:  _sv('<path d="M10 13a5 5 0 0 0 7.5.5l2-2A5 5 0 0 0 12.5 4.5l-1.2 1.2"/><path d="M14 11a5 5 0 0 0-7.5-.5l-2 2A5 5 0 0 0 11.5 19.5l1.2-1.2"/>'),
   table: _sv('<rect x="3" y="4" width="18" height="16" rx="2"/><path d="M3 9h18M9 9v11"/>'),
   truck: _sv('<path d="M3 6h11v10H3zM14 9h4l3 3v4h-7z"/><circle cx="7" cy="18" r="1.8"/><circle cx="17.5" cy="18" r="1.8"/>'),
+  check: _sv('<path d="M9 11l3 3 8-8"/><path d="M20 12v7a2 2 0 0 1-2 2H6a2 2 0 0 1-2-2V6a2 2 0 0 1 2-2h9"/>'),
+  bulb:  _sv('<path d="M9 18h6M10 22h4"/><path d="M12 2a7 7 0 0 0-4 12.7V17h8v-2.3A7 7 0 0 0 12 2z"/>'),
+  box:   _sv('<path d="M21 8l-9-5-9 5 9 5 9-5z"/><path d="M3 8v8l9 5 9-5V8"/><path d="M12 13v8"/>'),
+  route: _sv('<circle cx="6" cy="6" r="2.5"/><circle cx="18" cy="18" r="2.5"/><path d="M8.5 6H15a3 3 0 0 1 0 6H9a3 3 0 0 0 0 6h6.5"/>'),
+  map:   _sv('<path d="M9 4L3 6.5v13L9 17l6 2.5 6-2.5v-13L15 6.5z"/><path d="M9 4v13M15 6.5v13"/>'),
+  filter:_sv('<path d="M3 5h18l-7 8v6l-4 2v-8z"/>'),
+  trend: _sv('<path d="M3 17l6-6 4 4 8-8"/><path d="M15 7h6v6"/>'),
+  pen:   _sv('<path d="M4 20h4L20 8a2.8 2.8 0 0 0-4-4L4 16z"/><path d="M14 6l4 4"/>'),
+  clock: _sv('<circle cx="12" cy="12" r="9"/><path d="M12 7v5l3 2"/>'),
+  tag:   _sv('<path d="M20.6 13.4L12 22l-9-9V3h10l7.6 7.6a2 2 0 0 1 0 2.8z"/><circle cx="7.5" cy="7.5" r="1.4"/>'),
+  grid:  _sv('<rect x="3" y="3" width="7" height="7" rx="1.4"/><rect x="14" y="3" width="7" height="7" rx="1.4"/><rect x="3" y="14" width="7" height="7" rx="1.4"/><rect x="14" y="14" width="7" height="7" rx="1.4"/>'),
+  doc:   _sv('<path d="M14 3H7a2 2 0 0 0-2 2v14a2 2 0 0 0 2 2h10a2 2 0 0 0 2-2V8z"/><path d="M14 3v5h5M9 13h6M9 17h6"/>'),
 };
 /* ใส่ไอคอนให้หัวการ์ดที่ระบุด้วย data-ic */
 function paintIcons(){
@@ -1089,10 +1102,13 @@ function kdd(sel){
     render(''); wrap.classList.add('open');
     const on=panel.querySelector('.kdd-it.on'); if(on) panel.scrollTop=Math.max(0,on.offsetTop-70);
   };
+  let justShut=0;
   inp.onmousedown=e=>{ e.stopPropagation();
-    if(wrap.classList.contains('open')) return;
+    if(wrap.classList.contains('open')){        /* กดซ้ำ = ย่อคืน */
+      e.preventDefault(); justShut=Date.now(); shut(); inp.blur(); return; }
     open(); setTimeout(()=>inp.select(),0); };
-  inp.onfocus=()=>{ if(!wrap.classList.contains('open')) open(); };
+  inp.onfocus=()=>{ if(Date.now()-justShut<250) return;
+    if(!wrap.classList.contains('open')) open(); };
   inp.oninput=()=>{ if(!wrap.classList.contains('open')) wrap.classList.add('open'); render(inp.value); };
   inp.onblur=()=>setTimeout(()=>{ if(wrap.classList.contains('open')) shut(); },60);
   inp.onkeydown=e=>{
@@ -1107,6 +1123,40 @@ function kdd(sel){
   lab();
 }
 function kddAll(){ document.querySelectorAll('select').forEach(kdd); }
+
+/* ── ช่องพิมพ์อิสระ + คำแนะนำ (แทน input list=datalist เดิม ให้หน้าตาเหมือน kdd ทุกที่) ── */
+function kfree(inp){
+  if(!inp || inp.dataset.kfree) return; inp.dataset.kfree='1';
+  const dlid=inp.getAttribute('list'); const dl=dlid?document.getElementById(dlid):null;
+  inp.removeAttribute('list');
+  const wrap=document.createElement('div'); wrap.className='kdd kfree';
+  inp.parentNode.insertBefore(wrap,inp); wrap.appendChild(inp);
+  inp.classList.add('kdd-inp'); inp.autocomplete='off';
+  const panel=document.createElement('div'); panel.className='kdd-panel';
+  wrap.appendChild(panel);
+  const render=()=>{
+    const q=kNorm(inp.value||'');
+    const all=dl?[...dl.querySelectorAll('option')].map(o=>o.value).filter(Boolean):[];
+    const hit=(q?all.filter(x=>kNorm(x).includes(q)):all).slice(0,KDD_CAP);
+    panel.innerHTML = hit.length
+      ? hit.map(x=>`<div class="kdd-it">${esc(x)}</div>`).join('')
+      : `<div class="kdd-more">${q?'ไม่พบในรายการ — พิมพ์เพื่อใช้ค่านี้เป็นค่าใหม่':'ยังไม่มีตัวเลือก — พิมพ์เพื่อกรอกเอง'}</div>`;
+    panel.querySelectorAll('.kdd-it').forEach(it=>it.onmousedown=e=>{
+      e.preventDefault(); inp.value=it.textContent; shut();
+      inp.dispatchEvent(new Event('change')); inp.blur(); });
+  };
+  const shut=()=>wrap.classList.remove('open');
+  wrap._close=shut;
+  const open=()=>{
+    document.querySelectorAll('.kdd.open').forEach(w=>{ if(w!==wrap&&w._close) w._close(); });
+    render(); wrap.classList.add('open');
+  };
+  inp.onfocus=open;
+  inp.oninput=()=>{ if(!wrap.classList.contains('open')) wrap.classList.add('open'); render(); };
+  inp.onblur=()=>setTimeout(()=>{ if(wrap.classList.contains('open')) shut(); },120);
+  inp.onkeydown=e=>{ if(e.key==='Escape'){ e.preventDefault(); shut(); inp.blur(); } };
+}
+function kfreeAll(){ document.querySelectorAll('input[list]').forEach(kfree); }
 document.addEventListener('mousedown',()=>document.querySelectorAll('.kdd.open').forEach(w=>w._close&&w._close()));
 setInterval(()=>{ document.querySelectorAll('select[data-kdd]').forEach(sel=>{
   const w=sel.closest('.kdd'); if(!w||w.classList.contains('open')) return;
@@ -1178,7 +1228,7 @@ function buildSummary(){
   hc('hcImp',impChips());
   hc('hcExp',`<span class="ph-chip">● เดือนล่าสุด <b>${latestLabel}</b></span>
     <span class="ph-chip">${LIVE.on?'☁ รวมคลังสดแล้ว':'⚠ ยังไม่ได้เชื่อมคลัง'}</span>`);
-  hc('hcSys',`<span class="ph-chip">เวอร์ชัน <b>3.7</b></span>
+  hc('hcSys',`<span class="ph-chip">เวอร์ชัน <b>3.9</b></span>
     <span class="ph-chip">อัปเดต 16 ส.ค. 2569</span>`);
   const nRowsLast = P.series.filter(s=>s[4][LAST]!=null).length;
   const nSrc = P.srcs.filter(s=>s).length;
@@ -1822,6 +1872,38 @@ function findKm(){
 }
 /* ── หลักเกณฑ์/หนังสือเวียนที่ระบบยึด (ข้อมูลนี้ฝังในไฟล์ถาวร) ── */
 const LAWS=[
+ {tag:'กฎหมายแม่บท',
+  title:'พ.ร.บ.จัดซื้อจัดจ้างและการบริหารพัสดุภาครัฐ',
+  doc:'พระราชบัญญัติการจัดซื้อจัดจ้างและการบริหารพัสดุภาครัฐ พ.ศ. ๒๕๖๐',
+  date:'มาตรา ๔ — นิยาม "ราคากลาง"',
+  li:['ราคากลางงานก่อสร้าง = ราคาที่คำนวณตาม<b>หลักเกณฑ์ที่คณะกรรมการราคากลางกำหนด</b>',
+      'ระบบนี้จึงยึดหลักเกณฑ์และตารางของกรมบัญชีกลางเป็นฐานทั้งหมด',
+      'ข้อมูลราคาที่ใช้ต้องตรวจสอบย้อนกลับได้ — ระบบเก็บที่มาทุกแถว'],
+  foot:'ทุกแถวในคลังบันทึก ช่องทาง · แหล่ง · เลขหนังสือ/ใบเสนอราคา · วันที่บันทึก'},
+ {tag:'หลักเกณฑ์ราคากลาง',
+  title:'ราคาวัสดุไม่รวมค่าขนส่ง',
+  doc:'หลักเกณฑ์การคำนวณราคากลางงานก่อสร้างทาง สะพาน และท่อเหลี่ยม',
+  date:'ข้อ ๙.๙.๘',
+  li:['ราคาวัสดุที่กรอกเข้าคลัง <b>ไม่รวมค่าขนส่ง</b> ทุกรายการ',
+      'ค่าขนส่งคิดแยกตามตาราง ว 477 ตามระยะจริงถึงหน่วยงาน',
+      'ระบบบังคับรูปแบบนี้ทั้งหน้านำเข้าและหน้าส่งออก'],
+  foot:'ป้ายกำกับ "ไม่รวมขนส่ง" แสดงทุกหน้าที่เกี่ยวกับราคา'},
+ {tag:'แหล่งราคาอ้างอิง',
+  title:'ราคาวัสดุจากพาณิชย์จังหวัด',
+  doc:'สำนักงานนโยบายและยุทธศาสตร์การค้า (สนค.) กระทรวงพาณิชย์',
+  date:'ดัชนีราคาวัสดุก่อสร้างรายเดือน',
+  li:['ใช้ราคาที่ประกาศโดยหน่วยงานรัฐเป็นฐานหลัก',
+      'เสริมด้วยราคาสืบจากหน่วยงานราชการอื่นและผู้ประกอบการในพื้นที่',
+      'ทุกช่องทางผ่าน<b>บัญชีคุมชื่อ-หน่วย-หมวด</b>ก่อนเข้าคลังจริง'],
+  foot:'ชื่อที่ไม่เคยพบเข้าคิว NEW_ITEMS รอจับคู่ ไม่หลุดเข้าคลังโดยไม่ตรวจ'},
+ {tag:'หลักเกณฑ์ของระบบ',
+  title:'วิธีเลือกราคาที่นำมาคิด',
+  doc:'แนวทางการทำงานของระบบนี้ (สอดคล้องข้อ ๙.๙.๘)',
+  date:'ใช้ทุกหน้าที่แสดงราคา',
+  li:['วัสดุ 1 รายการมีได้หลายแหล่ง — ระบบ<b>เอาแหล่งที่ราคารวมถูกที่สุดขึ้นก่อน</b>เสมอ (ราคาวัสดุ + ค่าขนส่งของแหล่งนั้น)',
+      'เดือนที่เลือกไม่มีราคาบันทึกไว้ → <b>ยกยอดราคาล่าสุดที่มี</b>มาใช้อัตโนมัติ (ปิดได้ที่หน้าส่งออกข้อมูล)',
+      'ไฟล์ส่งออกทุกแถวที่เป็นราคายกยอด ระบบทำเครื่องหมายกำกับไว้ให้ตรวจสอบย้อนกลับได้'],
+  foot:'ดูสูตรเต็มที่หน้า คำนวณระยะขนส่ง → เปรียบเทียบราคา + ค่าขนส่ง'},
  {main:1, tag:'ประกาศล่าสุด · ใช้อยู่ปัจจุบัน',
   title:'ตารางค่าขนส่งวัสดุก่อสร้าง',
   doc:'กรมบัญชีกลาง ด่วนที่สุด ที่ กค 0433.2/ว 477',
@@ -1832,14 +1914,15 @@ const LAWS=[
       'ตัวแปรสภาพผิวทาง × ภูมิประเทศ และตัวคูณ <b>F = D ÷ L</b>'],
   foot:'ฝังครบทุกค่าในระบบ · ตรวจทานกับตัวอย่างท้ายหนังสือแล้วตรงทุกหลัก (10 ล้อ · 50 กม. · ดีเซล 38 = 196.70 บาท/ลบ.ม.)',
   go:['เปิดตารางเต็ม', "document.querySelector('#nav button[data-p=dist]').click();setTimeout(()=>document.getElementById('tabFull').click(),60)"]},
- {tag:'หลักเกณฑ์ราคากลาง',
-  title:'ราคาวัสดุไม่รวมค่าขนส่ง',
-  doc:'หลักเกณฑ์การคำนวณราคากลางงานก่อสร้างทาง สะพาน และท่อเหลี่ยม',
-  date:'ข้อ ๙.๙.๘',
-  li:['ราคาวัสดุที่กรอกเข้าคลัง <b>ไม่รวมค่าขนส่ง</b> ทุกรายการ',
-      'ค่าขนส่งคิดแยกตามตาราง ว 477 ตามระยะจริงถึงหน่วยงาน',
-      'ระบบบังคับรูปแบบนี้ทั้งหน้านำเข้าและหน้าส่งออก'],
-  foot:'ป้ายกำกับ "ไม่รวมขนส่ง" แสดงทุกหน้าที่เกี่ยวกับราคา'},
+ {tag:'หลักเกณฑ์ของระบบ',
+  title:'วิธีวัดระยะทางขนส่ง (L)',
+  doc:'แนวทางการทำงานของระบบนี้ (ใช้กับตาราง ว 477 ข้อ L)',
+  date:'ใช้กับทุกแหล่งวัสดุที่ปักหมุดในบัญชีคุม',
+  li:['วัด <b>ระยะทางจริงตามเส้นทางถนน</b> จากแหล่งวัสดุถึงจุดกึ่งกลางโครงการ ไม่ใช่ระยะเส้นตรง (โปรแกรมนำทาง OSRM/OpenStreetMap)',
+      'ทุกครั้งมีลิงก์เปิด Google Maps เทียบระยะที่วัดได้ก่อนใช้จริง — พบผิดปกติแก้ค่าเองได้',
+      'กรอกระยะทางเองได้เสมอ (กรอกน้อยกว่าที่วัดได้ แต่ห้ามเกิน) กรณีทราบเส้นทางจริงที่ต่างจากระบบนำทาง',
+      'ระยะทางรวมของงานแบ่งช่วงได้หลายช่วง หลายชนิดรถ (เช่น ลาดยาง 6 ล้อ ต่อด้วยลูกรัง 10 ล้อ)'],
+  foot:'ตัวคูณ F = D ÷ L คำนวณต่อจากระยะนี้ทันที (ดูค่า D ที่การ์ด ตารางค่าขนส่งวัสดุก่อสร้าง)'},
  {tag:'แนวทางในเล่ม ว 477',
   title:'การเลือกชนิดรถบรรทุก',
   doc:'ตารางแนบท้ายหนังสือ ว 477',
@@ -1855,7 +1938,15 @@ const LAWS=[
   li:['ใช้ราคาดีเซล <b>ที่ อ.เมือง ของจังหวัดที่ก่อสร้าง</b>',
       'ราคาตกช่วงใด ให้ใช้ตารางของช่วงนั้น (ช่วงละ 1 บาท)',
       'ระบบดึงราคาเข้าชีท OIL ให้อัตโนมัติทุกเช้า'],
-  foot:'เทียบสอบได้ที่ pttor.com และ app.yotathai.com/oil'},
+  foot:'เทียบสอบราคาได้ที่ pttor.com'},
+ {tag:'องค์ประกอบราคากลาง',
+  title:'ตาราง Factor F งานทาง',
+  doc:'ตาราง Factor F ของคณะกรรมการราคากลาง',
+  date:'ใช้คู่กับค่าวัสดุและค่าขนส่ง',
+  li:['ค่าวัสดุ (ระบบนี้) + ค่าขนส่ง (ว 477) = <b>ค่าวัสดุถึงหน่วยงาน</b>',
+      'นำไปเข้าตารางประมาณการ แล้วคูณ Factor F ตามวงเงินและเงื่อนไขงาน',
+      'ระบบนี้รับผิดชอบเฉพาะส่วนค่าวัสดุและค่าขนส่งให้ถูกต้องก่อนเข้า Factor F'],
+  foot:'ไฟล์ประมาณราคา DRR_KK Estimate รับค่าจากระบบนี้ผ่านชีต Sheet1 (5 คอลัมน์)'},
 ];
 function lawInit(){
   const el=$('lawGrid'); if(!el) return;
@@ -2211,10 +2302,10 @@ function sysInit(){
     ['พิกัดแหล่งวัสดุ','ควบคุมจากชีต "แหล่งวัสดุ" ในไฟล์ บัญชีคุมวัสดุ.xlsx → อัปโหลดขึ้นแท็บ SOURCES → แดชบอร์ดอ่านไปวางหมุดแผนที่และคำนวณระยะทาง · แก้พิกัด/เพิ่มแหล่ง ทำที่ไฟล์เดียวจบ'],
     ['ระยะทางถนนจริง','บริการเส้นทาง OSRM บนข้อมูลแผนที่ OpenStreetMap · เมื่อเรียกไม่ได้ระบบถอยไปใช้ระยะเส้นตรง × 1.30 และติดป้าย "ประมาณ" ห้ามใช้ทำราคากลาง'],
     ['TPSO (เชื่อมผ่าน ดึงTPSO.py)','API ดัชนีราคาวัสดุก่อสร้าง สำนักงานนโยบายและยุทธศาสตร์การค้า กระทรวงพาณิชย์ · เรียกได้เฉพาะจากเครื่องที่มี IP ประเทศไทย จึงรันโปรแกรม ดึงTPSO.py บนเครื่องของแขวงฯ เดือนละครั้ง — ได้ทั้งไฟล์ Excel และแถวราคาขึ้นแท็บ PRICES แดชบอร์ดนี้อ่านต่อให้อัตโนมัติ'],
-    ['ราคาน้ำมันดีเซล (รอเชื่อม)','ราคาขายปลีกที่ อ.เมืองขอนแก่น อ้างอิง ปตท. (pttor.com) ตามข้อกำหนดท้ายตาราง ว 477 ที่ให้ใช้เกณฑ์ราคาดีเซลที่อำเภอเมืองของจังหวัดที่ก่อสร้าง · ระหว่างรอเชื่อมอัตโนมัติ ผู้ใช้กรอกเลขเองในหน้าคำนวณระยะขนส่ง และเทียบสอบกับระบบโยธาไทย (app.yotathai.com/oil) ได้'],
+    ['ราคาน้ำมันดีเซล','ราคาขายปลีก ณ อำเภอเมือง ของจังหวัดที่ก่อสร้าง อ้างอิง ปตท. (Web Service รายจังหวัด ของ orapiweb.pttor.com) ตามข้อกำหนดท้ายตาราง ว 477 · ระบบดึงเข้าแท็บ OIL ให้อัตโนมัติทุกเช้า และกรอกเองได้จากหน้าคำนวณระยะขนส่ง'],
     ['ช่องทางนำเข้าข้อมูลทั้ง 5 ช่อง','1.1 TPSO — โปรแกรม .py ดึงจาก API พาณิชย์อัตโนมัติทุกเดือน เซฟ Excel ลงเซิร์ฟเวอร์ แล้วส่งขึ้น Google Sheet · 1.2 ราคาน้ำมัน — ดึงจาก ปตท. ขึ้นชีท OIL แล้วหน้าคำนวณระยะขนส่งอ่านอัตโนมัติ · 1.3 กรม/หน่วยงานรัฐ — อัปโหลด PDF เก็บหลักฐาน + กรอกในหน้า นำเข้าข้อมูล · 1.4 เว็บไซต์ร้านค้า — สืบตามบัญชีลิงก์ที่กำหนด อัปเดตรายเดือน · 1.5 สืบจากแหล่งภายนอก — ระบบออกหนังสือสืบราคา คำตอบกรอกในหน้า นำเข้าข้อมูล (ระบบเดียวกับ 1.3) · ทุกช่องผ่านบัญชีคุมชื่อ-ชนิด-หน่วยก่อนเข้าคลังจริง ชื่อที่ไม่เคยเห็นเข้าคิวรอจับคู่'],
     ['แนวทางเลือกชนิดรถ (ตามเล่ม ว 477)','รถ 10 ล้อ: งานทั่วไป ไม่ต้องรวมกอง ภูมิประเทศราบ/ภูเขา ผิวลาดยางหรือลูกรัง · รถ 10 ล้อ+พ่วง: ของหนักเป็นถังใหญ่ (เหล็ก ยางแอสฟัลต์ ปูนผง) หรือกรณีรวมกอง (Stock pile) — ห้ามใช้บนทางภูเขา · รถ 6 ล้อ: ทางภูเขา/ลาดชันมาก เขตชุมชนหนาแน่น งานเล็กหรือพื้นที่คับแคบ · ผู้คำนวณต้องใช้ดุลยพินิจให้เข้ากับสภาพจริง'],
-    ['แนวคิดการออกแบบ','รูปแบบการใช้งานบางส่วนศึกษาจากระบบของโยธาไทย (app.yotathai.com) ได้แก่ แถบสรุปราคาน้ำมัน→ช่วงตาราง มุมมองตารางเต็ม และแนวคิดการอัปเดตราคาน้ำมันอัตโนมัติ · ตัวเลขทั้งหมดในระบบนี้มาจากเอกสารต้นฉบับ ว 477 โดยตรง ไม่ได้นำมาจากเว็บดังกล่าว'],
+    ['การตรวจสอบความถูกต้อง','ตัวเลขในตารางค่าขนส่งทุกช่องถอดจากเอกสารต้นฉบับ ว 477 โดยตรง และตรวจทานกับตัวอย่างการคำนวณท้ายหนังสือแล้วตรงทุกหลัก (รถ 10 ล้อ · 50 กม. · ดีเซล 38 บาท = 196.70 บาท/ลบ.ม.) · สูตรตัวคูณ F = D ÷ L และตัวแปรสภาพผิวทางใช้ตามตารางในหนังสือฉบับเดียวกัน'],
   ];
   $('sysSrc').innerHTML=srcs.map(s=>`<div class="srcbox"><h3>${s[0]}</h3><div class="mini">${s[1]}</div></div>`).join('');
   let h='<thead><tr><th>เดือน</th><th class="num">แถวราคา</th><th class="num">รายการวัสดุ</th><th class="num">แหล่ง</th></tr></thead><tbody>';
@@ -2224,8 +2315,8 @@ function sysInit(){
       <td class="num">${new Set(rs.map(s=>s[0])).size.toLocaleString()}</td>
       <td class="num">${new Set(rs.map(s=>s[1])).size}</td></tr>`;});
   $('tblSysStat').innerHTML=h+'</tbody>';
-  const cm=$('cMeta'); if(cm) cm.innerHTML='เริ่มพัฒนา สิงหาคม 2569 · เวอร์ชันปัจจุบัน v3.7 · '+(LIVE.on?'เชื่อมคลังข้อมูลแล้ว':'ยังไม่ได้เชื่อมคลัง');
-  $('sysInfo').innerHTML=`เวอร์ชัน: 3.7 · อัปเดต: 17 ส.ค. 2569<br>
+  const cm=$('cMeta'); if(cm) cm.innerHTML='เริ่มพัฒนา สิงหาคม 2569 · เวอร์ชันปัจจุบัน v3.9 · '+(LIVE.on?'เชื่อมคลังข้อมูลแล้ว':'ยังไม่ได้เชื่อมคลัง');
+  $('sysInfo').innerHTML=`เวอร์ชัน: 3.9 · อัปเดต: 17 ส.ค. 2569<br>
     การเชื่อมราคาน้ำมันอัตโนมัติ: สร้างแท็บชื่อ <b>OIL</b> ในชีทคลังข้อมูล คอลัมน์ A=วันที่ B=จังหวัด C=ราคาดีเซล (หรือ A=วันที่ B=ราคา ถ้ามีเฉพาะขอนแก่น) แชร์แบบ อ่านได้ทุกคนที่มีลิงก์ — หน้าคำนวณระยะขนส่งจะอ่านราคาล่าสุดของจังหวัดที่เลือกให้เอง<br>
     ขอบเขตข้อมูลที่ฝังในไฟล์นี้: ${mLabI(0)} – ${mLabI(LAST)} (${P.series.length.toLocaleString()} คู่ราคา)<br>
     ชีทกลาง: 01.0 คลังข้อมูลวัสดุก่อสร้าง (แท็บ PRICES + OIL + REGISTRY) · เปิดหน้าเว็บครั้งใด ระบบอ่านแท็บ PRICES มารวมกับข้อมูลฝังให้อัตโนมัติ — ราคา TPSO เดือนใหม่และราคากรอกเองจึงขึ้นจอโดยไม่ต้องแก้ไฟล์นี้<br>
@@ -2302,13 +2393,13 @@ function clearInit(){
   const opts=()=>{
     const v=sc.value;
     if(v==='prices_month'){
-      box.innerHTML='<label class="f">ปี พ.ศ. / เดือน</label><div style="display:flex;gap:6px">'
+      box.innerHTML='<label class="f">ปี พ.ศ. / เดือน</label><div style="display:flex;gap:6px;max-width:260px">'
         +'<input type="number" id="clY" style="width:88px" value="'+P.ylist[LAST]+'">'
         +'<select id="clM"></select></div>';
       $('clM').innerHTML=TH_M.map((t,i)=>`<option value="${i+1}" ${i+1===P.months[LAST]?'selected':''}>${t}</option>`).join('');
     } else if(v==='prices_channel'){
-      box.innerHTML='<label class="f">ช่องทาง</label><select id="clC">'
-        +['TPSO','หน่วยงานราชการ','เว็บร้านค้า','กรอกเอง'].map(x=>`<option>${x}</option>`).join('')+'</select>';
+      box.innerHTML='<label class="f">ช่องทาง</label><div style="max-width:220px"><select id="clC">'
+        +['TPSO','หน่วยงานราชการ','เว็บร้านค้า','กรอกเอง'].map(x=>`<option>${x}</option>`).join('')+'</select></div>';
     } else box.innerHTML='<div class="hint" style="padding-bottom:9px">ล้างทั้งแท็บ</div>';
     kddAll();
   };
@@ -2346,7 +2437,7 @@ function clearInit(){
 /* ============ boot ============ */
 [buildSummary, lawInit, provInit, matInit, initMap, statInit, impInit, expInit, sysInit, regInit, clearInit, fullInit, distTabs, dieselIdx, drawMatChips]
   .forEach(f=>{ try{ f(); }catch(e){ console.error('init:', f.name, e); } });
-kddAll(); paintIcons();
+kddAll(); kfreeAll(); paintIcons();
 try{ fetchOil(true); }catch(e){}
 try{ loadLive(); }catch(e){}
 </script>
