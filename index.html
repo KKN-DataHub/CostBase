@@ -408,6 +408,12 @@ tr.detail>td{background:#F8F7F3;border-top:none;padding:10px 14px}
 .kcard{background:#fff;border:1px solid var(--hairline);border-radius:var(--r-card);padding:11px 13px;box-shadow:var(--sh-card);
   transition:transform .16s,box-shadow .16s,border-color .16s}
 .kcard:hover{transform:translateY(-3px);border-color:var(--teal);box-shadow:0 10px 24px rgba(13,148,136,.16)}
+.kcard[data-mi]{cursor:pointer}
+.kcard[data-mi]:focus-visible{outline:2px solid var(--teal);outline-offset:2px}
+.kcard .kgo{font-size:10.5px;color:var(--teal);font-weight:600;margin-top:6px;opacity:0;transform:translateX(-4px);
+  transition:opacity .18s,transform .18s}
+.kcard[data-mi]:hover .kgo,.kcard[data-mi]:focus-visible .kgo{opacity:1;transform:none}
+.kcard .s b{color:var(--navy)}
 .kcard .spark{width:100%;height:26px;margin-top:7px;display:block}
 .kcard .spark path{fill:none;stroke:var(--teal);stroke-width:1.7;stroke-linecap:round;stroke-linejoin:round}
 .kcard .spark circle{fill:#C99B3F}
@@ -423,6 +429,10 @@ tr.detail>td{background:#F8F7F3;border-top:none;padding:10px 14px}
 .dragbox .db-h{cursor:move;font-weight:700;color:var(--navy);margin-bottom:5px;display:flex;justify-content:space-between}
 .dragbox .db-x{cursor:pointer;color:var(--muted);padding:0 3px}
 .statusline{display:flex;gap:8px;flex-wrap:wrap;align-items:center;margin-top:8px}
+.apgrp{border:1px solid var(--grid);border-radius:12px;padding:11px 12px;margin-bottom:10px;background:#FCFBF8}
+.apgrp .ap-h{font-size:12.5px;color:var(--navy);margin-bottom:7px;display:flex;gap:10px;align-items:baseline;flex-wrap:wrap}
+.apgrp .ap-act{display:flex;gap:8px;align-items:center;margin-top:9px;flex-wrap:wrap}
+.apgrp .ap-pass{max-width:150px;letter-spacing:3px;text-align:center}
 .cl-auth{display:flex;align-items:flex-end;gap:14px;flex-wrap:wrap;background:#FBF6F4;
   border:1px solid #E8D5CF;border-radius:12px;padding:14px 16px}
 .cl-auth .cl-lock{width:38px;height:38px;border-radius:10px;background:linear-gradient(135deg,#B03A3A,#7E2626);
@@ -464,7 +474,7 @@ canvas{max-width:100%}
   <div class="brand">
     <h1>ระบบฐานข้อมูลวัสดุ</h1>
     <div class="sub">แขวงทางหลวงชนบทขอนแก่น</div>
-    <div class="chips"><span class="chip" id="bLatest">—</span><span class="chip">v5.0</span></div>
+    <div class="chips"><span class="chip" id="bLatest">—</span><span class="chip">v5.4</span></div>
   </div>
   <nav class="nav" id="nav">
     <button data-p="sum" class="active"><span class="ico">▦</span>หน้าสรุป</button>
@@ -496,6 +506,9 @@ canvas{max-width:100%}
     <button class="jchip" data-jump="secTypes">▦ ภาพรวมตามประเภท</button>
   </div>
   <h2 class="sec" data-ic="tag" id="secKey">สรุปราคาวัสดุหลักประจำเดือน — เอาแหล่งที่ถูกสุดขึ้นก่อน</h2>
+  <div class="cap" style="margin:-4px 0 10px">ตัวเลขบนการ์ดคือ <b>ราคาถูกสุดของเดือนล่าสุดที่มีข้อมูล</b> (ไม่ใช่ถูกสุดข้ามเดือน)
+    · เส้นใต้ตัวเลขคือแนวโน้มย้อนหลังของแหล่งนั้น · แต่ละการ์ดล็อกหน่วยตามที่ระเบียบใช้ ไอเท็มหน่วยอื่นไม่ถูกนำมาเทียบ
+    · <b>กดที่การ์ดเพื่อเปิดกราฟแนวโน้มเต็มในหน้าสถิติราคา</b></div>
   <div id="keyCards"></div>
   <div class="card" style="margin-top:14px" id="secNews">
     <h2>ข่าวและประกาศที่เกี่ยวข้อง <span class="pill info">ชุดข่าว ณ 16 ส.ค. 69</span></h2>
@@ -693,9 +706,11 @@ canvas{max-width:100%}
       </div>
       <div id="mUrlBox" style="display:none"><label class="f">ลิงก์หน้าสินค้า (URL เว็บที่สืบราคา)</label><input type="url" id="mUrl" placeholder="วางลิงก์หน้าสินค้า เช่น https://www.globalhouse.co.th/..."></div>
       <label class="f">หมายเหตุ / ที่มา (เลขหนังสือ · ใบเสนอราคา · หน่วยงาน)</label><input type="text" id="mRef" placeholder="เช่น ใบเสนอราคา SQ.690801 ลว. 10 ส.ค. 69 · ไม่รวม VAT">
-      <div style="display:flex;gap:8px;margin-top:12px">
+      <label class="f" style="margin-top:10px">ชื่อผู้กรอก (แนบไปในอีเมลแจ้งผู้อนุมัติ)</label>
+      <input type="text" id="mBy" placeholder="เช่น สมชาย · กลุ่มวิชาการ" style="max-width:320px">
+      <div style="display:flex;gap:8px;margin-top:12px;flex-wrap:wrap">
         <button class="btn" id="mAdd">เพิ่มเข้าคิว</button>
-        <button class="btn" id="mPush">ส่งขึ้นคลัง (PRICES)</button>
+        <button class="btn gold" id="mPush">📤 ส่งขออนุมัติขึ้นคลัง</button>
         <button class="btn ghost" id="mCopy">คัดลอกคิว</button>
       </div>
       <div class="hint" id="mPushStat" style="margin-top:8px"></div>
@@ -706,9 +721,19 @@ canvas{max-width:100%}
         <span class="hint" id="impXlStat" style="align-self:center"></span>
       </div>
     </div>
+    <div>
+    <div class="card" style="margin-bottom:12px">
+      <h2 data-ic="check">รายการรออนุมัติ <span class="pill warn" id="apStat">—</span></h2>
+      <div class="statusline">
+        <button class="btn ghost" id="apLoad">🔄 ดูรายการรออนุมัติ</button>
+        <span class="hint" id="apHint">ราคาที่ส่งมาจะยังไม่เข้าคลังจนกว่าผู้ดูแลจะกดอนุมัติ</span>
+      </div>
+      <div id="apBox" style="margin-top:10px"></div>
+    </div>
     <div class="card">
       <h2 data-ic="clock">คิวรอส่งขึ้นคลังข้อมูล <span class="pill warn" id="qStat">0 รายการ</span></h2>
       <div class="tw" style="max-height:340px"><table id="tblQueue"><thead><tr><th>เดือน</th><th>รายการ</th><th>หน่วย</th><th class="num">ราคา</th><th>แหล่ง</th><th>อ้างอิง</th><th>สถานะชื่อ</th></tr></thead><tbody id="qRows"></tbody></table></div>
+    </div>
     </div>
   </div>
 </section>
@@ -1370,7 +1395,7 @@ function buildSummary(){
   hc('hcImp',impChips());
   hc('hcExp',`<span class="ph-chip">● เดือนล่าสุด <b>${latestLabel}</b></span>
     <span class="ph-chip">${LIVE.on?'☁ รวมคลังสดแล้ว':'⚠ ยังไม่ได้เชื่อมคลัง'}</span>`);
-  hc('hcSys',`<span class="ph-chip">เวอร์ชัน <b>5.0</b></span>
+  hc('hcSys',`<span class="ph-chip">เวอร์ชัน <b>5.1</b></span>
     <span class="ph-chip">อัปเดต 18 ส.ค. 2569</span>`);
   const nRowsLast = P.series.filter(s=>s[4][LAST]!=null).length;
   /* พร้อมใช้ = มีราคาเดือนล่าสุด หรือมีราคาเดือนก่อนหน้าให้ยกยอด (ตามหลักเกณฑ์ยกยอดของระบบ)
@@ -1419,38 +1444,59 @@ function buildSummary(){
   });
   $('tblTypes').innerHTML = tr2+'</tbody>';
 
-  /* การ์ดวัสดุหลัก — จัดกลุ่มตามหมวดงานทาง เฉพาะหมวดหลักที่ใช้ประจำ */
+  /* การ์ดวัสดุหลัก — จัดกลุ่มตามหมวดงานทาง เฉพาะหมวดหลักที่ใช้ประจำ
+     [ป้ายชื่อ, ตัวจับชื่อรายการ, หน่วยที่ยอมรับ]
+     หน่วยเป็นตัวบังคับทุกใบ — ปูนโครงสร้างต้อง "ตัน" ไม่ใช่ "ถุง" ยางต้อง "ตัน" ไม่ใช่ "ถัง"
+     ไม่งั้นราคาถูกสุดจะไปตกที่ไอเท็มคนละหน่วย เทียบกันไม่ได้ */
   const GROUPS = [
     ['งานทาง', [
-      ['หินคลุก', /หินคลุก/], ['ลูกรัง', /ลูกรัง/], ['ดินถม', /ดินถม/],
-      ['ทรายหยาบ', /ทรายหยาบ/]]],
+      ['หินคลุก', /หินคลุก/, /^ลบ\.?ม/],
+      ['ลูกรัง', /ลูกรัง/, /^ลบ\.?ม/],
+      ['ดินถม', /ดินถม/, /^ลบ\.?ม/],
+      ['ทรายหยาบ', /ทรายหยาบ/, /^ลบ\.?ม/]]],
     ['งานผิวทาง', [
-      ['ยางแอสฟัลต์ AC 40/50', /AC[ .-]?40\/50|เกรด ?40\/50/i, /ตัน/],
-      ['ยางแอสฟัลต์ AC 60/70', /AC[ .-]?60\/70|เกรด ?60\/70/i, /ตัน/],
-      ['ยาง EAP', /\bEAP\b|อีเอพี/i, /ตัน/],
-      ['ยาง CRS-2', /CRS[ .-]?2\b/i, /ตัน/],
-      ['ยาง Rejuvenator', /reju|รีจู/i, /ตัน/],
+      ['ยางแอสฟัลต์ AC 40/50', /AC[ .-]?40\/50|เกรด ?40\/50/i, /^ตัน/],
+      ['ยางแอสฟัลต์ AC 60/70', /AC[ .-]?60\/70|เกรด ?60\/70/i, /^ตัน/],
+      ['ยางแอสฟัลต์ EAP', /\bEAP\b|อีเอพี/i, /^ตัน/],
+      ['ยางแอสฟัลต์ CRS-2', /CRS[ .-]?2\b/i, /^ตัน/],
+      ['สารฟื้นสภาพ Rejuvenator', /reju|รีจู|ฟื้นสภาพแอสฟัลต์/i, /^ตัน/],
       ['น้ำมันดีเซล', /ดีเซล/, /ลิตร/]]],
     ['งานโครงสร้าง', [
-      ['ปูนซีเมนต์ปอร์ตแลนด์', /ปอร์ตแลนด์/, /ตัน/],
-      ['ปูนซีเมนต์ไฮดรอลิก', /^(?![\s\S]*ท่อ)[\s\S]*ไฮดรอลิก/, /ตัน/],
-      ['เหล็กเส้นกลม SR.24', /^(?![\s\S]*(ตะแกรง|wiremesh|ไวร์เมช))[\s\S]*(เหล็กเส้นกลมผิวเรียบ|SR\.? ?24)/i, /ตัน/],
-      ['เหล็กข้ออ้อย SD.40', /^(?![\s\S]*(ตะแกรง|wiremesh|ไวร์เมช))[\s\S]*ข้ออ้อย[\s\S]*SD\.? ?40/i, /ตัน/],
-      ['คอนกรีตผสมเสร็จ 350 ksc', /คอนกรีตผสมเสร็จ[\s\S]*350/, /ลบ\.?ม/],
-      ['Wiremesh RB 6 @0.20 ม.', /(RB ?6\b|ผิวเรียบ[\s\S]*(ศก\.? ?6\b|6 ?มม))[\s\S]*0\.20? ?x ?0\.20?/i]]],
+      ['ปูนซีเมนต์ปอร์ตแลนด์', /ปอร์ตแลนด์/, /^ตัน/],
+      ['ปูนซีเมนต์ไฮดรอลิก', /^(?![\s\S]*ท่อ)[\s\S]*ไฮดรอลิก/, /^ตัน/],
+      ['เหล็กเส้นกลม SR.24', /^(?![\s\S]*(ตะแกรง|wiremesh|ไวร์เมช|ข้ออ้อย))[\s\S]*(ผิวเรียบ|SR\.? ?24)/i, /^ตัน/],
+      ['เหล็กข้ออ้อย SD.40', /^(?![\s\S]*(ตะแกรง|wiremesh|ไวร์เมช))[\s\S]*ข้ออ้อย[\s\S]*SD\.? ?40/i, /^ตัน/],
+      ['คอนกรีตผสมเสร็จ 350 ksc', /คอนกรีตผสมเสร็จ[\s\S]*350/, /^ลบ\.?ม/],
+      ['Wiremesh RB 6 @0.20 ม.', /wiremesh[\s\S]*RB ?6\b[\s\S]*0\.20 ?[x×] ?0\.20/i, /^ตร\.?ม\.?$/]]],
     ['งานไฟฟ้า', [
-      ['สาย CV 2x25 ตร.มม.', /\bCV\b[\s\S]*2 ?x ?25\b/i, /เมตร|ม\./],
-      ['สาย VCT-G 2x2.5', /VCT(-?G)?[\s\S]*2 ?x ?2\.5\b/i, /เมตร|ม\./],
-      ['สาย NYY 2x25 ตร.มม.', /NYY[\s\S]*2 ?x ?25\b/i, /เมตร|ม\./],
-      ['RCBO 10A', /RCBO[\s\S]*10 ?A/i],
-      ['MCB 1P 10A', /\bMCB\b[\s\S]*10 ?A|เบรกเกอร์ ขนาด ?10/i]]],
+      ['สาย CV ขนาด 2 x 25 ตร.มม.', /\bCV\b[\s\S]*2 ?[x×] ?25\b/i, /^เมตร|^ม\.$/],
+      ['สาย NYY ขนาด 2 x 25 ตร.มม.', /NYY[\s\S]*2 ?[x×] ?25\b/i, /^ม้วน|^เมตร/],
+      /* VCT-G ยังไม่มีในบัญชีคุม (มีแต่ VCT ธรรมดา) — ตัวที่ 4 คือชื่อที่ "อยากได้จริง"
+         ถ้าคลังมี VCT-G เมื่อไร การ์ดจะสลับไปใช้ตัวนั้นเองอัตโนมัติ ระหว่างนี้โชว์ VCT ธรรมดาไปก่อน */
+      ['สาย VCT-G ขนาด 2 x 2.5 ตร.มม.', /VCT[\s\S]*2 ?[x×] ?2\.5\b/i, /^เมตร|^ม้วน|^ม\.$/,
+        {re:/VCT ?-? ?G\b[\s\S]*2 ?[x×] ?2\.5\b/i, note:'ยังไม่มี VCT-G ในคลัง — แสดง VCT ธรรมดาแทน'}],
+      ['RCBO 2P 10A', /RCBO[\s\S]*2 ?P[\s\S]*10 ?A/i, /^ชุด|^อัน|^ตัว/],
+      ['MCCB 2P 80A 30KA', /MCCB[\s\S]*2 ?P[\s\S]*80 ?A/i, /^ชุด|^อัน|^ตัว/]]],
   ];
-  const kcard = ([label,re,unitRe])=>{
+  const kcard = ([label,re,unitRe,pref])=>{
     const mi = new Set(); P.mats.forEach((m,i)=>{ if(re.test(m)) mi.add(i); });
-    let ss = P.series.filter(s=>mi.has(s[0]));
-    if(unitRe) ss = ss.filter(s=>unitRe.test(P.units[s[2]]||''));   /* ล็อกหน่วย กันคนละไอเท็ม (ถุง/ถัง/ชุด ปนตัน) */
-    if(!ss.length) return `<div class="kcard"><div class="t">${label}</div><div class="v" style="color:var(--muted)">—</div><div class="s">ยังไม่มีในคลัง</div></div>`;
-    /* cheapest at latest available month */
+    let all = P.series.filter(s=>mi.has(s[0]));
+    /* ถ้ามีชื่อที่ต้องการเป๊ะ ๆ (เช่น VCT-G) ให้ใช้เฉพาะตัวนั้น ไม่งั้นค่อยตกมาใช้ตัวกว้าง */
+    let subst = '';
+    if(pref&&pref.re){
+      const exact = all.filter(s=>pref.re.test(P.mats[s[0]]||''));
+      if(exact.length) all = exact; else subst = pref.note||'';
+    }
+    /* ล็อกหน่วย — ไอเท็มหน่วยไม่ตรงไม่เอามาเทียบเด็ดขาด */
+    let ss = unitRe ? all.filter(s=>unitRe.test(String(P.units[s[2]]||'').trim())) : all;
+    if(!ss.length){
+      const other = [...new Set(all.map(s=>P.units[s[2]]).filter(Boolean))];
+      return `<div class="kcard"><div class="t">${label}</div><div class="v" style="color:var(--muted)">—</div>
+        <div class="s">${all.length&&other.length
+          ? 'มีในคลังแต่คนละหน่วย ('+esc(other.slice(0,3).join(' / '))+') — การ์ดนี้ใช้เฉพาะหน่วยที่ระเบียบกำหนด'
+          : 'ยังไม่มีในคลัง'}</div></div>`;
+    }
+    /* ── ราคาถูกสุด "ของเดือนล่าสุดเท่านั้น" (ไม่ไล่หาถูกสุดข้ามเดือน) ── */
     let best=null, bestPrev=null;
     let lm=-1; ss.forEach(s=>{const lv=latestVal(s[4]); if(lv&&lv.m>lm) lm=lv.m;});
     ss.forEach(s=>{ const p=s[4][lm]; if(p!=null && (best==null||p<best.p)) best={p,s}; });
@@ -1458,6 +1504,7 @@ function buildSummary(){
     const d = (best&&bestPrev!=null)? (best.p-bestPrev)/bestPrev*100 : null;
     const cls = d==null?'fl':d>0.05?'up':d<-0.05?'dn':'fl';
     const stale = lm!==LAST;
+    const nsrc = ss.filter(s=>s[4][lm]!=null).length;
     /* เส้นแนวโน้มจิ๋ว — ประวัติราคาของแหล่งที่ถูกสุดตลอดช่วงข้อมูล */
     const spark=(v)=>{
       const pts=v.map((p,i)=>({p,i})).filter(x=>x.p!=null);
@@ -1470,15 +1517,26 @@ function buildSummary(){
       const la=pts[pts.length-1];
       return `<svg class="spark" viewBox="0 0 ${W} ${H}" preserveAspectRatio="none"><path d="${path}"/><circle cx="${X(la.i).toFixed(1)}" cy="${Y(la.p).toFixed(1)}" r="2.3"/></svg>`;
     };
-    return `<div class="kcard"><div class="t">${label} ${stale?`<span class="pill warn">ราคา ${mLabI(lm)}</span>`:''}</div>
+    return `<div class="kcard" role="button" tabindex="0" data-mi="${best.s[0]}" data-si="${best.s[1]}"
+        title="กดเพื่อดูกราฟแนวโน้มของ ${esc(P.mats[best.s[0]]||label)} ในหน้าสถิติราคา">
+      <div class="t">${label}</div>
       <div class="v">${fmt(best.p)} <span class="u">บาท/${esc(P.units[best.s[2]]||'-')}</span></div>
-      <div class="s">ถูกสุด: ${esc(P.srcs[best.s[1]]||'(ไม่ระบุ)')}</div>
+      <div class="s">ถูกสุดของ <b>${mLabI(lm)}</b>${stale?' <span class="pill warn">ยังไม่มีราคา '+mLabI(LAST)+'</span>':''}
+        · ${nsrc} แหล่ง<br>${esc(P.srcs[best.s[1]]||'(ไม่ระบุ)')}
+        ${subst?'<br><span class="pill warn">'+esc(subst)+'</span>':''}</div>
       ${spark(best.s[4])}
-      <div class="d ${cls}">${d==null?'ไม่มีฐานเทียบ':(d>0?'▲ +':d<0?'▼ ':'—  ')+Math.abs(d).toFixed(2)+'% จากครั้งก่อน'}</div></div>`;
+      <div class="d ${cls}">${d==null?'ไม่มีฐานเทียบ':(d>0?'▲ +':d<0?'▼ ':'—  ')+Math.abs(d).toFixed(2)+'% จากครั้งก่อน'}</div>
+      <div class="kgo">ดูกราฟแนวโน้ม →</div></div>`;
   };
   $('keyCards').innerHTML = GROUPS.map(([g,items])=>
     `<div class="kgroup"><div class="kg-lab">${g}</div>
      <div class="kcards">${items.map(kcard).join('')}</div></div>`).join('');
+  /* กดการ์ด → เด้งไปหน้าสถิติราคา พร้อมเลือกรายการ+แหล่งที่ถูกสุดให้เลย */
+  $('keyCards').querySelectorAll('.kcard[data-mi]').forEach(c=>{
+    const go=()=>gotoStat(+c.dataset.mi, -1);   /* โชว์ทุกแหล่ง จะได้เห็นว่าถูกสุดห่างจากเจ้าอื่นแค่ไหน */
+    c.onclick=go;
+    c.onkeydown=e=>{ if(e.key==='Enter'||e.key===' '){ e.preventDefault(); go(); } };
+  });
 
   /* observations */
   const movers=[];
@@ -1613,7 +1671,7 @@ function dieselIdx(){ let v=parseFloat($('dDiesel').value)||37.98; let b=Math.fl
   $('dBand').innerHTML=`ใช้ตารางช่วง <b>${b}.00–${b}.99</b> บาท/ลิตร`;
   const hd=document.getElementById('hcDist');
   if(hd) hd.innerHTML=`<span class="ph-chip">📍 ${esc($('dProv')?$('dProv').value:'ขอนแก่น')}</span>
-    <span class="ph-chip">⛽ ดีเซล <b>${v.toFixed(2)}</b> บาท/ลิตร${oilMeta?' · ชีท OIL':''}</span>
+    <span class="ph-chip">⛽ ดีเซล <b>${v.toFixed(2)}</b> บาท/ลิตร${oilMeta?' · ปตท.'+(oilMeta.ref?' '+esc(oilMeta.ref):'')+' · มีผล '+esc(oilMeta.date):''}</span>
     <span class="ph-chip">📖 ใช้ตารางช่วง <b>${b}.00–${b}.99</b></span>
     <span class="ph-chip">🚚 ว 477 (26 มิ.ย. 2569)</span>
     <span class="ph-chip">⚑ ${SRC.length?SRC.length+' แหล่งมีพิกัด':'ยังไม่มีบัญชีแหล่ง'}</span>`;
@@ -1621,9 +1679,17 @@ function dieselIdx(){ let v=parseFloat($('dDiesel').value)||37.98; let b=Math.fl
 async function fetchOil(silent){
   const id=($('cfgSheet').value||'').trim(); const st=$('oilStat'); const prov=$('dProv').value;
   if(!id){ if(!silent) st.innerHTML='<span class="pill warn">ยังไม่ตั้งค่า Sheet (หน้า ระบบ)</span>'; return; }
-  const useHit=(dt,pv,pr,extra)=>{ $('dDiesel').value=(+pr).toFixed(2); oilMeta={date:dt,prov:pv};
-    st.innerHTML=`<span class="pill ok">${extra||'จากชีท OIL'} · ${esc(pv)} · ${esc(dt)}</span>`;
+  /* ref = จุดอ้างอิงราคา เช่น "อ.เมืองขอนแก่น" (ว 477 ใช้ราคา ณ อำเภอเมือง)
+     dt  = วันที่ "ราคามีผล" ที่ ปตท. ประกาศ ไม่ใช่วันที่กดดึง */
+  const useHit=(dt,pv,pr,extra,ref)=>{ $('dDiesel').value=(+pr).toFixed(2);
+    oilMeta={date:dt,prov:pv,ref:ref||''};
+    st.innerHTML=`<span class="pill ok">${extra||'จากชีท OIL'} · ${esc(pv)}${ref?' · '+esc(ref):''}`
+      +` · ราคามีผล ${esc(dt)}</span>`;
     dieselIdx(); renderAll(); };
+  /* ที่มาในชีทเก็บเป็น "ปตท. อ.เมืองขอนแก่น (อัตโนมัติ 18/08/2569)"
+     — วงเล็บหน้าคือจุดอ้างอิง วงเล็บหลังคือวันที่ไปดึงมา (คนละอันกับวันที่ราคามีผล) */
+  const locOf =s=>{ const m=String(s||'').match(/^\s*ปตท\.\s*(.*?)\s*\(/); return m?m[1]:''; };
+  const gotOf =s=>{ const m=String(s||'').match(/\((?:[^)]*?\s)?(\d{2}\/\d{2}\/\d{4})\)/); return m?m[1]:''; };
   /* ขั้น 1 — อ่านชีท OIL ก่อนเสมอ (เร็ว ~1 วิ) · ถ้ามีราคาของวันนี้แล้ว จบเลยไม่ต้องยิงสด */
   if(!silent) st.textContent='กำลังอ่านชีท OIL …';
   let hit=null;
@@ -1638,13 +1704,16 @@ async function fetchOil(silent){
         else { pv=PROVS[0]; pr=parseFloat(c[1]); }
         if(!(pr>=20&&pr<70)) continue;
         if(pv!==prov) continue;
-        hit={dt:String(dt).trim(),pv,pr}; break;
+        hit={dt:String(dt).trim(),pv,pr,ref:locOf(c[3]),got:gotOf(c[3])}; break;
       }
     }
   }catch(e){}
   const _d=new Date();
   const today=String(_d.getDate()).padStart(2,'0')+'/'+String(_d.getMonth()+1).padStart(2,'0')+'/'+(_d.getFullYear()+543);
-  if(hit&&(silent||hit.dt===today)){ useHit(hit.dt,hit.pv,hit.pr,hit.dt===today?'ราคาวันนี้จากชีท':'จากชีท OIL'); return; }
+  /* ราคาน้ำมันไม่ได้เปลี่ยนทุกวัน — ถือว่าสดถ้า "ไปดึงมาแล้ววันนี้" ไม่ใช่ "ราคามีผลวันนี้"
+     ไม่งั้นกดทีไรก็ต้องยิงสดทุกครั้ง เพราะวันที่มีผลค้างอยู่หลายวัน */
+  const fresh = hit && (hit.got===today || hit.dt===today);
+  if(hit&&(silent||fresh)){ useHit(hit.dt,hit.pv,hit.pr,fresh?'ราคาล่าสุด (ตรวจแล้ววันนี้)':'จากชีท OIL',hit.ref); return; }
   if(silent) return;
   /* ขั้น 2 — ชีทยังไม่มีราคาวันนี้ → สั่ง WebApp ดึงสดจาก ปตท. (Code.gs รุ่น 11 ขึ้นไป · ครั้งแรกของวัน ~5-10 วิ) */
   const url=($('cfgUrl').value||'').trim();
@@ -1655,8 +1724,13 @@ async function fetchOil(silent){
         body:JSON.stringify({token:WTOKEN,action:'oil_now',prov})});
       const res=await r.json();
       if(res.ok&&res.price>=20&&res.price<70){
-        useHit(res.date,res.prov,res.price,'สดจาก ปตท.');
-        st.innerHTML+=' บันทึกเข้าชีท OIL แล้ว — ครั้งต่อไปของวันนี้จะเร็วทันที'; return;
+        useHit(res.date,res.prov,res.price,'สดจาก ปตท.',res.ref||(res.location?'อ.'+res.location:''));
+        st.innerHTML+= res.added? ' บันทึกเข้าชีท OIL แล้ว — ครั้งต่อไปจะเร็วทันที'
+                                : ' (ราคางวดนี้มีในชีท OIL อยู่แล้ว ไม่บันทึกซ้ำ)';
+        if(res.ref===undefined&&res.location===undefined)
+          st.innerHTML+='<br><span class="pill warn">ชีทยังใช้ Code.gs ก่อนรุ่น 18</span>'
+            +' ราคาที่ได้อาจเป็นของอำเภออื่น — อัปเดต Code.gs แล้ว Deploy → New version';
+        return;
       }
       if(res.ok&&res.price===undefined){
         st.innerHTML='<span class="pill bad">ชีทยังใช้ Code.gs รุ่นเก่า</span> วาง Code.gs รุ่นล่าสุดจากโฟลเดอร์ 01.ระบบ'
@@ -1668,7 +1742,7 @@ async function fetchOil(silent){
     }catch(e){ st.innerHTML='<span class="pill warn">ต่อ WebApp ไม่ได้ — ตรวจ URL ที่หน้า ระบบ</span>'; }
   }
   if(hit){ st.innerHTML+=`<br><span class="pill warn">ใช้ราคาล่าสุดที่มีในชีทไปก่อน · ${esc(hit.pv)} · ${esc(hit.dt)}</span>`;
-    $('dDiesel').value=hit.pr.toFixed(2); oilMeta={date:hit.dt,prov:hit.pv}; dieselIdx(); renderAll(); return; }
+    $('dDiesel').value=hit.pr.toFixed(2); oilMeta={date:hit.dt,prov:hit.pv,ref:hit.ref}; dieselIdx(); renderAll(); return; }
   if(!url) st.innerHTML=`<span class="pill warn">ไม่พบราคา ${esc(prov)} ในชีท — กรอกเอง</span>`;
 }
 function rateOf(truck,unit,km,di){const M=RATES[(unit==='v'?'v':'t')+truck];km=Math.max(1,Math.round(km));
@@ -2034,7 +2108,7 @@ function buildCalcSheet(){
     <div style="font-size:12.5px;line-height:1.8;margin-bottom:8px">
     หน่วยงาน: แขวงทางหลวงชนบทขอนแก่น · โครงการ: ${esc(proj)}<br>
     วันที่กำหนดราคากลาง: ${esc($('dDate').value||'—')} · พิกัดกึ่งกลางโครงการ: ${esc($('dDest').value)}<br>
-    ราคาน้ำมันดีเซล ที่ อ.เมือง จ.${esc(prov)}: ${dv.toFixed(2)} บาท/ลิตร ${oilMeta?`(อ้างอิงระบบ ณ ${esc(oilMeta.date)})`:''} → ใช้ตารางช่วง ${25+di}.00–${25+di}.99<br>
+    ราคาน้ำมันดีเซล ${esc(prov)} — ${oilMeta&&oilMeta.ref?esc(oilMeta.ref):'ที่ อ.เมือง'}: ${dv.toFixed(2)} บาท/ลิตร ${oilMeta?`(ราคา ปตท. มีผล ${esc(oilMeta.date)})`:''} → ใช้ตารางช่วง ${25+di}.00–${25+di}.99<br>
     เกณฑ์การคำนวณ: ตารางค่าขนส่งวัสดุก่อสร้าง ตามหนังสือกรมบัญชีกลาง ด่วนที่สุด ที่ กค 0433.2/ว 477 ลว. 26 มิ.ย. 2569</div>`;
   if(matSel.length){
     matSel.forEach(mi=>{
@@ -2167,10 +2241,12 @@ const LAWS=[
   title:'ใช้ราคาดีเซล ณ อำเภอเมือง',
   doc:'ข้อกำหนดท้ายตาราง ว 477',
   date:'อ้างอิงราคาขายปลีก ปตท.',
-  li:['ใช้ราคาดีเซล <b>ที่ อ.เมือง ของจังหวัดที่ก่อสร้าง</b>',
+  li:['ใช้ราคาดีเซล <b>ที่ อ.เมือง ของจังหวัดที่ก่อสร้าง</b> — ปตท. ตั้งราคาต่างกันรายอำเภอ (ขอนแก่นมี 26 อำเภอ ต่างกันได้ถึง 0.16 บาท)',
+      'กรุงเทพฯ ไม่มีอำเภอเมือง ใช้ <b>ราคาขายปลีก กทม. และปริมณฑล</b> ซึ่งประกาศเป็นชุดเดียวกันทั้งเขต',
       'ราคาตกช่วงใด ให้ใช้ตารางของช่วงนั้น (ช่วงละ 1 บาท)',
+      'วันที่ที่บันทึกคือ <b>วันที่ราคามีผล</b> ไม่ใช่วันที่กดดึง — ราคาไม่ขยับ วันที่ก็ไม่ขยับ ถือว่าปกติ',
       'ระบบดึงราคาเข้าชีท OIL ให้อัตโนมัติทุกเช้า'],
-  foot:'เทียบสอบราคาได้ที่ pttor.com'},
+  foot:'เทียบสอบราคาได้ที่ pttor.com (เลือกจังหวัด → อำเภอเมือง)'},
  {tag:'องค์ประกอบราคากลาง',
   title:'ตาราง Factor F งานทาง',
   doc:'ตาราง Factor F ของคณะกรรมการราคากลาง',
@@ -2356,6 +2432,21 @@ function fillSeriesTable(ss){
   ss.forEach(s=>{ h+=`<tr><td>${esc(P.srcs[s[1]]||'(ไม่ระบุ)')}</td>`+s[4].map(v=>`<td class="num">${v==null?'<span class="fl">—</span>':fmt(v)}</td>`).join('')+'</tr>'; });
   $('tblSeries').innerHTML=h+'</tbody>';
 }
+/* เด้งไปหน้าสถิติราคา พร้อมตั้งรายการ (และแหล่ง ถ้าระบุ) ให้เรียบร้อย
+   ใช้ร่วมกันระหว่างการ์ด KPI หน้าสรุป กับตารางรายการที่ราคาขยับ */
+function gotoStat(mi, si){
+  if(!(mi>=0)) return;
+  sSel.type='-1'; sSel.mat=mi;
+  sSel.srcs = (si>=0)? new Set([si]) : new Set();
+  const b=document.querySelector('#nav button[data-p=stat]'); if(b) b.click();
+  setTimeout(()=>{
+    if($('sType')) $('sType').value='-1';
+    buildMatList(false);
+    if($('sMat')) $('sMat').value=String(mi);
+    kddAll(); buildSrcChips(); drawStat();
+    const el=$('sTitle'); if(el&&el.scrollIntoView) el.scrollIntoView({behavior:'smooth',block:'center'});
+  },70);
+}
 function buildMovers(){
   const mv=[];
   P.series.forEach(s=>{
@@ -2371,10 +2462,7 @@ function buildMovers(){
       <td class="num">${fmt(m.b)}</td><td class="num">${fmt(m.a)}</td>
       <td class="num ${m.pct>0?'up':'dn'}">${(m.pct>0?'+':'')+m.pct.toFixed(2)}%</td></tr>`;});
   $('tblMovers').innerHTML=h+'</tbody>';
-  $('tblMovers').querySelectorAll('tr[data-m]').forEach(tr=>tr.onclick=()=>{
-    sSel.mat=+tr.dataset.m; sSel.srcs=new Set(); sSel.type='-1';
-    $('sType').value='-1'; buildMatList(false); $('sMat').value=String(sSel.mat);
-    kddAll(); buildSrcChips(); drawStat();});
+  $('tblMovers').querySelectorAll('tr[data-m]').forEach(tr=>tr.onclick=()=>gotoStat(+tr.dataset.m,-1));
 }
 
 /* ============ นำเข้าข้อมูล ============ */
@@ -2474,28 +2562,95 @@ function impInit(){
     const wb=XLSX.utils.book_new(); XLSX.utils.book_append_sheet(wb,ws,'Sheet1');
     XLSX.writeFile(wb,'แบบฟอร์มนำเข้าราคา.xlsx');
   };
+  /* ชื่อผู้กรอก — จำไว้ในเครื่องนี้ */
+  try{ $('mBy').value=localStorage.getItem('kkmat_by')||''; }catch(e){}
+  $('mBy').oninput=()=>{ try{ localStorage.setItem('kkmat_by',$('mBy').value); }catch(e){} };
   $('mPush').onclick=async()=>{
     const url=($('cfgUrl').value||'').trim(), st=$('mPushStat');
     if(!queue.length){ st.textContent='คิวว่าง — เพิ่มรายการก่อน'; return; }
     if(!url){ st.textContent='ยังไม่ตั้ง WebApp URL (ดูหน้า ระบบ)'; return; }
-    $('mPush').disabled=true; st.textContent='กำลังส่ง '+queue.length+' รายการ…';
+    const by=($('mBy').value||'').trim();
+    if(!by){ st.innerHTML='<span class="up">ใส่ชื่อผู้กรอกก่อนส่ง</span>'; $('mBy').focus(); return; }
+    if(!confirm('ส่งขออนุมัติ '+queue.length+' รายการ\n\nราคาจะยังไม่เข้าคลัง จนกว่าผู้ดูแลจะกดอนุมัติ\nระบบจะส่งอีเมลแจ้งผู้อนุมัติทันที')) return;
+    $('mPush').disabled=true; st.textContent='กำลังส่งขออนุมัติ '+queue.length+' รายการ…';
     try{
       const rows=queue.map(q=>[q.y,q.mo,q.mat,q.unit,q.price,q.src,q.typ,(q.chan||'กรอกเอง')+(q.ref?' · '+q.ref:'')]);
       const r=await fetch(url,{method:'POST',headers:{'Content-Type':'text/plain;charset=utf-8'},
-        body:JSON.stringify({token:WTOKEN,action:'prices',rows})});
+        body:JSON.stringify({token:WTOKEN,action:'submit',rows,by})});
       const res=await r.json();
       if(!res.ok) throw new Error(res.error||'ส่งไม่สำเร็จ');
-      st.textContent='ส่งสำเร็จ · เพิ่มใหม่ '+res.added+' แถว'+(rows.length-res.added>0?' (ซ้ำ '+(rows.length-res.added)+' แถว ระบบข้ามให้)':'');
-      queue.length=0; renderQueue(); loadLive();
+      if(res.batch===undefined) throw new Error('ชีทยังใช้ Code.gs รุ่นเก่า — ต้องรุ่น 17 ขึ้นไป');
+      st.innerHTML='<span class="pill ok">ส่งขออนุมัติแล้ว</span> ชุด <b>'+esc(res.batch)+'</b> · '+res.added+' รายการ'
+        +(res.mailed?' · แจ้งอีเมลผู้อนุมัติแล้ว':' · <span class="up">ส่งอีเมลไม่ผ่าน (ดูสิทธิ์ใน Apps Script)</span>')
+        +'<br>ราคายังไม่เข้าคลัง รอผู้ดูแลกดอนุมัติที่การ์ด "รายการรออนุมัติ"';
+      queue.length=0; renderQueue(); loadPending();
     }catch(e){ st.textContent='ส่งไม่สำเร็จ: '+e.message; }
     $('mPush').disabled=false;
   };
+  $('apLoad').onclick=()=>loadPending();
+  loadPending(true);
   $('mCopy').onclick=()=>{
     if(!queue.length) return;
     const x=queue.map(q=>[q.y,q.mo,q.mat,q.unit,q.price,q.src,q.typ,q.ref].join('\t')).join('\n');
     navigator.clipboard.writeText('ปี พ.ศ.\tเดือน\tรายการวัสดุ\tหน่วย\tราคา\tแหล่งวัสดุ\tประเภท\tอ้างอิง\n'+x);
     $('mCopy').textContent='คัดลอกแล้ว ✓'; setTimeout(()=>$('mCopy').textContent='คัดลอกคิว',1500);
   };
+}
+/* ============ รายการรออนุมัติ (Code.gs รุ่น 17) ============ */
+let PEND=[];
+async function loadPending(silent){
+  const id=($('cfgSheet').value||'').trim(), box=$('apBox'), st=$('apStat');
+  if(!id){ if(!silent) box.innerHTML='<div class="hint">ยังไม่ตั้งค่า Sheet (หน้า ระบบ)</div>'; return; }
+  if(!silent) box.innerHTML='<div class="hint">กำลังอ่านคิวรออนุมัติ…</div>';
+  try{
+    const r=await fetch(`https://docs.google.com/spreadsheets/d/${id}/gviz/tq?tqx=out:csv&sheet=PENDING&nocache=${Date.now()}`);
+    if(!r.ok) throw 0;
+    const rows=csvParse(await r.text()).slice(1).filter(c=>c.length>5&&String(c[11]||'').trim()==='รออนุมัติ');
+    PEND=rows;
+    const by={};
+    rows.forEach(c=>{ const b=c[0]; (by[b]=by[b]||{batch:b,who:c[9],at:c[10],items:[]}).items.push(c); });
+    const list=Object.values(by).sort((a,b)=>a.batch<b.batch?1:-1);
+    st.textContent=rows.length?rows.length+' รายการ · '+list.length+' ชุด':'ไม่มีคิว';
+    st.className='pill '+(rows.length?'warn':'ok');
+    if(!list.length){ box.innerHTML='<div class="hint">ไม่มีรายการรออนุมัติ — คลังเป็นปัจจุบันแล้ว</div>'; return; }
+    box.innerHTML=list.map(g=>{
+      const sum=g.items.reduce((a,c)=>a+(parseFloat(c[5])||0),0);
+      return `<div class="apgrp">
+        <div class="ap-h"><b>${esc(g.batch)}</b> · ${g.items.length} รายการ
+          <span class="hint">ผู้กรอก ${esc(g.who||'-')} · ส่งเมื่อ ${esc(g.at||'-')}</span></div>
+        <div class="tw" style="max-height:190px"><table><thead><tr><th>เดือน</th><th>รายการ</th><th>หน่วย</th><th class="num">ราคา</th><th>แหล่ง</th></tr></thead><tbody>
+        ${g.items.map(c=>`<tr><td>${esc(TH_M[(+c[2]||1)-1]||c[2])} ${String(c[1]).slice(2)}</td><td>${esc(c[3])}</td><td>${esc(c[4])}</td><td class="num">${fmt(parseFloat(c[5]))}</td><td>${esc(c[6])}</td></tr>`).join('')}
+        </tbody></table></div>
+        <div class="ap-act">
+          <input type="password" class="ap-pass" placeholder="รหัสผู้ดูแล" autocomplete="new-password">
+          <button class="btn" data-ok="${esc(g.batch)}">✓ อนุมัติเข้าคลัง</button>
+          <button class="btn ghost" data-no="${esc(g.batch)}" style="color:#A33;border-color:#E3C3C3">✕ ไม่อนุมัติ</button>
+          <span class="hint" data-st="${esc(g.batch)}">รวม ${fmt(sum)} บาท</span>
+        </div></div>`;
+    }).join('');
+    box.querySelectorAll('[data-ok],[data-no]').forEach(b=>b.onclick=()=>
+      decidePend(b.dataset.ok||b.dataset.no, !!b.dataset.ok, b));
+  }catch(e){ box.innerHTML='<div class="hint">อ่านคิวรออนุมัติไม่ได้ — ตรวจว่าวาง Code.gs รุ่น 17 และแชร์ชีทแบบอ่านได้แล้ว</div>'; }
+}
+async function decidePend(batch, ok, btn){
+  const grp=btn.closest('.apgrp'), pass=grp.querySelector('.ap-pass').value;
+  const st=grp.querySelector('[data-st]'); const url=($('cfgUrl').value||'').trim();
+  if(!pass){ st.innerHTML='<span class="up">ใส่รหัสผู้ดูแลก่อน</span>'; return; }
+  if(!ok && !confirm('ยืนยันไม่อนุมัติชุด '+batch+' ?')) return;
+  grp.querySelectorAll('button').forEach(b=>b.disabled=true);
+  st.textContent=ok?'กำลังอนุมัติ…':'กำลังบันทึกผล…';
+  try{
+    const r=await fetch(url,{method:'POST',headers:{'Content-Type':'text/plain;charset=utf-8'},
+      body:JSON.stringify({token:WTOKEN,action:ok?'approve':'reject',pass,batch})});
+    const res=await r.json();
+    if(!res.ok) throw new Error(res.error||'ไม่สำเร็จ');
+    st.innerHTML=ok?`<span class="pill ok">อนุมัติแล้ว</span> เข้าคลัง ${res.result?res.result.moved:0} แถว`
+                   :'<span class="pill">บันทึกว่าไม่อนุมัติแล้ว</span>';
+    setTimeout(()=>{ loadPending(); if(ok) loadLive(); },900);
+  }catch(e){
+    st.innerHTML='<span class="up">'+esc(String(e.message).replace('Error: ',''))+'</span>';
+    grp.querySelectorAll('button').forEach(b=>b.disabled=false);
+  }
 }
 function impChips(){
   return `<span class="ph-chip">📋 คิว <b>${queue.length}</b> รายการ</span>
@@ -2611,8 +2766,8 @@ function sysInit(){
       <td class="num">${new Set(rs.map(s=>s[0])).size.toLocaleString()}</td>
       <td class="num">${new Set(rs.map(s=>s[1])).size}</td></tr>`;});
   $('tblSysStat').innerHTML=h+'</tbody>';
-  const cm=$('cMeta'); if(cm) cm.innerHTML='เริ่มพัฒนา สิงหาคม 2569 · เวอร์ชันปัจจุบัน v5.0 · '+(LIVE.on?'เชื่อมคลังข้อมูลแล้ว':'ยังไม่ได้เชื่อมคลัง');
-  $('sysInfo').innerHTML=`เวอร์ชัน: 5.0 · อัปเดต: 18 ส.ค. 2569<br>
+  const cm=$('cMeta'); if(cm) cm.innerHTML='เริ่มพัฒนา สิงหาคม 2569 · เวอร์ชันปัจจุบัน v5.4 · '+(LIVE.on?'เชื่อมคลังข้อมูลแล้ว':'ยังไม่ได้เชื่อมคลัง');
+  $('sysInfo').innerHTML=`เวอร์ชัน: 5.1 · อัปเดต: 18 ส.ค. 2569<br>
     การเชื่อมราคาน้ำมันอัตโนมัติ: สร้างแท็บชื่อ <b>OIL</b> ในชีทคลังข้อมูล คอลัมน์ A=วันที่ B=จังหวัด C=ราคาดีเซล (หรือ A=วันที่ B=ราคา ถ้ามีเฉพาะขอนแก่น) แชร์แบบ อ่านได้ทุกคนที่มีลิงก์ — หน้าคำนวณระยะขนส่งจะอ่านราคาล่าสุดของจังหวัดที่เลือกให้เอง<br>
     ขอบเขตข้อมูลที่ฝังในไฟล์นี้: ${mLabI(0)} – ${mLabI(LAST)} (${P.series.length.toLocaleString()} คู่ราคา)<br>
     ชีทกลาง: 01.0 คลังข้อมูลวัสดุก่อสร้าง (แท็บ PRICES + OIL + REGISTRY) · เปิดหน้าเว็บครั้งใด ระบบอ่านแท็บ PRICES มารวมกับข้อมูลฝังให้อัตโนมัติ — ราคา TPSO เดือนใหม่และราคากรอกเองจึงขึ้นจอโดยไม่ต้องแก้ไฟล์นี้<br>
