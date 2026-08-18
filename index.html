@@ -414,6 +414,28 @@ tr.detail>td{background:#F8F7F3;border-top:none;padding:10px 14px}
   transition:opacity .18s,transform .18s}
 .kcard[data-mi]:hover .kgo,.kcard[data-mi]:focus-visible .kgo{opacity:1;transform:none}
 .kcard .s b{color:var(--navy)}
+/* ── ตารางความครบถ้วนของข้อมูล ── */
+.covc{display:inline-block;padding:1px 7px;border-radius:5px;font-weight:600;font-size:11px}
+.covc.full{background:#dcf3ee;color:#0b6b57}
+.covc.part{background:#fdf0d5;color:#8a6212}
+.covc.none{background:#eeeeea;color:#8b8b83}
+#tblCov td.cov{text-align:center;padding:3px 4px}
+#tblCov td.nm{cursor:pointer}
+#tblCov td.nm:hover{color:var(--teal);text-decoration:underline}
+#tblCov th{white-space:nowrap}
+/* ── แผนผังเส้นทางเดินของข้อมูล ── */
+.flowmap{display:grid;grid-template-columns:1fr auto 1fr auto 1fr;gap:10px;align-items:start}
+.flowcol{display:flex;flex-direction:column;gap:7px}
+.fl-h{font-size:12px;font-weight:700;color:var(--navy);padding-bottom:3px;border-bottom:2px solid var(--teal)}
+.fl-b{background:#fff;border:1px solid var(--hairline);border-left:3px solid var(--teal);border-radius:8px;
+  padding:7px 9px;font-size:12px;font-weight:600;color:var(--ink);line-height:1.45}
+.fl-b span{display:block;font-weight:400;font-size:11px;color:var(--muted);margin-top:2px}
+.fl-b span b{color:var(--ink2)}
+.fl-b.tab{border-left-color:#C99B3F;font-family:ui-monospace,Menlo,monospace}
+.fl-b.out{border-left-color:var(--navy)}
+.flowarr{align-self:center;font-size:20px;color:var(--teal);font-weight:700}
+@media(max-width:900px){.flowmap{grid-template-columns:1fr}.flowarr{transform:rotate(90deg);align-self:center}}
+@media print{.flowmap{grid-template-columns:1fr 1fr 1fr}.flowarr{display:none}}
 .kcard .spark{width:100%;height:26px;margin-top:7px;display:block}
 .kcard .spark path{fill:none;stroke:var(--teal);stroke-width:1.7;stroke-linecap:round;stroke-linejoin:round}
 .kcard .spark circle{fill:#C99B3F}
@@ -474,7 +496,7 @@ canvas{max-width:100%}
   <div class="brand">
     <h1>ระบบฐานข้อมูลวัสดุ</h1>
     <div class="sub">แขวงทางหลวงชนบทขอนแก่น</div>
-    <div class="chips"><span class="chip" id="bLatest">—</span><span class="chip">v5.4</span></div>
+    <div class="chips"><span class="chip" id="bLatest">—</span><span class="chip">v5.5</span></div>
   </div>
   <nav class="nav" id="nav">
     <button data-p="sum" class="active"><span class="ico">▦</span>หน้าสรุป</button>
@@ -669,6 +691,27 @@ canvas{max-width:100%}
       <div class="tw" style="max-height:340px"><table id="tblSeries"></table></div>
     </div>
   </div>
+
+  <h2 class="sec" data-ic="check" id="secCov">ความครบถ้วนของข้อมูล — รายการไหน เดือนไหน ยังไม่ได้เอาเข้า</h2>
+  <div class="card">
+    <div id="covKpi" class="kcards" style="margin-bottom:12px"></div>
+    <div class="grid3 no-print">
+      <div><label class="f">หมวด</label><select id="covCat"></select></div>
+      <div><label class="f">ค้นชื่อรายการ</label><input type="text" id="covQ" placeholder="พิมพ์บางส่วนของชื่อ เช่น หินคลุก"></div>
+      <div><label class="f">แสดง</label><select id="covMode">
+        <option value="miss" selected>เฉพาะที่ยังไม่ครบ (ขาดอย่างน้อย 1 เดือน)</option>
+        <option value="missLast">เฉพาะที่ยังไม่มีราคาเดือนล่าสุด</option>
+        <option value="all">ทั้งหมด</option></select></div>
+    </div>
+    <div class="statusline no-print" style="margin-top:10px">
+      <button class="btn ghost" id="covXlsx">⬇ ดาวน์โหลดตารางความครบถ้วน (.xlsx)</button>
+      <span class="hint" id="covStat"></span>
+    </div>
+    <div class="cap" style="margin-top:8px">ตัวเลขในช่อง = จำนวนแหล่งที่มีราคาในเดือนนั้น (จากทั้งหมดที่เคยมีราคาของรายการนั้น)
+      · <span class="covc full">เขียว</span> = ครบทุกแหล่ง · <span class="covc part">เหลือง</span> = มีบางแหล่ง · <span class="covc none">เทา</span> = เดือนนั้นไม่มีเลย
+      · กดชื่อรายการเพื่อเปิดกราฟแนวโน้ม</div>
+    <div class="tw" style="max-height:460px;margin-top:8px"><table id="tblCov"></table></div>
+  </div>
 </section>
 
 <!-- ================= นำเข้าข้อมูล ================= -->
@@ -730,6 +773,18 @@ canvas{max-width:100%}
       </div>
       <div id="apBox" style="margin-top:10px"></div>
     </div>
+    <div class="card" style="margin-bottom:12px">
+      <h2 data-ic="pin">แหล่งที่ยังไม่มีพิกัด <span class="pill warn" id="noGeoStat">—</span></h2>
+      <div class="hint" style="margin-bottom:8px">แหล่งที่มีราคาในคลังแต่ยังไม่มีหมุดในแท็บ SOURCES —
+        <b>คำนวณระยะขนส่งไม่ได้จนกว่าจะใส่พิกัด</b>
+        <br>วิธีเอาพิกัด: เปิด Google Maps → คลิกขวาที่จุดนั้น → คลิกตัวเลขคู่แรก (คัดลอกอัตโนมัติ) → วางลงช่องเดียวได้เลย</div>
+      <div class="statusline">
+        <button class="btn ghost" id="noGeoScan">🔄 ตรวจหาแหล่งที่ยังไม่มีพิกัด</button>
+        <button class="btn gold" id="noGeoSave">📍 บันทึกพิกัดขึ้นคลัง</button>
+      </div>
+      <div id="noGeoBox" style="margin-top:10px"></div>
+      <div class="hint" id="noGeoMsg" style="margin-top:8px"></div>
+    </div>
     <div class="card">
       <h2 data-ic="clock">คิวรอส่งขึ้นคลังข้อมูล <span class="pill warn" id="qStat">0 รายการ</span></h2>
       <div class="tw" style="max-height:340px"><table id="tblQueue"><thead><tr><th>เดือน</th><th>รายการ</th><th>หน่วย</th><th class="num">ราคา</th><th>แหล่ง</th><th>อ้างอิง</th><th>สถานะชื่อ</th></tr></thead><tbody id="qRows"></tbody></table></div>
@@ -782,6 +837,43 @@ canvas{max-width:100%}
     </div>
   </div>
   <div class="card">
+    <h2 data-ic="share">เส้นทางเดินของข้อมูล — ราคา · แหล่ง · พิกัด ไปทางไหนบ้าง</h2>
+    <div class="flowmap">
+      <div class="flowcol">
+        <div class="fl-h">① ข้อมูลเข้า</div>
+        <div class="fl-b">ดึงTPSO.py<span>ราคา + ชื่อแหล่ง (ไม่มีพิกัด)</span></div>
+        <div class="fl-b">นำเข้าไฟล์ Excel<span>ชีต "ราคา" + ชีต "แหล่งวัสดุ" (มีพิกัด)</span></div>
+        <div class="fl-b">กรอกทีละรายการบนแดชบอร์ด<span>ราคา + ชื่อแหล่ง</span></div>
+        <div class="fl-b">อัปโหลดบัญชีคุมวัสดุ.xlsx<span>ชีต "บัญชีคุม" + ชีต "แหล่งวัสดุ" = แม่แบบถาวร</span></div>
+      </div>
+      <div class="flowarr">→</div>
+      <div class="flowcol">
+        <div class="fl-h">② คลังบน Google Sheet</div>
+        <div class="fl-b tab">PRICES<span>ปี · เดือน · รายการ · หน่วย · ราคา · <b>ชื่อแหล่ง</b> · ช่องทาง</span></div>
+        <div class="fl-b tab">PENDING<span>คิวรออนุมัติ — ยังไม่นับเป็นราคาจริงจนกดอนุมัติ</span></div>
+        <div class="fl-b tab">REGISTRY<span>บัญชีคุม — ใช้จับคู่ชื่อให้เป็นชื่อมาตรฐาน + หมวด + หน่วย</span></div>
+        <div class="fl-b tab">SOURCES<span>ชื่อแหล่ง · <b>ละติจูด · ลองจิจูด</b> · หมายเหตุ</span></div>
+        <div class="fl-b tab">NEW_ITEMS<span>ชื่อที่ยังจับคู่บัญชีคุมไม่ได้ + หน่วย</span></div>
+        <div class="fl-b tab">OIL<span>ราคาดีเซล ณ อำเภอเมือง + วันที่ราคามีผล</span></div>
+      </div>
+      <div class="flowarr">→</div>
+      <div class="flowcol">
+        <div class="fl-h">③ เอาไปใช้</div>
+        <div class="fl-b out">หน้าสรุป / สถิติราคา<span>ใช้ PRICES ทุกเดือน (ดูแนวโน้ม + ความครบถ้วน)</span></div>
+        <div class="fl-b out">เปรียบเทียบราคา + ค่าขนส่ง<span>PRICES <b>เดือนล่าสุดของแต่ละแหล่ง</b> × SOURCES (พิกัด→ระยะ) × OIL (ช่วงตาราง ว 477)</span></div>
+        <div class="fl-b out">ส่งออกข้อมูลรายเดือน<span>ไฟล์ราคาสำหรับ DRR_KK Estimate</span></div>
+      </div>
+    </div>
+    <div class="cap" style="margin-top:10px">
+      <b>จุดต่อที่ต้องระวัง:</b> PRICES กับ SOURCES เชื่อมกันด้วย <b>ชื่อแหล่ง (ข้อความ)</b> อย่างเดียว —
+      สะกดต่างกันนิดเดียวก็ถือเป็นคนละแหล่ง ระบบมีตัวจับคู่แบบยืดหยุ่นช่วยอยู่ (ชื่อเต็ม/ชื่อย่อ) แต่ถ้ากำกวมจะไม่เดาให้
+      · ราคาที่นำเข้าไม่มีช่องพิกัด <b>โดยตั้งใจ</b> เพราะพิกัดเป็นของแหล่ง ไม่ใช่ของราคา — ใส่ครั้งเดียวใช้ได้ตลอด
+      · แหล่งไหนยังไม่มีหมุด ดูที่หน้า <b>นำเข้าข้อมูล → แหล่งที่ยังไม่มีพิกัด</b> เติมแล้วส่งขึ้นคลังได้เลย
+      · <b>ที่เก็บถาวรคือชีต "แหล่งวัสดุ" ในไฟล์บัญชีคุม</b> — เติมพิกัดผ่านแดชบอร์ดแล้ว ให้ไปเติมในไฟล์นั้นด้วย
+      ไม่งั้นครั้งหน้าที่อัปโหลดบัญชีคุมทับ (mode replace) พิกัดที่เพิ่งเติมจะหายไป
+    </div>
+  </div>
+  <div class="card" style="margin-top:12px">
     <h2 data-ic="book">แหล่งที่มาของข้อมูลทุกส่วนในระบบ</h2>
     <div id="sysSrc" style="display:grid;grid-template-columns:repeat(auto-fit,minmax(320px,1fr));gap:10px"></div>
   </div>
@@ -1116,7 +1208,7 @@ async function loadLive(){
   }
 }
 function rerender(){
-  [buildSummary, matInit, statInit, buildMovers, impInit, expInit, sysInit, drawMatChips]
+  [buildSummary, matInit, statInit, buildMovers, covInit, impInit, drawNoGeo, expInit, sysInit, drawMatChips]
     .forEach(f=>{ try{ f(); }catch(e){ console.error('rerender:', f.name, e); } });
   kddAll(); kfreeAll(); paintIcons(); drawConn();
 }
@@ -1149,6 +1241,7 @@ const ICON = {
   tag:   _sv('<path d="M20.6 13.4L12 22l-9-9V3h10l7.6 7.6a2 2 0 0 1 0 2.8z"/><circle cx="7.5" cy="7.5" r="1.4"/>'),
   grid:  _sv('<rect x="3" y="3" width="7" height="7" rx="1.4"/><rect x="14" y="3" width="7" height="7" rx="1.4"/><rect x="3" y="14" width="7" height="7" rx="1.4"/><rect x="14" y="14" width="7" height="7" rx="1.4"/>'),
   doc:   _sv('<path d="M14 3H7a2 2 0 0 0-2 2v14a2 2 0 0 0 2 2h10a2 2 0 0 0 2-2V8z"/><path d="M14 3v5h5M9 13h6M9 17h6"/>'),
+  share: _sv('<circle cx="6" cy="12" r="2.6"/><circle cx="18" cy="6" r="2.6"/><circle cx="18" cy="18" r="2.6"/><path d="M8.4 10.8l7.2-3.6M8.4 13.2l7.2 3.6"/>'),
 };
 /* ใส่ไอคอนให้หัวการ์ดที่ระบุด้วย data-ic */
 function paintIcons(){
@@ -1471,22 +1564,15 @@ function buildSummary(){
     ['งานไฟฟ้า', [
       ['สาย CV ขนาด 2 x 25 ตร.มม.', /\bCV\b[\s\S]*2 ?[x×] ?25\b/i, /^เมตร|^ม\.$/],
       ['สาย NYY ขนาด 2 x 25 ตร.มม.', /NYY[\s\S]*2 ?[x×] ?25\b/i, /^ม้วน|^เมตร/],
-      /* VCT-G ยังไม่มีในบัญชีคุม (มีแต่ VCT ธรรมดา) — ตัวที่ 4 คือชื่อที่ "อยากได้จริง"
-         ถ้าคลังมี VCT-G เมื่อไร การ์ดจะสลับไปใช้ตัวนั้นเองอัตโนมัติ ระหว่างนี้โชว์ VCT ธรรมดาไปก่อน */
-      ['สาย VCT-G ขนาด 2 x 2.5 ตร.มม.', /VCT[\s\S]*2 ?[x×] ?2\.5\b/i, /^เมตร|^ม้วน|^ม\.$/,
-        {re:/VCT ?-? ?G\b[\s\S]*2 ?[x×] ?2\.5\b/i, note:'ยังไม่มี VCT-G ในคลัง — แสดง VCT ธรรมดาแทน'}],
+      /* VCT-G ยังไม่มีในบัญชีคุม (มีแต่ VCT ธรรมดา) — จับเฉพาะ VCT-G เท่านั้น
+         ไม่มีก็ขึ้นว่ายังไม่มีในคลัง ไม่เอา VCT ธรรมดามาแสดงแทน จะได้ไม่เข้าใจผิด */
+      ['สาย VCT-G ขนาด 2 x 2.5 ตร.มม.', /VCT ?-? ?G\b[\s\S]*2 ?[x×] ?2\.5\b/i, /^เมตร|^ม้วน|^ม\.$/],
       ['RCBO 2P 10A', /RCBO[\s\S]*2 ?P[\s\S]*10 ?A/i, /^ชุด|^อัน|^ตัว/],
       ['MCCB 2P 80A 30KA', /MCCB[\s\S]*2 ?P[\s\S]*80 ?A/i, /^ชุด|^อัน|^ตัว/]]],
   ];
-  const kcard = ([label,re,unitRe,pref])=>{
+  const kcard = ([label,re,unitRe])=>{
     const mi = new Set(); P.mats.forEach((m,i)=>{ if(re.test(m)) mi.add(i); });
-    let all = P.series.filter(s=>mi.has(s[0]));
-    /* ถ้ามีชื่อที่ต้องการเป๊ะ ๆ (เช่น VCT-G) ให้ใช้เฉพาะตัวนั้น ไม่งั้นค่อยตกมาใช้ตัวกว้าง */
-    let subst = '';
-    if(pref&&pref.re){
-      const exact = all.filter(s=>pref.re.test(P.mats[s[0]]||''));
-      if(exact.length) all = exact; else subst = pref.note||'';
-    }
+    const all = P.series.filter(s=>mi.has(s[0]));
     /* ล็อกหน่วย — ไอเท็มหน่วยไม่ตรงไม่เอามาเทียบเด็ดขาด */
     let ss = unitRe ? all.filter(s=>unitRe.test(String(P.units[s[2]]||'').trim())) : all;
     if(!ss.length){
@@ -1500,7 +1586,9 @@ function buildSummary(){
     let best=null, bestPrev=null;
     let lm=-1; ss.forEach(s=>{const lv=latestVal(s[4]); if(lv&&lv.m>lm) lm=lv.m;});
     ss.forEach(s=>{ const p=s[4][lm]; if(p!=null && (best==null||p<best.p)) best={p,s}; });
-    if(best){ const pv=best.s[4].slice(0,lm).reverse().find(x=>x!=null); bestPrev=pv??null; }
+    if(!best) return `<div class="kcard"><div class="t">${label}</div><div class="v" style="color:var(--muted)">—</div>
+      <div class="s">มีรายการในคลังแต่ยังไม่มีตัวเลขราคา</div></div>`;
+    { const pv=best.s[4].slice(0,lm).reverse().find(x=>x!=null); bestPrev=pv??null; }
     const d = (best&&bestPrev!=null)? (best.p-bestPrev)/bestPrev*100 : null;
     const cls = d==null?'fl':d>0.05?'up':d<-0.05?'dn':'fl';
     const stale = lm!==LAST;
@@ -1522,8 +1610,7 @@ function buildSummary(){
       <div class="t">${label}</div>
       <div class="v">${fmt(best.p)} <span class="u">บาท/${esc(P.units[best.s[2]]||'-')}</span></div>
       <div class="s">ถูกสุดของ <b>${mLabI(lm)}</b>${stale?' <span class="pill warn">ยังไม่มีราคา '+mLabI(LAST)+'</span>':''}
-        · ${nsrc} แหล่ง<br>${esc(P.srcs[best.s[1]]||'(ไม่ระบุ)')}
-        ${subst?'<br><span class="pill warn">'+esc(subst)+'</span>':''}</div>
+        · ${nsrc} แหล่ง<br>${esc(P.srcs[best.s[1]]||'(ไม่ระบุ)')}</div>
       ${spark(best.s[4])}
       <div class="d ${cls}">${d==null?'ไม่มีฐานเทียบ':(d>0?'▲ +':d<0?'▼ ':'—  ')+Math.abs(d).toFixed(2)+'% จากครั้งก่อน'}</div>
       <div class="kgo">ดูกราฟแนวโน้ม →</div></div>`;
@@ -1860,7 +1947,11 @@ function renderCmp(){
     const best=calc.find(x=>x.t.total!=null);
     const unit=calc[0]?calc[0].r.unit:'-';
     const ex=exOf(mi);
+    const noGeo=calc.filter(x=>!x.r.sc).length;
     let h=`<div class="card" style="margin-bottom:12px"><h2>${esc(P.mats[mi])} <span class="hint" style="font-weight:400">หน่วย: ${esc(unit)} · ${calc.length} แหล่ง</span></h2>
+      <div class="cap no-print" style="margin:-4px 0 8px">ราคาที่นำมาคิด = <b>ราคาล่าสุดของแต่ละแหล่ง</b> (แหล่งไหนอัปเดตถึงเดือนไหน ใช้ของเดือนนั้น)
+        ไม่ใช่ราคาถูกสุดข้ามเดือน — เดือนเก่าใช้ดูสถิติอย่างเดียว · แถวไหนไม่ใช่เดือนล่าสุดจะมีป้ายเดือนกำกับไว้
+        ${noGeo?`<br><span class="up">มี ${noGeo} แหล่งยังไม่มีพิกัด</span> — คำนวณระยะให้อัตโนมัติไม่ได้ ไปเติมพิกัดที่หน้า <b>นำเข้าข้อมูล → แหล่งที่ยังไม่มีพิกัด</b>`:''}</div>
       <div class="statusline no-print" style="margin:2px 0 8px">
         <span style="font-size:12px">ค่าขนขึ้น-ลง <input type="number" min="0" step="0.01" value="${ex.up||''}" placeholder="0" data-exu="${mi}" style="width:96px"> บาท/${esc(unit)}</span>
         <span style="font-size:12px">ค่าดัด/แปรรูป <input type="number" min="0" step="0.01" value="${ex.bend||''}" placeholder="0" data-exb="${mi}" style="width:96px"> บาท/${esc(unit)}</span>
@@ -2432,6 +2523,102 @@ function fillSeriesTable(ss){
   ss.forEach(s=>{ h+=`<tr><td>${esc(P.srcs[s[1]]||'(ไม่ระบุ)')}</td>`+s[4].map(v=>`<td class="num">${v==null?'<span class="fl">—</span>':fmt(v)}</td>`).join('')+'</tr>'; });
   $('tblSeries').innerHTML=h+'</tbody>';
 }
+/* ══════ ความครบถ้วนของข้อมูล — รายการไหน เดือนไหน ยังไม่ได้เอาเข้า ══════
+   หน่วยที่นับคือ "คู่ราคา" = วัสดุ 1 รายการ × แหล่ง 1 แหล่ง (คือ 1 เส้นใน P.series)
+   ช่องของเดือนหนึ่ง = มีกี่แหล่งที่ลงราคาไว้ในเดือนนั้น จากทั้งหมดที่เคยลงให้รายการนี้ */
+function covBuild(){
+  const map=new Map();                     /* matIdx → {tot, per:[จำนวนแหล่งต่อเดือน]} */
+  P.series.forEach(s=>{
+    let o=map.get(s[0]);
+    if(!o){ o={tot:0, per:Array(NM).fill(0)}; map.set(s[0],o); }
+    o.tot++;
+    for(let i=0;i<NM;i++) if(s[4][i]!=null) o.per[i]++;
+  });
+  return map;
+}
+function covRows(){
+  const cov=covBuild();
+  const cat=$('covCat')?$('covCat').value:'-1';
+  const q=($('covQ')?$('covQ').value:'').trim().toLowerCase();
+  const mode=$('covMode')?$('covMode').value:'miss';
+  const out=[];
+  cov.forEach((o,mi)=>{
+    const nm=P.mats[mi]||'';
+    if(q && nm.toLowerCase().indexOf(q)<0) return;
+    if(cat&&cat!=='-1'){
+      const c = REG.on ? (P.matCat||{})[mi] : null;
+      if(REG.on){ if(c!==cat) return; }
+      else { const any=P.series.some(s=>s[0]===mi&&P.types[s[3]]===cat); if(!any) return; }
+    }
+    const missMonths=[];
+    for(let i=0;i<NM;i++) if(o.per[i]<o.tot) missMonths.push(i);
+    const noLast=o.per[LAST]===0;
+    if(mode==='miss'&&!missMonths.length) return;
+    if(mode==='missLast'&&!noLast) return;
+    out.push({mi,nm,tot:o.tot,per:o.per,missMonths,noLast});
+  });
+  out.sort((a,b)=>(a.per[LAST]-b.per[LAST])||a.nm.localeCompare(b.nm,'th'));
+  return out;
+}
+const COV_CAP=400;
+function drawCov(){
+  if(!$('tblCov')) return;
+  const cov=covBuild();
+  /* ── สรุปบนสุด ── */
+  let pairs=0, havLast=0, matsNoLast=0, matsTot=0;
+  cov.forEach(o=>{ pairs+=o.tot; havLast+=o.per[LAST]; matsTot++; if(!o.per[LAST]) matsNoLast++; });
+  const pct = pairs? Math.round(havLast/pairs*1000)/10 : 0;
+  const card=(t,v,s,cls)=>`<div class="kcard"><div class="t">${t}</div>
+    <div class="v ${cls||''}">${v}</div><div class="s">${s}</div></div>`;
+  $('covKpi').innerHTML =
+     card('คู่ราคาในคลัง (วัสดุ×แหล่ง)', fmtInt(pairs), matsTot.toLocaleString()+' รายการ')
+   + card('มีราคาเดือน '+mLabI(LAST), fmtInt(havLast)+' <span class="u">คู่</span>', pct+'% ของทั้งคลัง', pct>=80?'':'up')
+   + card('รายการที่ยังไม่มีราคาเดือนนี้', fmtInt(matsNoLast)+' <span class="u">รายการ</span>',
+          matsNoLast?'ต้องตามเก็บ หรือใช้ราคายกยอด':'ครบทุกรายการแล้ว', matsNoLast?'up':'dn');
+  /* ── ตาราง ── */
+  const rows=covRows();
+  const shown=rows.slice(0,COV_CAP);
+  $('covStat').innerHTML = rows.length
+    ? 'พบ '+fmtInt(rows.length)+' รายการ'+(rows.length>COV_CAP?' — แสดง '+COV_CAP+' แถวแรก (ไฟล์ .xlsx ได้ครบทุกแถว)':'')
+    : 'ไม่มีรายการตามเงื่อนไขที่เลือก';
+  let h='<thead><tr><th>รายการวัสดุ</th><th class="num">แหล่ง</th>'
+       + P.months.map((_,i)=>`<th class="num">${mLabI(i)}</th>`).join('')
+       + '<th class="num">ขาด</th></tr></thead><tbody>';
+  shown.forEach(r=>{
+    h+=`<tr><td class="nm" data-mi="${r.mi}">${esc(r.nm)}</td><td class="num">${r.tot}</td>`
+      + r.per.map(n=>{
+          const cls=n===0?'none':n>=r.tot?'full':'part';
+          return `<td class="cov"><span class="covc ${cls}">${n===0?'—':n+'/'+r.tot}</span></td>`;
+        }).join('')
+      + `<td class="num ${r.missMonths.length?'up':'dn'}">${r.missMonths.length}</td></tr>`;
+  });
+  $('tblCov').innerHTML=h+'</tbody>';
+  $('tblCov').querySelectorAll('td.nm').forEach(td=>td.onclick=()=>gotoStat(+td.dataset.mi,-1));
+}
+function covInit(){
+  if(!$('covCat')) return;
+  const cats = REG.on ? [...new Set(Object.values(P.matCat||{}))].sort((a,b)=>a.localeCompare(b,'th'))
+                      : P.types.filter(Boolean);
+  $('covCat').innerHTML='<option value="-1">ทุกหมวด</option>'
+    + cats.map(c=>`<option value="${esc(c)}">${esc(c)}</option>`).join('');
+  $('covCat').onchange=drawCov;
+  $('covMode').onchange=drawCov;
+  let t=null; $('covQ').oninput=()=>{ clearTimeout(t); t=setTimeout(drawCov,220); };
+  $('covXlsx').onclick=()=>{
+    if(typeof XLSX==='undefined'){ alert('ต้องต่ออินเทอร์เน็ตครั้งแรกเพื่อโหลดตัวสร้างไฟล์'); return; }
+    const rows=covRows();
+    const aoa=[['รายการวัสดุ','หมวด','จำนวนแหล่ง',...P.months.map((_,i)=>mLabI(i)),'จำนวนเดือนที่ยังไม่ครบ','เดือนที่ยังไม่ครบ']];
+    rows.forEach(r=>aoa.push([r.nm, (REG.on?(P.matCat||{})[r.mi]:'')||'', r.tot,
+      ...r.per.map((n,i)=>n+'/'+r.tot), r.missMonths.length, r.missMonths.map(i=>mLabI(i)).join(', ')]));
+    const ws=XLSX.utils.aoa_to_sheet(aoa);
+    ws['!cols']=[{wch:48},{wch:16},{wch:9},...P.months.map(()=>({wch:8})),{wch:10},{wch:34}];
+    const wb=XLSX.utils.book_new(); XLSX.utils.book_append_sheet(wb,ws,'ความครบถ้วน');
+    XLSX.writeFile(wb,'ความครบถ้วนของข้อมูลราคา_'+mLabI(LAST).replace(/\s/g,'')+'.xlsx');
+  };
+  kddAll(); drawCov();
+}
+const fmtInt=n=>Number(n||0).toLocaleString('th-TH');
+
 /* เด้งไปหน้าสถิติราคา พร้อมตั้งรายการ (และแหล่ง ถ้าระบุ) ให้เรียบร้อย
    ใช้ร่วมกันระหว่างการ์ด KPI หน้าสรุป กับตารางรายการที่ราคาขยับ */
 function gotoStat(mi, si){
@@ -2511,13 +2698,30 @@ function impInit(){
     const _ref=(_url?_url+' · ':'')+$('mRef').value.trim();
     queue.push({y,mo,mat,unit,price,src,ref:_ref,typ:$('mType').value,chan:$('mChan').value,known:P.mats.includes(mat)||!!regStd(mat)});
     $('mMat').value='';$('mPrice').value='';$('mRef').value='';
-    renderQueue();
+    renderQueue(); try{ drawNoGeo(); }catch(e){}
   };
   const TH_ABBR={'ม.ค.':1,'ก.พ.':2,'มี.ค.':3,'เม.ย.':4,'พ.ค.':5,'มิ.ย.':6,'ก.ค.':7,'ส.ค.':8,'ก.ย.':9,'ต.ค.':10,'พ.ย.':11,'ธ.ค.':12};
   window.parseImpWb=function(wb){
-    const ws=wb.Sheets[wb.SheetNames[0]];
+    /* ── ชีตราคา: เอาชีตชื่อ "ราคา" ก่อน ไม่มีค่อยใช้ชีตแรก ── */
+    const nameOf=re=>wb.SheetNames.find(n=>re.test(n));
+    const priceSheet = nameOf(/^ราคา/) || wb.SheetNames[0];
+    const ws=wb.Sheets[priceSheet];
+    /* ── ชีตแหล่งวัสดุ: เก็บพิกัดเข้า GEOQ ไว้ให้การ์ด "แหล่งที่ยังไม่มีพิกัด" ── */
+    let geo=0;
+    const sName=nameOf(/แหล่ง/);
+    if(sName&&sName!==priceSheet){
+      const aoaS=XLSX.utils.sheet_to_json(wb.Sheets[sName],{header:1,defval:''});
+      aoaS.slice(1).forEach(r=>{
+        const nm=String(r[0]||'').trim(); const lat=parseFloat(r[1]), lon=parseFloat(r[2]);
+        if(!nm||!isFinite(lat)||!isFinite(lon)||Math.abs(lat)>90||Math.abs(lon)>180) return;
+        const i=GEOQ.findIndex(g=>g.name===nm);
+        const rec={name:nm,lat,lon,note:String(r[3]||'').trim()};
+        if(i>=0) GEOQ[i]=rec; else GEOQ.push(rec);
+        geo++;
+      });
+    }
     const aoa=XLSX.utils.sheet_to_json(ws,{header:1,defval:''});
-    if(!aoa.length) return {read:0,ok:0,skip:0};
+    if(!aoa.length){ try{drawNoGeo();}catch(e){} return {read:0,ok:0,skip:0,geo}; }
     const hd=aoa[0].map(x=>String(x).trim());
     const col=t=>hd.findIndex(h=>h.includes(t));
     const ci={y:col('ปี'),m:col('เดือน'),mat:col('รายการ'),unit:col('หน่วย'),pr:col('ราคา'),src:col('แหล่ง'),typ:col('ประเภท'),ref:col('หมายเหตุ')};
@@ -2540,7 +2744,8 @@ function impInit(){
       ok++;
     });
     renderQueue();
-    return {read:aoa.length-1,ok,skip};
+    try{ drawNoGeo(); }catch(e){}
+    return {read:aoa.length-1,ok,skip,geo};
   };
   $('impXl').onclick=()=>$('impFile').click();
   $('impFile').onchange=async()=>{
@@ -2549,17 +2754,33 @@ function impInit(){
     if(typeof XLSX==='undefined'){ st.textContent='ตัวอ่าน .xlsx ยังไม่โหลด — ต่ออินเทอร์เน็ตแล้วรีเฟรช'; return; }
     try{
       const res=parseImpWb(XLSX.read(await f.arrayBuffer(),{type:'array'}));
-      st.textContent='อ่าน '+res.read+' แถว เข้าคิว '+res.ok+' รายการ'+(res.skip?' (ข้าม '+res.skip+' แถวไม่สมบูรณ์)':'');
+      st.innerHTML='อ่าน '+res.read+' แถว เข้าคิว '+res.ok+' รายการ'+(res.skip?' (ข้าม '+res.skip+' แถวไม่สมบูรณ์)':'')
+        +(res.geo?' · อ่านพิกัดจากชีต "แหล่งวัสดุ" '+res.geo+' แหล่ง — ดูการ์ด <b>แหล่งที่ยังไม่มีพิกัด</b>':'');
     }catch(e){ st.textContent='อ่านไม่ได้: '+e.message; }
     $('impFile').value='';
   };
   $('impTpl').onclick=()=>{
     if(typeof XLSX==='undefined'){ alert('ต้องต่ออินเทอร์เน็ตครั้งแรกเพื่อโหลดตัวสร้างไฟล์'); return; }
+    /* แบบฟอร์ม 2 ชีต — ชีต "ราคา" คู่กับชีต "แหล่งวัสดุ"
+       ชื่อแหล่งในชีตราคา ต้องสะกดตรงกับชีตแหล่งวัสดุ ระบบจะได้จับคู่พิกัดให้อัตโนมัติ
+       ไม่มีพิกัด = คำนวณระยะขนส่งไม่ได้ */
     const aoa=[['ปี พ.ศ.','เดือน','รายการวัสดุ','หน่วย','ราคา','แหล่งวัสดุ','ประเภท','หมายเหตุ'],
       [P.ylist[LAST],P.months[LAST],'ยางแอสฟัลต์อิมัลชัน CSS-1h','ตัน',36500,'บจก.ตัวอย่าง','ยางแอสฟัลต์','ใบเสนอราคา SQ.xxxx ลว. ... · ไม่รวม VAT'],
       [P.ylist[LAST],'ส.ค.','หินคลุก','ลบ.ม.',250,'โรงโม่ตัวอย่าง','หิน','เดือนใส่เป็นเลขหรือตัวย่อไทยก็ได้']];
+    const aoaS=[['ชื่อแหล่ง','ละติจูด','ลองจิจูด','หมายเหตุ / ที่อยู่'],
+      ['บจก.ตัวอย่าง',16.432100,102.823600,'ชื่อต้องสะกดตรงกับคอลัมน์ แหล่งวัสดุ ในชีตราคา'],
+      ['โรงโม่ตัวอย่าง',16.680000,101.980000,'พิกัดเอาจาก Google Maps → คลิกขวาที่จุด → คลิกตัวเลขคู่แรก'],
+      [],['หมายเหตุ:'],
+      ['· แหล่งที่มีพิกัดแล้วในคลัง ไม่ต้องใส่ซ้ำ ระบบจะข้ามให้'],
+      ['· ไม่มีพิกัด = แดชบอร์ดหาเส้นทาง/ระยะทางไม่ได้ จึงคิดค่าขนส่งตาม ว 477 ไม่ได้'],
+      ['· ใส่พิกัดชุดเดียวกันนี้ในชีต "แหล่งวัสดุ" ของไฟล์บัญชีคุมด้วย จะได้เป็นแม่แบบถาวร']];
+    const wb=XLSX.utils.book_new();
     const ws=XLSX.utils.aoa_to_sheet(aoa);
-    const wb=XLSX.utils.book_new(); XLSX.utils.book_append_sheet(wb,ws,'Sheet1');
+    ws['!cols']=[{wch:9},{wch:9},{wch:44},{wch:9},{wch:12},{wch:26},{wch:14},{wch:46}];
+    XLSX.utils.book_append_sheet(wb,ws,'ราคา');
+    const wsS=XLSX.utils.aoa_to_sheet(aoaS);
+    wsS['!cols']=[{wch:30},{wch:13},{wch:13},{wch:66}];
+    XLSX.utils.book_append_sheet(wb,wsS,'แหล่งวัสดุ');
     XLSX.writeFile(wb,'แบบฟอร์มนำเข้าราคา.xlsx');
   };
   /* ชื่อผู้กรอก — จำไว้ในเครื่องนี้ */
@@ -2596,6 +2817,86 @@ function impInit(){
     $('mCopy').textContent='คัดลอกแล้ว ✓'; setTimeout(()=>$('mCopy').textContent='คัดลอกคิว',1500);
   };
 }
+/* ══════ แหล่งที่ยังไม่มีพิกัด — ตัวเชื่อมระหว่าง "นำเข้าราคา" กับ "คำนวณระยะขนส่ง" ══════
+   ราคาที่นำเข้าจะพาชื่อแหล่งขึ้นแท็บ PRICES ก็จริง แต่พิกัดอยู่คนละแท็บ (SOURCES)
+   ถ้าไม่มีหมุด → หาเส้นทาง/ระยะไม่ได้ → คิดค่าขนส่งตาม ว 477 ไม่ได้
+   การ์ดนี้ไล่หาชื่อที่ยังจับคู่กับ SOURCES ไม่ได้ แล้วให้กรอกพิกัดส่งขึ้นคลังได้เลย */
+let GEOQ = [];          /* [{name, lat, lon, note}] — พิกัดที่มาจากชีต "แหล่งวัสดุ" ของไฟล์นำเข้า */
+function parseLatLon(txt){
+  const t=String(txt||'').trim();
+  if(!t) return null;
+  /* รองรับลิงก์ Google Maps ด้วย เช่น .../@16.4322,102.8236,15z  หรือ  ?q=16.4322,102.8236 */
+  const m=t.match(/(-?\d{1,2}\.\d{3,})\s*[, ]\s*(-?\d{1,3}\.\d{3,})/);
+  if(!m) return null;
+  const lat=parseFloat(m[1]), lon=parseFloat(m[2]);
+  if(!isFinite(lat)||!isFinite(lon)||Math.abs(lat)>90||Math.abs(lon)>180) return null;
+  return {lat,lon};
+}
+function noGeoList(){
+  /* ชื่อแหล่งทั้งหมดที่ปรากฏในคลังราคา + ที่อยู่ในคิวรออัปโหลด + ที่มาจากชีตแหล่งของไฟล์นำเข้า */
+  const names=new Set();
+  P.series.forEach(s=>{ const n=P.srcs[s[1]]; if(n) names.add(String(n).trim()); });
+  queue.forEach(q=>{ if(q.src) names.add(String(q.src).trim()); });
+  GEOQ.forEach(g=>names.add(g.name));
+  const out=[];
+  names.forEach(n=>{ if(!n||n==='(ไม่ระบุ)') return; if(findSrc(n)) return;
+    const g=GEOQ.find(x=>x.name===n);
+    out.push({name:n, lat:g?g.lat:null, lon:g?g.lon:null, note:g?g.note:''}); });
+  out.sort((a,b)=>a.name.localeCompare(b.name,'th'));
+  return out;
+}
+function drawNoGeo(){
+  if(!$('noGeoBox')) return;
+  const list=noGeoList();
+  const st=$('noGeoStat');
+  st.textContent = list.length? list.length+' แหล่ง' : 'ครบทุกแหล่ง';
+  st.className='pill '+(list.length?'warn':'ok');
+  if(!list.length){ $('noGeoBox').innerHTML='<div class="hint">แหล่งทุกแหล่งที่มีราคาในคลัง มีหมุดพิกัดครบแล้ว — คำนวณระยะขนส่งได้ทุกแหล่ง</div>'; return; }
+  $('noGeoBox').innerHTML='<div class="tw" style="max-height:300px"><table id="tblNoGeo"><thead><tr>'
+    +'<th>ชื่อแหล่ง (ตามที่อยู่ในคลังราคา)</th><th>พิกัด — วางคู่ ละติจูด, ลองจิจูด</th><th>หมายเหตุ / ที่อยู่</th></tr></thead><tbody>'
+    + list.map((r,i)=>`<tr><td>${esc(r.name)}</td>
+        <td><input type="text" class="ng-ll" data-i="${i}" placeholder="16.432100, 102.823600 หรือวางลิงก์ Google Maps"
+              value="${r.lat!=null?r.lat+', '+r.lon:''}" style="min-width:250px"></td>
+        <td><input type="text" class="ng-nt" data-i="${i}" placeholder="เช่น โรงโม่ ต.... อ.... จ...." value="${esc(r.note||'')}"></td></tr>`).join('')
+    +'</tbody></table></div>';
+  $('noGeoBox')._list=list;
+}
+function noGeoInit(){
+  if(!$('noGeoScan')) return;
+  $('noGeoScan').onclick=()=>{ drawNoGeo(); $('noGeoMsg').textContent=''; };
+  $('noGeoSave').onclick=async()=>{
+    const url=($('cfgUrl').value||'').trim(), msg=$('noGeoMsg');
+    const list=$('noGeoBox')._list||[];
+    if(!url){ msg.textContent='ยังไม่ตั้ง WebApp URL (ดูหน้า ระบบ)'; return; }
+    const rows=[]; const bad=[];
+    $('noGeoBox').querySelectorAll('.ng-ll').forEach(inp=>{
+      const i=+inp.dataset.i, r=list[i]; if(!r) return;
+      const raw=inp.value.trim(); if(!raw) return;
+      const ll=parseLatLon(raw);
+      if(!ll){ bad.push(r.name); return; }
+      const nt=$('noGeoBox').querySelector('.ng-nt[data-i="'+i+'"]');
+      rows.push([r.name, ll.lat, ll.lon, nt?nt.value.trim():'']);
+    });
+    if(bad.length){ msg.innerHTML='<span class="up">อ่านพิกัดไม่ออก '+bad.length+' แหล่ง</span> ('+esc(bad.slice(0,3).join(', '))+') — ต้องเป็นตัวเลข 2 ตัวคั่นด้วยจุลภาค'; return; }
+    if(!rows.length){ msg.textContent='ยังไม่ได้กรอกพิกัดสักแหล่ง'; return; }
+    $('noGeoSave').disabled=true; msg.textContent='กำลังส่งพิกัด '+rows.length+' แหล่งขึ้นแท็บ SOURCES…';
+    try{
+      const r=await fetch(url,{method:'POST',headers:{'Content-Type':'text/plain;charset=utf-8'},
+        body:JSON.stringify({token:WTOKEN,action:'sources',mode:'upsert',rows})});
+      const res=await r.json();
+      if(!res.ok) throw new Error(res.error||'ส่งไม่สำเร็จ');
+      if(res.added===undefined) throw new Error('ชีทยังใช้ Code.gs รุ่นเก่า — ต้องรุ่น 19 ขึ้นไป');
+      msg.innerHTML='<span class="pill ok">บันทึกแล้ว</span> '+rows.length+' แหล่งขึ้นแท็บ SOURCES · กำลังโหลดคลังใหม่…';
+      GEOQ=GEOQ.filter(g=>!rows.some(x=>x[0]===g.name));
+      await loadLive(); drawNoGeo();
+      msg.innerHTML='<span class="pill ok">บันทึกแล้ว</span> '+rows.length+' แหล่ง — ใช้คำนวณระยะขนส่งได้ทันที'
+        +'<br><span class="hint">อย่าลืมเติมพิกัดชุดนี้ลงชีต "แหล่งวัสดุ" ในไฟล์บัญชีคุมด้วย ไม่งั้นครั้งหน้าที่อัปโหลดบัญชีคุมทับ พิกัดจะหาย</span>';
+    }catch(e){ msg.textContent='ไม่สำเร็จ: '+e.message; }
+    $('noGeoSave').disabled=false;
+  };
+  drawNoGeo();
+}
+
 /* ============ รายการรออนุมัติ (Code.gs รุ่น 17) ============ */
 let PEND=[];
 async function loadPending(silent){
@@ -2766,7 +3067,7 @@ function sysInit(){
       <td class="num">${new Set(rs.map(s=>s[0])).size.toLocaleString()}</td>
       <td class="num">${new Set(rs.map(s=>s[1])).size}</td></tr>`;});
   $('tblSysStat').innerHTML=h+'</tbody>';
-  const cm=$('cMeta'); if(cm) cm.innerHTML='เริ่มพัฒนา สิงหาคม 2569 · เวอร์ชันปัจจุบัน v5.4 · '+(LIVE.on?'เชื่อมคลังข้อมูลแล้ว':'ยังไม่ได้เชื่อมคลัง');
+  const cm=$('cMeta'); if(cm) cm.innerHTML='เริ่มพัฒนา สิงหาคม 2569 · เวอร์ชันปัจจุบัน v5.5 · '+(LIVE.on?'เชื่อมคลังข้อมูลแล้ว':'ยังไม่ได้เชื่อมคลัง');
   $('sysInfo').innerHTML=`เวอร์ชัน: 5.1 · อัปเดต: 18 ส.ค. 2569<br>
     การเชื่อมราคาน้ำมันอัตโนมัติ: สร้างแท็บชื่อ <b>OIL</b> ในชีทคลังข้อมูล คอลัมน์ A=วันที่ B=จังหวัด C=ราคาดีเซล (หรือ A=วันที่ B=ราคา ถ้ามีเฉพาะขอนแก่น) แชร์แบบ อ่านได้ทุกคนที่มีลิงก์ — หน้าคำนวณระยะขนส่งจะอ่านราคาล่าสุดของจังหวัดที่เลือกให้เอง<br>
     ขอบเขตข้อมูลที่ฝังในไฟล์นี้: ${mLabI(0)} – ${mLabI(LAST)} (${P.series.length.toLocaleString()} คู่ราคา)<br>
@@ -2886,7 +3187,7 @@ function clearInit(){
 }
 
 /* ============ boot ============ */
-[buildSummary, lawInit, provInit, matInit, initMap, statInit, impInit, expInit, sysInit, regInit, clearInit, fullInit, distTabs, dieselIdx, drawMatChips, usageInit]
+[buildSummary, lawInit, provInit, matInit, initMap, statInit, covInit, impInit, noGeoInit, expInit, sysInit, regInit, clearInit, fullInit, distTabs, dieselIdx, drawMatChips, usageInit]
   .forEach(f=>{ try{ f(); }catch(e){ console.error('init:', f.name, e); } });
 kddAll(); kfreeAll(); paintIcons();
 try{ fetchOil(true); }catch(e){}
