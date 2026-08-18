@@ -417,6 +417,23 @@ tr.detail>td{background:#F8F7F3;border-top:none;padding:10px 14px}
 .dragbox .db-h{cursor:move;font-weight:700;color:var(--navy);margin-bottom:5px;display:flex;justify-content:space-between}
 .dragbox .db-x{cursor:pointer;color:var(--muted);padding:0 3px}
 .statusline{display:flex;gap:8px;flex-wrap:wrap;align-items:center;margin-top:8px}
+.cl-auth{display:flex;align-items:flex-end;gap:14px;flex-wrap:wrap;background:#FBF6F4;
+  border:1px solid #E8D5CF;border-radius:12px;padding:14px 16px}
+.cl-auth .cl-lock{width:38px;height:38px;border-radius:10px;background:linear-gradient(135deg,#B03A3A,#7E2626);
+  display:flex;align-items:center;justify-content:center;flex:0 0 38px;align-self:center}
+.cl-auth .cl-lock .ic{width:19px;height:19px;margin:0;color:#fff}
+.cl-auth input:focus{border-color:#B03A3A;box-shadow:0 0 0 3px rgba(176,58,58,.14)}
+.toTop{position:fixed;right:22px;bottom:22px;width:44px;height:44px;border-radius:12px;border:none;
+  background:var(--navy);color:#FFD966;font-size:19px;cursor:pointer;z-index:900;display:none;
+  box-shadow:0 8px 22px rgba(27,42,74,.35);transition:transform .15s,opacity .2s}
+.toTop:hover{transform:translateY(-3px);background:#24365E}
+.toTop.show{display:block;animation:kddin .2s ease}
+@media print{.toTop{display:none!important}}
+.jumpbar{display:flex;gap:8px;flex-wrap:wrap;margin:2px 0 14px}
+.jumpbar .jchip{background:#fff;border:1.5px solid var(--grid);border-radius:999px;padding:6px 14px;
+  font:inherit;font-size:12px;color:var(--navy);cursor:pointer;transition:all .15s}
+.jumpbar .jchip:hover{border-color:var(--teal);color:var(--teal);transform:translateY(-1px);
+  box-shadow:0 4px 10px rgba(13,148,136,.15)}
 .srcbox{border:1px solid var(--grid);border-radius:10px;padding:11px 13px;background:#fff}
 .srcbox h3{margin:0 0 4px;font-size:13px;color:var(--navy)}
 .srcbox .mini{font-size:11.5px;color:var(--ink2);line-height:1.55}
@@ -441,7 +458,7 @@ canvas{max-width:100%}
   <div class="brand">
     <h1>ระบบฐานข้อมูลวัสดุ</h1>
     <div class="sub">แขวงทางหลวงชนบทขอนแก่น</div>
-    <div class="chips"><span class="chip" id="bLatest">—</span><span class="chip">v4.0</span></div>
+    <div class="chips"><span class="chip" id="bLatest">—</span><span class="chip">v4.1</span></div>
   </div>
   <nav class="nav" id="nav">
     <button data-p="sum" class="active"><span class="ico">▦</span>หน้าสรุป</button>
@@ -465,11 +482,24 @@ canvas{max-width:100%}
     </div>
   </div>
   <div class="kpis" id="sumKpis"></div>
-  <div class="card" style="margin-bottom:12px">
-    <h2 data-ic="law">หลักเกณฑ์ราคากลางที่ระบบใช้อ้างอิง</h2>
-    <div class="lawgrid" id="lawGrid"></div>
+  <div class="jumpbar no-print">
+    <button class="jchip" data-jump="secKey">🏷 ราคาวัสดุหลัก</button>
+    <button class="jchip" data-jump="secNews">📰 ข่าวและประกาศ</button>
+    <button class="jchip" data-jump="secCheck">✓ เช็คลิสต์อัปเดต</button>
+    <button class="jchip" data-jump="secLaw">⚖ หลักเกณฑ์อ้างอิง</button>
+    <button class="jchip" data-jump="secTypes">▦ ภาพรวมตามประเภท</button>
   </div>
-  <div class="grid2">
+  <h2 class="sec" data-ic="tag" id="secKey">สรุปราคาวัสดุหลักประจำเดือน — เอาแหล่งที่ถูกสุดขึ้นก่อน</h2>
+  <div id="keyCards"></div>
+  <div class="card" style="margin-top:14px" id="secNews">
+    <h2>ข่าวและประกาศที่เกี่ยวข้อง <span class="pill info">ชุดข่าว ณ 16 ส.ค. 69</span></h2>
+    <div class="newsitem"><span class="nd">26 มิ.ย. 69 · กรมบัญชีกลาง</span><br>ประกาศใช้ <b>ตารางค่าขนส่งวัสดุก่อสร้างฉบับใหม่</b> (กค 0433.2/ว 477) — ระบบนี้ใช้ตารางฉบับนี้แล้วทั้งระบบ</div>
+    <div class="newsitem"><span class="nd">พ.ค. 69 · สนค. กระทรวงพาณิชย์</span><br><a href="https://ดัชนีราคา.com/ดัชนีราคาวัสดุก่อส-11/" target="_blank">ดัชนีราคาวัสดุก่อสร้างปรับสูงขึ้นต่อเนื่อง</a> จากแรงกดดันด้านพลังงานและอุปทานโลกตึงตัว</div>
+    <div class="newsitem"><span class="nd">ก.พ. 69 · สนค. กระทรวงพาณิชย์</span><br><a href="https://www.tpso.go.th/news/2603-0000000009" target="_blank">ดัชนีวัสดุก่อสร้าง +0.3%</a> แรงหนุนจากโครงการภาครัฐและต้นทุนวัตถุดิบเพิ่ม</div>
+    <div class="newsitem"><span class="nd">ม.ค. 69 · สนค. กระทรวงพาณิชย์</span><br><a href="https://www.tpso.go.th/news/2602-0000000007" target="_blank">ดัชนีสูงขึ้นเล็กน้อย</a> ราคาสินค้าวัสดุก่อสร้างเคลื่อนไหวในกรอบจำกัด</div>
+    <div class="cap">ชุดข่าวอัปเดตพร้อมรอบข้อมูลรายเดือน · แหล่งข่าวหลัก: tpso.go.th (แถลงดัชนีทุกต้นเดือน) และหนังสือเวียนกรมบัญชีกลาง gprocurement.go.th</div>
+  </div>
+  <div class="grid2" style="margin-top:14px" id="secCheck">
     <div class="card">
       <h2 data-ic="check">เช็คลิสต์การอัปเดต แยกตามประเภท</h2>
       <div class="tw" style="max-height:330px"><table id="tblCheck"></table></div>
@@ -479,17 +509,11 @@ canvas{max-width:100%}
       <div id="obsBox" style="font-size:12.5px;line-height:1.7"></div>
     </div>
   </div>
-  <div class="card" style="margin-top:14px">
-    <h2>ข่าวและประกาศที่เกี่ยวข้อง <span class="pill info">ชุดข่าว ณ 16 ส.ค. 69</span></h2>
-    <div class="newsitem"><span class="nd">26 มิ.ย. 69 · กรมบัญชีกลาง</span><br>ประกาศใช้ <b>ตารางค่าขนส่งวัสดุก่อสร้างฉบับใหม่</b> (กค 0433.2/ว 477) — ระบบนี้ใช้ตารางฉบับนี้แล้วทั้งระบบ</div>
-    <div class="newsitem"><span class="nd">พ.ค. 69 · สนค. กระทรวงพาณิชย์</span><br><a href="https://ดัชนีราคา.com/ดัชนีราคาวัสดุก่อส-11/" target="_blank">ดัชนีราคาวัสดุก่อสร้างปรับสูงขึ้นต่อเนื่อง</a> จากแรงกดดันด้านพลังงานและอุปทานโลกตึงตัว</div>
-    <div class="newsitem"><span class="nd">ก.พ. 69 · สนค. กระทรวงพาณิชย์</span><br><a href="https://www.tpso.go.th/news/2603-0000000009" target="_blank">ดัชนีวัสดุก่อสร้าง +0.3%</a> แรงหนุนจากโครงการภาครัฐและต้นทุนวัตถุดิบเพิ่ม</div>
-    <div class="newsitem"><span class="nd">ม.ค. 69 · สนค. กระทรวงพาณิชย์</span><br><a href="https://www.tpso.go.th/news/2602-0000000007" target="_blank">ดัชนีสูงขึ้นเล็กน้อย</a> ราคาสินค้าวัสดุก่อสร้างเคลื่อนไหวในกรอบจำกัด</div>
-    <div class="cap">ชุดข่าวอัปเดตพร้อมรอบข้อมูลรายเดือน · แหล่งข่าวหลัก: tpso.go.th (แถลงดัชนีทุกต้นเดือน) และหนังสือเวียนกรมบัญชีกลาง gprocurement.go.th</div>
+  <div class="card" style="margin-top:14px" id="secLaw">
+    <h2 data-ic="law">หลักเกณฑ์ราคากลางที่ระบบใช้อ้างอิง</h2>
+    <div class="lawgrid" id="lawGrid"></div>
   </div>
-  <h2 class="sec" data-ic="tag">สรุปราคาวัสดุหลักประจำเดือน — เอาแหล่งที่ถูกสุดขึ้นก่อน</h2>
-  <div id="keyCards"></div>
-  <h2 class="sec" data-ic="grid">ภาพรวมตามประเภท</h2>
+  <h2 class="sec" data-ic="grid" id="secTypes">ภาพรวมตามประเภท</h2>
   <div class="card"><div class="tw" style="max-height:420px"><table id="tblTypes"></table></div></div>
 </section>
 
@@ -659,6 +683,7 @@ canvas{max-width:100%}
         <div><label class="f">แหล่ง / ผู้ให้ราคา (ตามบัญชีแหล่งวัสดุ)</label><select id="mSrcSel"></select></div>
         <div id="mSrcNewBox" style="display:none"><label class="f">ชื่อแหล่งใหม่</label><input type="text" id="mSrc" placeholder="พิมพ์ชื่อแหล่ง/บริษัท"></div>
       </div>
+      <div id="mUrlBox" style="display:none"><label class="f">ลิงก์หน้าสินค้า (URL เว็บที่สืบราคา)</label><input type="url" id="mUrl" placeholder="วางลิงก์หน้าสินค้า เช่น https://www.globalhouse.co.th/..."></div>
       <label class="f">หมายเหตุ / ที่มา (เลขหนังสือ · ใบเสนอราคา · หน่วยงาน)</label><input type="text" id="mRef" placeholder="เช่น ใบเสนอราคา SQ.690801 ลว. 10 ส.ค. 69 · ไม่รวม VAT">
       <div style="display:flex;gap:8px;margin-top:12px">
         <button class="btn" id="mAdd">เพิ่มเข้าคิว</button>
@@ -732,6 +757,11 @@ canvas{max-width:100%}
     </div>
   </div>
   <div class="card" style="margin-top:12px">
+    <h2 data-ic="chart">สถิติการเข้าใช้งาน</h2>
+    <div class="kpis" id="useKpis"></div>
+    <div class="hint" id="useHint" style="margin-top:8px"></div>
+  </div>
+  <div class="card" style="margin-top:12px">
     <h2 data-ic="book">คำอธิบายการทำงานของแต่ละหน้า</h2>
     <div id="sysHelp" style="font-size:12.5px;line-height:1.75"></div>
   </div>
@@ -759,11 +789,16 @@ canvas{max-width:100%}
       </select></div>
       <div id="clOptBox"></div>
     </div>
-    <div class="frow cm" style="margin-top:10px">
-      <div><label class="f">รหัสผู้ดูแลระบบ</label><input type="password" id="clYes" placeholder="เฉพาะผู้ดูแลระบบ" autocomplete="new-password"></div>
-      <div style="align-self:end"><button class="btn" id="clGo" style="background:#a33">ล้างข้อมูลตามที่เลือก</button></div>
+    <div class="cl-auth" style="margin-top:14px">
+      <div class="cl-lock" data-ic="law"></div>
+      <div style="flex:1;min-width:220px">
+        <label class="f" style="margin-top:0">รหัสผู้ดูแลระบบ</label>
+        <input type="password" id="clYes" placeholder="••••••••" autocomplete="new-password"
+               style="max-width:260px;letter-spacing:4px;text-align:center;font-size:15px">
+      </div>
+      <button class="btn" id="clGo" style="background:linear-gradient(135deg,#B03A3A,#7E2626);box-shadow:0 4px 14px rgba(176,58,58,.30);white-space:nowrap">🗑 ล้างข้อมูลตามที่เลือก</button>
     </div>
-    <div class="hint" id="clStat" style="margin-top:8px">สำรองอัตโนมัติก่อนล้างทุกครั้ง</div>
+    <div class="hint" id="clStat" style="margin-top:8px">สำรองอัตโนมัติก่อนล้างทุกครั้ง · เฉพาะผู้ดูแลระบบเท่านั้น</div>
   </div>
   <div class="card" style="margin-top:12px">
     <h2 data-ic="cloud">อัปโหลดบัญชีคุม (REGISTRY) ขึ้นคลัง</h2>
@@ -1207,7 +1242,58 @@ document.querySelectorAll('#nav button').forEach(b=>b.onclick=()=>{
   document.querySelectorAll('.page').forEach(p=>p.classList.remove('active'));
   const pg=$('pg-'+b.dataset.p); pg.classList.add('active'); stagger(pg);
   if(b.dataset.p==='dist' && map) setTimeout(()=>map.invalidateSize(),60);
+  try{ bumpPage(b.dataset.p); }catch(e){}
+  window.scrollTo({top:0});
 });
+
+/* ============ ปุ่มกลับขึ้นบนสุด + แถบกระโดดในหน้า ============ */
+(function(){
+  const b=document.createElement('button');
+  b.className='toTop'; b.title='กลับขึ้นบนสุด'; b.textContent='↑';
+  document.body.appendChild(b);
+  b.onclick=()=>window.scrollTo({top:0,behavior:'smooth'});
+  addEventListener('scroll',()=>b.classList.toggle('show',window.scrollY>350),{passive:true});
+  document.querySelectorAll('.jumpbar .jchip').forEach(c=>c.onclick=()=>{
+    const t=document.getElementById(c.dataset.jump);
+    if(t) t.scrollIntoView({behavior:'smooth',block:'start'});
+  });
+})();
+
+/* ============ สถิติการเข้าใช้งาน (localStorage — นับเฉพาะเครื่องนี้) ============ */
+function usageInit(){
+  let u={}; try{ u=JSON.parse(localStorage.getItem('kkmat_use')||'{}')||{}; }catch(e){ u={}; }
+  const now=new Date();
+  const dstr=now.toLocaleDateString('th-TH',{day:'numeric',month:'short',year:'2-digit'});
+  const tstr=now.toLocaleTimeString('th-TH',{hour:'2-digit',minute:'2-digit'});
+  u.n=(u.n||0)+1; u.first=u.first||dstr;
+  const ym=now.getFullYear()+'-'+(now.getMonth()+1);
+  if(u.ym!==ym){ u.ym=ym; u.nm=0; }
+  u.nm=(u.nm||0)+1;
+  u.prevLast=u.last||'—'; u.last=dstr+' '+tstr;
+  u.pages=u.pages||{};
+  try{ localStorage.setItem('kkmat_use',JSON.stringify(u)); }catch(e){}
+  window._USE=u; drawUsage();
+}
+function bumpPage(p){
+  const u=window._USE; if(!u) return;
+  u.pages[p]=(u.pages[p]||0)+1;
+  try{ localStorage.setItem('kkmat_use',JSON.stringify(u)); }catch(e){}
+  drawUsage();
+}
+function drawUsage(){
+  const el=$('useKpis'); if(!el||!window._USE) return;
+  const u=window._USE;
+  const names={sum:'ภาพรวมราคา',dist:'คำนวณระยะขนส่ง',stat:'สถิติราคา',imp:'นำเข้าข้อมูล',exp:'ส่งออกข้อมูล',sys:'ระบบ'};
+  const top=Object.entries(u.pages||{}).sort((a,b)=>b[1]-a[1])[0];
+  el.innerHTML=[
+    ['🖥',(u.n||1).toLocaleString(),'ครั้งที่เปิดใช้ทั้งหมด'],
+    ['🗓',(u.nm||1).toLocaleString(),'ครั้งในเดือนนี้'],
+    ['⏱',u.prevLast||'—','เข้าใช้ครั้งก่อนหน้า'],
+    ['★',top?(names[top[0]]||top[0]):'—',top?('หน้าที่เปิดบ่อยสุด · '+top[1]+' ครั้ง'):'หน้าที่เปิดบ่อยสุด'],
+  ].map(k=>`<div class="kpill"><div class="k-ico">${k[0]}</div><div><div class="k-val">${k[1]}</div><div class="k-lab">${k[2]}</div></div></div>`).join('');
+  const h=$('useHint');
+  if(h) h.textContent='เริ่มนับ '+(u.first||'—')+' · ใช้ล่าสุด '+(u.last||'—')+' · นับเฉพาะการใช้งานบนเครื่อง/เบราว์เซอร์นี้';
+}
 
 /* ============ หน้าสรุป ============ */
 function buildSummary(){
@@ -1226,7 +1312,7 @@ function buildSummary(){
   hc('hcImp',impChips());
   hc('hcExp',`<span class="ph-chip">● เดือนล่าสุด <b>${latestLabel}</b></span>
     <span class="ph-chip">${LIVE.on?'☁ รวมคลังสดแล้ว':'⚠ ยังไม่ได้เชื่อมคลัง'}</span>`);
-  hc('hcSys',`<span class="ph-chip">เวอร์ชัน <b>4.0</b></span>
+  hc('hcSys',`<span class="ph-chip">เวอร์ชัน <b>4.1</b></span>
     <span class="ph-chip">อัปเดต 18 ส.ค. 2569</span>`);
   const nRowsLast = P.series.filter(s=>s[4][LAST]!=null).length;
   /* พร้อมใช้ = มีราคาเดือนล่าสุด หรือมีราคาเดือนก่อนหน้าให้ยกยอด (ตามหลักเกณฑ์ยกยอดของระบบ)
@@ -1436,8 +1522,14 @@ async function fetchOil(silent){
           st.innerHTML=`<span class="pill ok">สดจาก ปตท. · ${esc(res.prov)} · ${esc(res.date)}</span> บันทึกเข้าชีท OIL แล้ว`;
           dieselIdx(); renderAll(); return;
         }
-        if(res.error&&/action/i.test(res.error))
-          st.innerHTML='<span class="pill warn">Code.gs ยังเป็นรุ่นเก่า (ต้องรุ่น 11) — ลองอ่านจากชีทแทน…</span>';
+        if(res.ok&&res.price===undefined){
+          st.innerHTML='<span class="pill bad">ชีทยังใช้ Code.gs รุ่นเก่า</span> วาง Code.gs รุ่น 11 (จากโฟลเดอร์ 01.ระบบ) ใน Apps Script'
+            +' → Deploy → Manage deployments → ✏ → <b>New version</b> แล้วกดปุ่มนี้อีกครั้ง'; return;
+        }
+        if(res.error){
+          st.innerHTML='<span class="pill bad">ดึงจาก ปตท. ไม่สำเร็จ</span> '+esc(res.error)
+            +' — รัน testOilFetch ใน Apps Script ดู Execution log'; return;
+        }
       }catch(e){ /* ตกไปอ่านชีทตามเดิม */ }
     }
   }
@@ -2151,6 +2243,9 @@ function impInit(){
   const srcTog=()=>{ const nw=$('mSrcSel').value==='__new__';
     $('mSrcNewBox').style.display=nw?'':'none'; $('mSrcRow').classList.toggle('two',nw); };
   $('mSrcSel').onchange=srcTog; srcTog();
+  /* ช่องทางเว็บร้านค้า → โชว์ช่องวางลิงก์หน้าสินค้า (ผนวกเข้าหมายเหตุ/ที่มาให้เอง) */
+  const urlTog=()=>{ $('mUrlBox').style.display=$('mChan').value==='เว็บร้านค้า'?'':'none'; };
+  $('mChan').addEventListener('change',urlTog); urlTog();
   /* วัสดุ: หมวดกรองรายการให้สั้นลง */
   const prevCat=$('mCat').value;
   const mcats=REG.on?[...new Set(Object.values(REG.cat))].sort((a,b)=>a.localeCompare(b,'th')):P.types.filter(Boolean);
@@ -2176,7 +2271,9 @@ function impInit(){
     if(!mat||!(price>0)){ alert('กรอกชื่อวัสดุและราคาก่อน'); return; }
     if(!src){ alert('เลือกหรือพิมพ์ชื่อแหล่งก่อน'); return; }
     if(!(y>=2560&&y<=2600)){ alert('ตรวจปี พ.ศ. อีกครั้ง'); return; }
-    queue.push({y,mo,mat,unit,price,src,ref:$('mRef').value.trim(),typ:$('mType').value,chan:$('mChan').value,known:P.mats.includes(mat)||!!regStd(mat)});
+    const _url=($('mUrl').value||'').trim();
+    const _ref=(_url?_url+' · ':'')+$('mRef').value.trim();
+    queue.push({y,mo,mat,unit,price,src,ref:_ref,typ:$('mType').value,chan:$('mChan').value,known:P.mats.includes(mat)||!!regStd(mat)});
     $('mMat').value='';$('mPrice').value='';$('mRef').value='';
     renderQueue();
   };
@@ -2336,8 +2433,8 @@ function sysInit(){
       <td class="num">${new Set(rs.map(s=>s[0])).size.toLocaleString()}</td>
       <td class="num">${new Set(rs.map(s=>s[1])).size}</td></tr>`;});
   $('tblSysStat').innerHTML=h+'</tbody>';
-  const cm=$('cMeta'); if(cm) cm.innerHTML='เริ่มพัฒนา สิงหาคม 2569 · เวอร์ชันปัจจุบัน v4.0 · '+(LIVE.on?'เชื่อมคลังข้อมูลแล้ว':'ยังไม่ได้เชื่อมคลัง');
-  $('sysInfo').innerHTML=`เวอร์ชัน: 4.0 · อัปเดต: 18 ส.ค. 2569<br>
+  const cm=$('cMeta'); if(cm) cm.innerHTML='เริ่มพัฒนา สิงหาคม 2569 · เวอร์ชันปัจจุบัน v4.1 · '+(LIVE.on?'เชื่อมคลังข้อมูลแล้ว':'ยังไม่ได้เชื่อมคลัง');
+  $('sysInfo').innerHTML=`เวอร์ชัน: 4.1 · อัปเดต: 18 ส.ค. 2569<br>
     การเชื่อมราคาน้ำมันอัตโนมัติ: สร้างแท็บชื่อ <b>OIL</b> ในชีทคลังข้อมูล คอลัมน์ A=วันที่ B=จังหวัด C=ราคาดีเซล (หรือ A=วันที่ B=ราคา ถ้ามีเฉพาะขอนแก่น) แชร์แบบ อ่านได้ทุกคนที่มีลิงก์ — หน้าคำนวณระยะขนส่งจะอ่านราคาล่าสุดของจังหวัดที่เลือกให้เอง<br>
     ขอบเขตข้อมูลที่ฝังในไฟล์นี้: ${mLabI(0)} – ${mLabI(LAST)} (${P.series.length.toLocaleString()} คู่ราคา)<br>
     ชีทกลาง: 01.0 คลังข้อมูลวัสดุก่อสร้าง (แท็บ PRICES + OIL + REGISTRY) · เปิดหน้าเว็บครั้งใด ระบบอ่านแท็บ PRICES มารวมกับข้อมูลฝังให้อัตโนมัติ — ราคา TPSO เดือนใหม่และราคากรอกเองจึงขึ้นจอโดยไม่ต้องแก้ไฟล์นี้<br>
@@ -2456,7 +2553,7 @@ function clearInit(){
 }
 
 /* ============ boot ============ */
-[buildSummary, lawInit, provInit, matInit, initMap, statInit, impInit, expInit, sysInit, regInit, clearInit, fullInit, distTabs, dieselIdx, drawMatChips]
+[buildSummary, lawInit, provInit, matInit, initMap, statInit, impInit, expInit, sysInit, regInit, clearInit, fullInit, distTabs, dieselIdx, drawMatChips, usageInit]
   .forEach(f=>{ try{ f(); }catch(e){ console.error('init:', f.name, e); } });
 kddAll(); kfreeAll(); paintIcons();
 try{ fetchOil(true); }catch(e){}
