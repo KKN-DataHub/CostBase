@@ -405,7 +405,13 @@ tr.detail>td{background:#F8F7F3;border-top:none;padding:10px 14px}
 .seg .cell{font-size:11px}
 .seg input{padding:5px 7px;font-size:12px}
 .kcards{display:grid;grid-template-columns:repeat(auto-fill,minmax(215px,1fr));gap:11px}
-.kcard{background:#fff;border:1px solid var(--hairline);border-radius:var(--r-card);padding:11px 13px;box-shadow:var(--sh-card)}
+.kcard{background:#fff;border:1px solid var(--hairline);border-radius:var(--r-card);padding:11px 13px;box-shadow:var(--sh-card);
+  transition:transform .16s,box-shadow .16s,border-color .16s}
+.kcard:hover{transform:translateY(-3px);border-color:var(--teal);box-shadow:0 10px 24px rgba(13,148,136,.16)}
+.kcard .spark{width:100%;height:26px;margin-top:7px;display:block}
+.kcard .spark path{fill:none;stroke:var(--teal);stroke-width:1.7;stroke-linecap:round;stroke-linejoin:round}
+.kcard .spark circle{fill:#C99B3F}
+.jumpbar .jchip.on{background:var(--teal);border-color:var(--teal);color:#fff}
 .kcard .t{font-size:12px;font-weight:700;color:var(--navy)}
 .kcard .v{font-size:19px;font-weight:700;color:var(--ink);margin-top:2px;font-variant-numeric:tabular-nums}
 .kcard .u{font-size:11px;color:var(--muted)}
@@ -458,7 +464,7 @@ canvas{max-width:100%}
   <div class="brand">
     <h1>ระบบฐานข้อมูลวัสดุ</h1>
     <div class="sub">แขวงทางหลวงชนบทขอนแก่น</div>
-    <div class="chips"><span class="chip" id="bLatest">—</span><span class="chip">v4.2</span></div>
+    <div class="chips"><span class="chip" id="bLatest">—</span><span class="chip">v4.4</span></div>
   </div>
   <nav class="nav" id="nav">
     <button data-p="sum" class="active"><span class="ico">▦</span>หน้าสรุป</button>
@@ -526,6 +532,7 @@ canvas{max-width:100%}
     </div>
     <div class="ph-act">
       <button class="btn ghost" id="dCsv">⬇ CSV</button>
+      <button class="btn ghost" id="dXlsx">⬇ Excel เปรียบเทียบ</button>
       <button class="btn gold" id="dPrint">🖨 พิมพ์ / PDF</button>
     </div>
   </div>
@@ -570,6 +577,7 @@ canvas{max-width:100%}
         <select id="dMatPick"></select>
         <button class="btn ghost" id="dMatAdd" style="width:100%;margin-top:8px">+ เพิ่มรายการนี้</button>
         <div class="chips" id="dMatChips"></div>
+        <div class="hint" id="dChipHint" style="margin-top:4px"></div>
         <button class="btn" id="dGo" style="width:100%;margin-top:12px">คำนวณราคาวัสดุ + ค่าขนส่ง</button>
         <div class="hint" id="dStatus" style="margin-top:8px"></div>
       </div>
@@ -717,6 +725,7 @@ canvas{max-width:100%}
     <div class="card">
       <h2 data-ic="gear">ตั้งค่าการส่งออก</h2>
       <label class="f">เดือน</label><select id="eMonth"></select>
+      <label class="f" style="margin-top:12px">หมวด (กรองรายการที่จะส่งออก)</label><select id="eCat"></select>
       <label class="f" style="margin-top:12px">ยกยอดราคาเดือนก่อน เมื่อเดือนที่เลือกไม่มีราคา</label>
       <select id="eCarry"><option value="1" selected>เปิด — ใช้ราคาล่าสุดที่มี (แนะนำ)</option><option value="0">ปิด — เดือนไหนไม่มี ตัดทิ้ง</option></select>
       <div class="statusline" style="margin-top:14px">
@@ -1252,11 +1261,22 @@ document.querySelectorAll('#nav button').forEach(b=>b.onclick=()=>{
   b.className='toTop'; b.title='กลับขึ้นบนสุด'; b.textContent='↑';
   document.body.appendChild(b);
   b.onclick=()=>window.scrollTo({top:0,behavior:'smooth'});
-  addEventListener('scroll',()=>b.classList.toggle('show',window.scrollY>350),{passive:true});
-  document.querySelectorAll('.jumpbar .jchip').forEach(c=>c.onclick=()=>{
+  const chips=[...document.querySelectorAll('.jumpbar .jchip')];
+  chips.forEach(c=>c.onclick=()=>{
     const t=document.getElementById(c.dataset.jump);
     if(t) t.scrollIntoView({behavior:'smooth',block:'start'});
   });
+  /* scrollspy — ไฮไลต์ชิปของส่วนที่กำลังดูอยู่ (เฉพาะหน้าสรุป) */
+  const spy=()=>{
+    if(!document.getElementById('pg-sum').classList.contains('active')) return;
+    let cur=null;
+    chips.forEach(c=>{
+      const t=document.getElementById(c.dataset.jump);
+      if(t && t.getBoundingClientRect().top<=140) cur=c;
+    });
+    chips.forEach(c=>c.classList.toggle('on',c===cur));
+  };
+  addEventListener('scroll',()=>{ b.classList.toggle('show',window.scrollY>350); spy(); },{passive:true});
 })();
 
 /* ============ สถิติการเข้าใช้งาน (localStorage — นับเฉพาะเครื่องนี้) ============ */
@@ -1312,7 +1332,7 @@ function buildSummary(){
   hc('hcImp',impChips());
   hc('hcExp',`<span class="ph-chip">● เดือนล่าสุด <b>${latestLabel}</b></span>
     <span class="ph-chip">${LIVE.on?'☁ รวมคลังสดแล้ว':'⚠ ยังไม่ได้เชื่อมคลัง'}</span>`);
-  hc('hcSys',`<span class="ph-chip">เวอร์ชัน <b>4.2</b></span>
+  hc('hcSys',`<span class="ph-chip">เวอร์ชัน <b>4.4</b></span>
     <span class="ph-chip">อัปเดต 18 ส.ค. 2569</span>`);
   const nRowsLast = P.series.filter(s=>s[4][LAST]!=null).length;
   /* พร้อมใช้ = มีราคาเดือนล่าสุด หรือมีราคาเดือนก่อนหน้าให้ยกยอด (ตามหลักเกณฑ์ยกยอดของระบบ)
@@ -1385,9 +1405,22 @@ function buildSummary(){
     const d = (best&&bestPrev!=null)? (best.p-bestPrev)/bestPrev*100 : null;
     const cls = d==null?'fl':d>0.05?'up':d<-0.05?'dn':'fl';
     const stale = lm!==LAST;
+    /* เส้นแนวโน้มจิ๋ว — ประวัติราคาของแหล่งที่ถูกสุดตลอดช่วงข้อมูล */
+    const spark=(v)=>{
+      const pts=v.map((p,i)=>({p,i})).filter(x=>x.p!=null);
+      if(pts.length<2) return '';
+      const mn=Math.min(...pts.map(x=>x.p)), mx=Math.max(...pts.map(x=>x.p));
+      const W=100,H=24,pad=2.5;
+      const X=i=>pad+(W-2*pad)*(i-pts[0].i)/Math.max(1,pts[pts.length-1].i-pts[0].i);
+      const Y=p=>mx===mn?H/2:pad+(H-2*pad)*(1-(p-mn)/(mx-mn));
+      const path=pts.map((x,k)=>(k?'L':'M')+X(x.i).toFixed(1)+' '+Y(x.p).toFixed(1)).join(' ');
+      const la=pts[pts.length-1];
+      return `<svg class="spark" viewBox="0 0 ${W} ${H}" preserveAspectRatio="none"><path d="${path}"/><circle cx="${X(la.i).toFixed(1)}" cy="${Y(la.p).toFixed(1)}" r="2.3"/></svg>`;
+    };
     return `<div class="kcard"><div class="t">${label} ${stale?`<span class="pill warn">ราคา ${mLabI(lm)}</span>`:''}</div>
       <div class="v">${fmt(best.p)} <span class="u">บาท/${esc(P.units[best.s[2]]||'-')}</span></div>
       <div class="s">ถูกสุด: ${esc(P.srcs[best.s[1]]||'(ไม่ระบุ)')}</div>
+      ${spark(best.s[4])}
       <div class="d ${cls}">${d==null?'ไม่มีฐานเทียบ':(d>0?'▲ +':d<0?'▼ ':'—  ')+Math.abs(d).toFixed(2)+'% จากครั้งก่อน'}</div></div>`;
   };
   $('keyCards').innerHTML = GROUPS.map(([g,items])=>
@@ -1485,6 +1518,13 @@ function drawMatChips(){
     matSel=matSel.filter(x=>x!==i); delete cmpState[i];
     if(matActive===i) matActive=matSel.length?matSel[matSel.length-1]:null;
     drawMatChips(); renderAll();});
+  /* ป้ายบนปุ่ม Excel/พิมพ์ บอกชัดว่ารายการที่เลือกค้างไว้ = รายการที่จะออกในไฟล์เดียว */
+  const bx=$('dXlsx');
+  if(bx) bx.textContent=matSel.length>1?`⬇ Excel เปรียบเทียบ (${matSel.length} วัสดุ)`:'⬇ Excel เปรียบเทียบ';
+  const hint=$('dChipHint');
+  if(hint) hint.textContent=matSel.length
+    ?`วัสดุที่เลือกไว้ทั้ง ${matSel.length} รายการ จะออกรวมในไฟล์ Excel เปรียบเทียบ/เอกสารพิมพ์ฉบับเดียว — จอแสดงทีละรายการ กดป้ายชื่อเพื่อสลับดู`
+    :'';
 }
 function parseCoord(s){
   s=(s||'').trim();
@@ -2143,6 +2183,35 @@ $('dCsv').onclick=()=>{
   const blob=new Blob(['\ufeff'+out.map(r=>r.join(',')).join('\n')],{type:'text/csv;charset=utf-8'});
   const a=document.createElement('a');a.href=URL.createObjectURL(blob);a.download='ค่าขนส่งวัสดุ.csv';a.click();
 };
+$('dXlsx').onclick=()=>{
+  /* ไฟล์เปรียบเทียบ ราคาวัสดุ + ค่าขนส่ง + ราคารวมถึงหน้างาน — เรียงถูกสุดขึ้นก่อน ทำเครื่องหมายแหล่งที่ถูกสุดให้ */
+  if(typeof XLSX==='undefined'){ alert('ตัวสร้าง .xlsx ต้องต่ออินเทอร์เน็ตครั้งแรก — ระหว่างนี้ใช้ปุ่ม CSV แทนได้'); return; }
+  if(!matSel.length){ alert('ยังไม่ได้เลือกวัสดุ — เลือกวัสดุแล้วกด คำนวณ ที่ช่อง 3 ก่อน'); return; }
+  const di=dieselIdx();
+  const HEAD=['วัสดุ','แหล่งวัสดุ','ราคาวัสดุ (ไม่รวมขนส่ง)','เดือนราคา','ระยะ L (กม.)','รถ/ช่วง','ค่าขนส่ง','ขนขึ้น-ลง','ดัด/แปรรูป','ราคารวมถึงหน้างาน','หน่วย','ถูกสุด','วิธีวัดระยะ'];
+  const aoa=[HEAD]; const sum=[['วัสดุ','แหล่งที่ถูกสุด','ราคาวัสดุ','ค่าขนส่ง','ราคารวมถึงหน้างาน','หน่วย','ระยะ L (กม.)']];
+  matSel.forEach((mi,gi)=>{ const ex=exOf(mi);
+    const calc=sortedCalc(mi,di);
+    if(gi>0) aoa.push([]);                               /* เว้นบรรทัดคั่นระหว่างวัสดุ อ่านง่าย */
+    aoa.push(['── '+P.mats[mi]+' ('+calc.length+' แหล่ง) ──']);
+    calc.forEach(({r,t},i)=>{
+      const legTxt=r.legs.filter(l=>l.L>0).map(l=>truckFull(l.truck).split(' · ')[0]+' '+l.L.toFixed(1)+' กม.').join(' + ');
+      aoa.push([P.mats[mi],r.nm,r.price,mLabI(r.pm),r.L||'',legTxt,t.cost??'',ex.up||0,ex.bend||0,t.total??'',r.unit,
+        i===0?'★ ถูกสุด':'',r.mode==='road'?'ถนนจริง (OSRM)':r.mode==='est'?'ประมาณ':'กรอกเอง']);
+      if(i===0) sum.push([P.mats[mi],r.nm,r.price,t.cost??'',t.total??'',r.unit,r.L||'']);
+    });
+  });
+  aoa.push([]);
+  aoa.push(['หมายเหตุ: ค่าขนส่งตามตาราง ว 477 · ดีเซล '+$('dDiesel').value+' บาท/ลิตร ('+($('dProv').value)+') · โครงการ: '+($('dProj').value||'-')+' · วันที่กำหนดราคากลาง: '+($('dDate').value||'-')]);
+  const wb=XLSX.utils.book_new();
+  const ws1=XLSX.utils.aoa_to_sheet(sum);
+  ws1['!cols']=[{wch:42},{wch:28},{wch:13},{wch:11},{wch:17},{wch:9},{wch:12}];
+  XLSX.utils.book_append_sheet(wb,ws1,'สรุปแหล่งถูกสุด');
+  const ws2=XLSX.utils.aoa_to_sheet(aoa);
+  ws2['!cols']=[{wch:42},{wch:28},{wch:16},{wch:10},{wch:11},{wch:26},{wch:11},{wch:10},{wch:10},{wch:16},{wch:9},{wch:9},{wch:14}];
+  XLSX.utils.book_append_sheet(wb,ws2,'เปรียบเทียบทุกแหล่ง');
+  XLSX.writeFile(wb,'เปรียบเทียบราคา_ค่าขนส่ง.xlsx');
+};
 $('dPrint').onclick=()=>{buildCalcSheet(); if(map){map.invalidateSize(); setTimeout(()=>window.print(),350);} else window.print();};
 
 /* ============ สถิติราคา ============ */
@@ -2367,9 +2436,13 @@ function renderQueue(){
 }
 
 /* ============ ส่งออกข้อมูล ============ */
-function expRows(mi,carry){
+function expCatOf(s){          /* หมวดของคู่ราคา — ใช้บัญชีคุมก่อน ไม่มีค่อยใช้ประเภท */
+  return regCat(P.mats[s[0]]) || P.types[s[3]] || '';
+}
+function expRows(mi,carry,cat){
   const rows=[]; let carried=0, dropped=0;
   P.series.forEach(s=>{
+    if(cat && expCatOf(s)!==cat) return;
     const v=valAt(s[4],mi,carry);
     if(!v){ dropped++; return; }
     if(v.carried) carried++;
@@ -2379,19 +2452,24 @@ function expRows(mi,carry){
 }
 function expInit(){
   $('eMonth').innerHTML=P.months.map((m,i)=>`<option value="${i}" ${i===LAST?'selected':''}>${mLabI(i)}</option>`).join('');
+  /* หมวดกรอง — จากบัญชีคุมถ้ามี ไม่มีใช้ประเภทที่พบในคลัง */
+  const prevECat=$('eCat').value;
+  const ecats=[...new Set(P.series.map(expCatOf).filter(Boolean))].sort((a,b)=>a.localeCompare(b,'th'));
+  $('eCat').innerHTML='<option value="">ทุกหมวด — ส่งออกทั้งคลัง</option>'
+    +ecats.map(c=>`<option ${c===prevECat?'selected':''}>${esc(c)}</option>`).join('');
   const upd=()=>{
-    const mi=+$('eMonth').value, carry=$('eCarry').value==='1';
-    const {rows,carried,dropped}=expRows(mi,carry);
-    $('eInfo').innerHTML=`จะส่งออก <b>${rows.length.toLocaleString()}</b> แถว · ยกยอดจากเดือนก่อน <b>${carried.toLocaleString()}</b> แถว · ไม่มีราคาเลยตัดทิ้ง <b>${dropped.toLocaleString()}</b> แถว`;
+    const mi=+$('eMonth').value, carry=$('eCarry').value==='1', cat=$('eCat').value;
+    const {rows,carried,dropped}=expRows(mi,carry,cat);
+    $('eInfo').innerHTML=`จะส่งออก <b>${rows.length.toLocaleString()}</b> แถว${cat?` (เฉพาะหมวด ${esc(cat)})`:''} · ยกยอดจากเดือนก่อน <b>${carried.toLocaleString()}</b> แถว · ไม่มีราคาเลยตัดทิ้ง <b>${dropped.toLocaleString()}</b> แถว`;
     let h='<thead><tr><th>รายการวัสดุ</th><th>หน่วย</th><th class="num">ราคา</th><th>แหล่งวัสดุ</th><th>ประเภท</th><th>ยกยอดจาก</th></tr></thead><tbody>';
     rows.slice(0,60).forEach(r=>{h+=`<tr><td>${esc(r[0])}</td><td>${esc(r[1])}</td><td class="num">${fmt(r[2])}</td><td>${esc(r[3])}</td><td>${esc(r[4])}</td><td>${r[5]?`<span class="pill warn">${r[5]}</span>`:''}</td></tr>`;});
     $('tblPrev').innerHTML=h+`</tbody>`;
   };
-  $('eMonth').onchange=upd; $('eCarry').onchange=upd; upd();
+  $('eMonth').onchange=upd; $('eCarry').onchange=upd; $('eCat').onchange=upd; upd();
   const buildXlsx=(fname)=>{
     if(typeof XLSX==='undefined'){ alert('ตัวสร้าง .xlsx ต้องต่ออินเทอร์เน็ตครั้งแรก — ระหว่างนี้ใช้ปุ่ม .csv แทนได้'); return; }
     const mi=+$('eMonth').value, carry=$('eCarry').value==='1';
-    const {rows}=expRows(mi,carry);
+    const {rows}=expRows(mi,carry,$('eCat').value);
     const aoa=[['รายการวัสดุ','หน่วย','ราคา','แหล่งวัสดุ','ประเภท'],...rows.map(r=>r.slice(0,5))];
     const ws=XLSX.utils.aoa_to_sheet(aoa);
     const wb=XLSX.utils.book_new(); XLSX.utils.book_append_sheet(wb,ws,'Sheet1');
@@ -2410,7 +2488,7 @@ function expInit(){
   };
   $('eCsv').onclick=()=>{
     const mi=+$('eMonth').value, carry=$('eCarry').value==='1';
-    const {rows}=expRows(mi,carry);
+    const {rows}=expRows(mi,carry,$('eCat').value);
     const t=[['รายการวัสดุ','หน่วย','ราคา','แหล่งวัสดุ','ประเภท'],...rows.map(r=>r.slice(0,5))]
       .map(r=>r.map(x=>/[",\n]/.test(x)?'"'+String(x).replace(/"/g,'""')+'"':x).join(',')).join('\n');
     const blob=new Blob(['﻿'+t],{type:'text/csv;charset=utf-8'});
@@ -2439,8 +2517,8 @@ function sysInit(){
       <td class="num">${new Set(rs.map(s=>s[0])).size.toLocaleString()}</td>
       <td class="num">${new Set(rs.map(s=>s[1])).size}</td></tr>`;});
   $('tblSysStat').innerHTML=h+'</tbody>';
-  const cm=$('cMeta'); if(cm) cm.innerHTML='เริ่มพัฒนา สิงหาคม 2569 · เวอร์ชันปัจจุบัน v4.2 · '+(LIVE.on?'เชื่อมคลังข้อมูลแล้ว':'ยังไม่ได้เชื่อมคลัง');
-  $('sysInfo').innerHTML=`เวอร์ชัน: 4.2 · อัปเดต: 18 ส.ค. 2569<br>
+  const cm=$('cMeta'); if(cm) cm.innerHTML='เริ่มพัฒนา สิงหาคม 2569 · เวอร์ชันปัจจุบัน v4.4 · '+(LIVE.on?'เชื่อมคลังข้อมูลแล้ว':'ยังไม่ได้เชื่อมคลัง');
+  $('sysInfo').innerHTML=`เวอร์ชัน: 4.4 · อัปเดต: 18 ส.ค. 2569<br>
     การเชื่อมราคาน้ำมันอัตโนมัติ: สร้างแท็บชื่อ <b>OIL</b> ในชีทคลังข้อมูล คอลัมน์ A=วันที่ B=จังหวัด C=ราคาดีเซล (หรือ A=วันที่ B=ราคา ถ้ามีเฉพาะขอนแก่น) แชร์แบบ อ่านได้ทุกคนที่มีลิงก์ — หน้าคำนวณระยะขนส่งจะอ่านราคาล่าสุดของจังหวัดที่เลือกให้เอง<br>
     ขอบเขตข้อมูลที่ฝังในไฟล์นี้: ${mLabI(0)} – ${mLabI(LAST)} (${P.series.length.toLocaleString()} คู่ราคา)<br>
     ชีทกลาง: 01.0 คลังข้อมูลวัสดุก่อสร้าง (แท็บ PRICES + OIL + REGISTRY) · เปิดหน้าเว็บครั้งใด ระบบอ่านแท็บ PRICES มารวมกับข้อมูลฝังให้อัตโนมัติ — ราคา TPSO เดือนใหม่และราคากรอกเองจึงขึ้นจอโดยไม่ต้องแก้ไฟล์นี้<br>
