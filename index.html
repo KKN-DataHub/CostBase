@@ -443,6 +443,8 @@ tr.detail>td{background:#F8F7F3;border-top:none;padding:10px 14px}
 .fixbar{border:1px solid #E4C98A;background:#FDF6E7;border-radius:10px;padding:10px 12px}
 .fixbar .fx-h{font-size:12.5px;font-weight:700;color:#8a6212;margin-bottom:8px}
 .fixbar .fx-b{display:grid;grid-template-columns:200px 1fr auto;gap:10px;align-items:end}
+.frow.rl{display:grid;grid-template-columns:minmax(190px,1fr) minmax(190px,1fr) 160px;gap:10px}
+@media(max-width:820px){.frow.rl{grid-template-columns:1fr}}
 @media(max-width:820px){.fixbar .fx-b{grid-template-columns:1fr}}
 /* กล่องกราฟ — ล็อกความสูงไม่ให้กราฟกินพื้นที่จนไม่เห็นตารางข้างล่าง */
 .chartbox{position:relative;height:300px}
@@ -540,7 +542,7 @@ canvas{max-width:100%}
   <div class="brand">
     <h1>ระบบฐานข้อมูลวัสดุ</h1>
     <div class="sub">แขวงทางหลวงชนบทขอนแก่น</div>
-    <div class="chips"><span class="chip" id="bLatest">—</span><span class="chip">v5.8</span></div>
+    <div class="chips"><span class="chip" id="bLatest">—</span><span class="chip">v5.9</span></div>
   </div>
   <nav class="nav" id="nav">
     <button data-p="sum" class="active"><span class="ico">▦</span>หน้าสรุป</button>
@@ -994,6 +996,21 @@ canvas{max-width:100%}
     <div class="tw" style="margin-top:12px"><table id="tblConn"></table></div>
   </div>
   <div class="card" style="margin-top:12px">
+    <h2 data-ic="tag">เปลี่ยนป้ายช่องทางย้อนหลัง</h2>
+    <div class="hint" style="margin-bottom:10px">ใช้ตอนติดป้ายช่องทางไว้คนละชื่อทั้งที่เป็นข้อมูลชุดเดียวกัน
+      · แก้เฉพาะชื่อช่องทาง <b>เลขที่หนังสือ/ใบเสนอราคาที่ต่อท้ายไม่ถูกแตะ</b> · สำรองแท็บ PRICES ให้ก่อนเสมอ</div>
+    <div class="frow rl">
+      <div><label class="f">ช่องทางเดิม</label><select id="rlFrom"></select></div>
+      <div><label class="f">เปลี่ยนเป็น</label><input type="text" id="rlTo" list="rlToList" placeholder="พิมพ์ / เลือก"><datalist id="rlToList"></datalist></div>
+      <div><label class="f">เฉพาะเดือน</label><select id="rlMonth"></select></div>
+    </div>
+    <div class="cl-auth" style="margin-top:10px">
+      <div><label class="f">รหัสผู้ดูแล</label><input type="password" id="rlPass" placeholder="รหัสเดียวกับคำสั่งล้างข้อมูล" style="max-width:230px"></div>
+      <button class="btn gold" id="rlGo">เปลี่ยนป้าย</button>
+    </div>
+    <div class="hint" id="rlStat" style="margin-top:10px"></div>
+  </div>
+  <div class="card" style="margin-top:12px">
     <h2 data-ic="trash">ล้างข้อมูลในคลัง</h2>
     <div class="frow cl">
       <div><label class="f">ขอบเขตที่จะล้าง</label><select id="clScope">
@@ -1316,7 +1333,7 @@ async function loadLive(){
   }
 }
 function rerender(){
-  [buildSummary, matInit, statInit, buildMovers, covInit, impInit, drawNoGeo, expInit, sysInit, drawMatChips]
+  [buildSummary, matInit, statInit, buildMovers, covInit, impInit, drawNoGeo, relabelInit, expInit, sysInit, drawMatChips]
     .forEach(f=>{ try{ f(); }catch(e){ console.error('rerender:', f.name, e); } });
   kddAll(); kfreeAll(); paintIcons(); drawConn();
   try{ sortableAll(); countUpAll(); }catch(e){}
@@ -3407,7 +3424,7 @@ function sysInit(){
       <td class="num">${new Set(rs.map(s=>s[0])).size.toLocaleString()}</td>
       <td class="num">${new Set(rs.map(s=>s[1])).size}</td></tr>`;});
   $('tblSysStat').innerHTML=h+'</tbody>';
-  const cm=$('cMeta'); if(cm) cm.innerHTML='เริ่มพัฒนา สิงหาคม 2569 · เวอร์ชันปัจจุบัน v5.8 · '+(LIVE.on?'เชื่อมคลังข้อมูลแล้ว':'ยังไม่ได้เชื่อมคลัง');
+  const cm=$('cMeta'); if(cm) cm.innerHTML='เริ่มพัฒนา สิงหาคม 2569 · เวอร์ชันปัจจุบัน v5.9 · '+(LIVE.on?'เชื่อมคลังข้อมูลแล้ว':'ยังไม่ได้เชื่อมคลัง');
   $('sysInfo').innerHTML=`เวอร์ชัน: 5.1 · อัปเดต: 18 ส.ค. 2569<br>
     การเชื่อมราคาน้ำมันอัตโนมัติ: สร้างแท็บชื่อ <b>OIL</b> ในชีทคลังข้อมูล คอลัมน์ A=วันที่ B=จังหวัด C=ราคาดีเซล (หรือ A=วันที่ B=ราคา ถ้ามีเฉพาะขอนแก่น) แชร์แบบ อ่านได้ทุกคนที่มีลิงก์ — หน้าคำนวณระยะขนส่งจะอ่านราคาล่าสุดของจังหวัดที่เลือกให้เอง<br>
     ขอบเขตข้อมูลที่ฝังในไฟล์นี้: ${mLabI(0)} – ${mLabI(LAST)} (${P.series.length.toLocaleString()} คู่ราคา)<br>
@@ -3478,6 +3495,53 @@ function regInit(){
   };
 }
 
+/* ══════ เปลี่ยนป้ายช่องทางย้อนหลัง (ต้อง Code.gs รุ่น 21) ══════ */
+function relabelInit(){
+  const sel=$('rlFrom'); if(!sel) return;
+  const names=Object.keys(CHAN);
+  sel.innerHTML = names.length
+    ? names.map(n=>`<option value="${esc(n)}">${esc(n)} — ${fmtInt(Object.values(CHAN[n].ym).reduce((a,b)=>a+b,0))} แถว</option>`).join('')
+    : '<option value="">— ยังไม่ได้เชื่อมคลัง —</option>';
+  $('rlToList').innerHTML = [...new Set(CHAN_OPTS.concat(names))].map(n=>`<option value="${esc(n)}">`).join('');
+  $('rlMonth').innerHTML = '<option value="">ทุกเดือน</option>'
+    + P.months.map((_,i)=>`<option value="${i}">${mLabI(i)}</option>`).join('');
+  const preview=()=>{
+    const o=CHAN[sel.value]; const mi=$('rlMonth').value;
+    let n=0;
+    if(o){ if(mi==='') n=Object.values(o.ym).reduce((a,b)=>a+b,0);
+           else n=o.ym[P.ylist[+mi]*100+P.months[+mi]]||0; }
+    $('rlStat').innerHTML = o? 'จะเปลี่ยน <b>'+fmtInt(n)+'</b> แถว' : '';
+  };
+  sel.onchange=preview; $('rlMonth').onchange=preview; preview();
+  $('rlGo').onclick=async()=>{
+    const url=($('cfgUrl').value||'').trim(), st=$('rlStat');
+    const from=sel.value, to=($('rlTo').value||'').trim(), mi=$('rlMonth').value;
+    if(!url){ st.textContent='ยังไม่ตั้ง WebApp URL ด้านบน'; return; }
+    if(!from||!to){ st.innerHTML='<span class="up">เลือกช่องทางเดิม และพิมพ์ชื่อใหม่ก่อน</span>'; return; }
+    if(from===to){ st.innerHTML='<span class="up">ชื่อเดิมกับชื่อใหม่เหมือนกัน</span>'; return; }
+    const pass=$('rlPass').value;
+    if(!pass){ st.innerHTML='<span class="up">ใส่รหัสผู้ดูแลก่อน</span>'; return; }
+    const y = mi===''?0:P.ylist[+mi], m = mi===''?0:P.months[+mi];
+    if(!confirm('เปลี่ยน "'+from+'" → "'+to+'"\n'+(mi===''?'ทุกเดือน':'เฉพาะ '+mLabI(+mi))
+        +'\n\nเลขที่หนังสือที่ต่อท้ายไม่ถูกแตะ · ระบบสำรองแท็บ PRICES ให้ก่อน')) return;
+    $('rlGo').disabled=true; st.textContent='กำลังเปลี่ยน…';
+    try{
+      const r=await fetch(url,{method:'POST',headers:{'Content-Type':'text/plain;charset=utf-8'},
+        body:JSON.stringify({token:WTOKEN,action:'relabel',pass,from,to,y,m})});
+      const res=await r.json();
+      if(!res.ok) throw new Error(res.error||'ไม่สำเร็จ');
+      if(res.changed===undefined) throw new Error('ชีทยังใช้ Code.gs รุ่นเก่า — ต้องรุ่น 21 ขึ้นไป');
+      st.innerHTML='<span class="pill ok">เปลี่ยนแล้ว '+fmtInt(res.changed)+' แถว</span>'
+        +(res.backup?' · สำรองไว้ที่แท็บ '+esc(res.backup):'')+' — กำลังโหลดคลังใหม่…';
+      $('rlPass').value='';
+      await loadLive();
+      st.innerHTML='<span class="pill ok">เปลี่ยนแล้ว '+fmtInt(res.changed)+' แถว</span>'
+        +(res.backup?' · สำรองไว้ที่แท็บ '+esc(res.backup):'');
+    }catch(e){ st.innerHTML='<span class="up">ไม่สำเร็จ: '+esc(e.message)+'</span>'; }
+    $('rlGo').disabled=false;
+  };
+}
+
 /* ============ ล้างข้อมูลในคลัง ============ */
 function clearInit(){
   const sc=$('clScope'); if(!sc) return;
@@ -3527,7 +3591,7 @@ function clearInit(){
 }
 
 /* ============ boot ============ */
-[buildSummary, lawInit, provInit, matInit, initMap, statInit, covInit, impInit, noGeoInit, sortableAll, countUpAll, expInit, sysInit, regInit, clearInit, fullInit, distTabs, dieselIdx, drawMatChips, usageInit]
+[buildSummary, lawInit, provInit, matInit, initMap, statInit, covInit, impInit, noGeoInit, relabelInit, sortableAll, countUpAll, expInit, sysInit, regInit, clearInit, fullInit, distTabs, dieselIdx, drawMatChips, usageInit]
   .forEach(f=>{ try{ f(); }catch(e){ console.error('init:', f.name, e); } });
 kddAll(); kfreeAll(); paintIcons();
 try{ fetchOil(true); }catch(e){}
