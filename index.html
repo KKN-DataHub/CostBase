@@ -584,7 +584,7 @@ canvas{max-width:100%}
   <div class="brand">
     <h1><span class="blogo" aria-hidden="true"></span>CostBase</h1>
     <div class="sub">ฐานข้อมูลราคาวัสดุ · แขวงทางหลวงชนบทขอนแก่น</div>
-    <div class="chips"><span class="chip" id="bLatest">—</span><span class="chip" id="bVer">v6.2</span></div>
+    <div class="chips"><span class="chip" id="bLatest">—</span><span class="chip" id="bVer">v—</span></div>
     <button class="instbtn" id="installBtn" style="display:none" title="เพิ่ม CostBase ลงหน้าจอโฮม เปิดใช้เหมือนแอป">⤓ ติดตั้งลงหน้าจอโฮม</button>
   </div>
   <nav class="nav" id="nav">
@@ -1137,7 +1137,12 @@ const EMPTY = () => P.series.length===0;
 let LIVE = {on:false, added:0};
 const fmt = n => n==null?'—':Number(n).toLocaleString('th-TH',{minimumFractionDigits:2,maximumFractionDigits:2});
 const $ = id => document.getElementById(id);
-const APPVER='6.4';        /* เลขรุ่นที่เดียว — ที่อื่นดึงจากตัวนี้ */
+const APPVER='6.5';        /* เลขรุ่นที่เดียว — ที่อื่นดึงจากตัวนี้ */
+const APPDATE='19 ส.ค. 2569';   /* วันที่ของรุ่นนี้ ที่เดียวเหมือนกัน */
+/* ⚠ ป้ายรุ่นบนแถบข้างเคยเป็นข้อความตายตัวใน HTML (v6.2) พอขึ้นรุ่นใหม่แล้วลืมแก้
+   ผู้ใช้เลยเห็นเลขรุ่นเก่าทั้งที่โค้ดใหม่หมดแล้ว — ต่อไปนี้เขียนจาก APPVER เสมอ */
+try{ const _bv=document.getElementById('bVer'); if(_bv) _bv.textContent='v'+APPVER;
+     document.title='CostBase v'+APPVER+' — ฐานข้อมูลราคาวัสดุ ขทช.ขอนแก่น'; }catch(e){}
 /* ต้อง escape ทั้ง " และ ' ด้วย — ชื่อวัสดุในบัญชีคุมมีเครื่องหมายนิ้ว (") 1,687 ชื่อ และฟุต (') 71 ชื่อ
    ถ้าไม่ escape ค่าใน value="..." จะถูกตัดกลางคัน แล้วชื่อที่โดนตัดจะไหลเข้าคลังเป็นวัสดุใหม่ปลอม ๆ */
 const esc = s => String(s).replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;')
@@ -1780,7 +1785,7 @@ function buildSummary(){
   hc('hcExp',`<span class="ph-chip">● เดือนล่าสุด <b>${latestLabel}</b></span>
     <span class="ph-chip">${LIVE.on?'☁ รวมคลังสดแล้ว':'⚠ ยังไม่ได้เชื่อมคลัง'}</span>`);
   hc('hcSys',`<span class="ph-chip">เวอร์ชัน <b>${APPVER}</b></span>
-    <span class="ph-chip">อัปเดต 18 ส.ค. 2569</span>`);
+    <span class="ph-chip">อัปเดต ${APPDATE}</span>`);
   const nRowsLast = P.series.filter(s=>s[4][LAST]!=null).length;
   /* พร้อมใช้ = มีราคาเดือนล่าสุด หรือมีราคาเดือนก่อนหน้าให้ยกยอด (ตามหลักเกณฑ์ยกยอดของระบบ)
      กันเคสตัวเลขหลอก: นำเข้าราคาเดือนใหม่ไม่กี่รายการ ระบบนับเดือนใหม่เป็นเดือนล่าสุด
@@ -4044,7 +4049,7 @@ function sysInit(){
   const cm=$('cMeta'); if(cm) cm.innerHTML='เริ่มพัฒนา สิงหาคม 2569 · เวอร์ชันปัจจุบัน v'+APPVER+' · '+(LIVE.on?'เชื่อมคลังข้อมูลแล้ว':'ยังไม่ได้เชื่อมคลัง');
   $('sysInfo').innerHTML=`ชื่อระบบ: <b>CostBase</b> — ฐานข้อมูลราคาวัสดุ แขวงทางหลวงชนบทขอนแก่น<br>
     ที่อยู่เว็บ: <a href="https://kkn-datahub.github.io/CostBase/" target="_blank" rel="noopener">kkn-datahub.github.io/CostBase/</a><br>
-    เวอร์ชัน: ${APPVER} · อัปเดต: 18 ส.ค. 2569<br>
+    เวอร์ชัน: ${APPVER} · อัปเดต: ${APPDATE}<br>
     การเชื่อมราคาน้ำมันอัตโนมัติ: สร้างแท็บชื่อ <b>OIL</b> ในชีทคลังข้อมูล คอลัมน์ A=วันที่ B=จังหวัด C=ราคาดีเซล (หรือ A=วันที่ B=ราคา ถ้ามีเฉพาะขอนแก่น) แชร์แบบ อ่านได้ทุกคนที่มีลิงก์ — หน้าคำนวณระยะขนส่งจะอ่านราคาล่าสุดของจังหวัดที่เลือกให้เอง<br>
     ขอบเขตข้อมูลที่ฝังในไฟล์นี้: ${mLabI(0)} – ${mLabI(LAST)} (${P.series.length.toLocaleString()} คู่ราคา)<br>
     ชีทกลาง: 01.0 คลังข้อมูลวัสดุก่อสร้าง (แท็บ PRICES + OIL + REGISTRY) · เปิดหน้าเว็บครั้งใด ระบบอ่านแท็บ PRICES มารวมกับข้อมูลฝังให้อัตโนมัติ — ราคา TPSO เดือนใหม่และราคากรอกเองจึงขึ้นจอโดยไม่ต้องแก้ไฟล์นี้<br>
