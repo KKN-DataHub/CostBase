@@ -112,7 +112,9 @@ a{color:var(--teal)}
 .side-foot{padding:12px 16px;font-size:10.5px;color:#8d9cba;
   border-top:1px solid rgba(255,255,255,.12);line-height:1.5}
 
-.main{flex:1;margin-left:var(--rail-w);padding:20px 24px 40px;max-width:var(--page-max)}
+/* min-width:0 สำคัญมาก — ถ้าไม่ใส่ flex/grid item จะย่อต่ำกว่าความกว้างเนื้อหาไม่ได้
+   ทำให้ตารางกว้าง ๆ ดันกรอบจนล้นออกนอกจอ */
+.main{flex:1;min-width:0;margin-left:var(--rail-w);padding:20px 24px 40px;max-width:var(--page-max)}
 
 /* ============ CARD ============ */
 .card{
@@ -160,8 +162,11 @@ tbody tr:hover{background:var(--teal-soft)}
 .chips{display:flex;gap:7px;flex-wrap:wrap;margin-top:9px}
 
 .pill{display:inline-block;font-size:11px;font-weight:600;padding:2px 8px;
-  border-radius:var(--r-pill);white-space:nowrap;
+  border-radius:var(--r-pill);white-space:nowrap;max-width:100%;
+  overflow-wrap:anywhere;word-break:break-word;vertical-align:middle;
   -webkit-print-color-adjust:exact;print-color-adjust:exact}
+/* pill ที่อยู่ในบรรทัดสถานะ/ในการ์ดแคบ ต้องตัดบรรทัดได้ ไม่งั้นล้นกรอบ */
+.hint .pill,.statusline .pill,.cap .pill,.pill.wrap{white-space:normal;line-height:1.5}
 .pill.ok{background:rgba(12,163,12,.12);color:var(--good)}
 .pill.warn{background:rgba(217,164,65,.18);color:#8a6413}
 .pill.bad{background:rgba(208,59,59,.12);color:var(--crit)}
@@ -216,9 +221,11 @@ tbody tr:hover{background:var(--teal-soft)}
 .pghead .ph-sub{font-size:12px;color:#b9c4d8;margin-top:2px}
 .pghead .ph-chips{display:flex;gap:7px;flex-wrap:wrap;margin-top:8px}
 .pghead .ph-chip{font-size:11.5px;padding:3px 11px;border-radius:20px;background:rgba(255,255,255,.13);
-  border:1px solid rgba(255,255,255,.24);color:#fff;white-space:nowrap}
+  border:1px solid rgba(255,255,255,.24);color:#fff;white-space:nowrap;
+  max-width:100%;overflow-wrap:anywhere}
+@media(max-width:620px){.pghead .ph-chip{white-space:normal}}
 .pghead .ph-chip b{color:#ffd98a}
-.pghead .ph-act{margin-left:auto;display:flex;gap:8px;flex:none;align-self:center}
+.pghead .ph-act{margin-left:auto;display:flex;gap:8px;flex-wrap:wrap;justify-content:flex-end;align-self:center}
 .pghead .btn.ghost{background:rgba(255,255,255,.10);color:#fff;border:1px solid rgba(255,255,255,.35)}
 .pghead .btn.ghost:hover{background:rgba(255,255,255,.2)}
 @media(max-width:860px){.pghead{flex-wrap:wrap}.pghead .ph-act{margin-left:0;width:100%}}
@@ -248,6 +255,7 @@ input[type=number]{text-align:right}
 #mmSheet table{margin-top:6px}
 #toastBox{position:fixed;left:50%;bottom:26px;transform:translateX(-50%);background:var(--navy);color:#fff;font-size:13px;padding:9px 18px;border-radius:8px;opacity:0;pointer-events:none;transition:opacity .25s;z-index:3000;max-width:90vw;text-align:center}
 #toastBox.on{opacity:.96}
+@media print{#toastBox{display:none!important}}   /* ไม่งั้นข้อความแจ้งเตือนติดไปในไฟล์ PDF */
 .autocell{display:inline-block;min-width:96px;padding:6px 10px;border:1px dashed var(--grid);border-radius:7px;
   background:var(--page);color:var(--ink2);font-variant-numeric:tabular-nums;text-align:center;font-size:12.5px}
 .legbox .csinp{border:1.5px solid var(--teal);background:#fff}
@@ -289,6 +297,15 @@ h2.sec{font-size:16px;color:var(--navy);margin:18px 0 10px;font-weight:700}
 .gridT{display:grid;grid-template-columns:360px 1fr;gap:14px;align-items:start}
 @media(max-width:1100px){.gridT{grid-template-columns:1fr}.grid3{grid-template-columns:1fr 1fr}}
 @media(max-width:700px){.grid2,.grid3{grid-template-columns:1fr}}
+/* ทุกช่องใน grid/flex ต้องย่อได้ ไม่งั้นตารางกว้างจะดันกรอบล้นจอ */
+.grid2>*,.grid3>*,.gridT>*,.kpis>*,.lawgrid>*,.kcards>*,.flowmap>*,.seg>*,
+.frow>*,.fixbar .fx-b>*,.pghead>*,.card{min-width:0}
+/* break-word ไม่ใช่ anywhere — anywhere จะทำให้เบราว์เซอร์คิดว่าคอลัมน์แคบได้ถึง 1 ตัวอักษร
+   ตารางเลยถูกบีบจนอ่านไม่ออก */
+.card{overflow-wrap:break-word}
+/* ตารางกว้างในกรอบเลื่อน: ตั้งความกว้างขั้นต่ำของคอลัมน์ แล้วให้ .tw เลื่อนซ้าย-ขวาแทนการบีบ */
+.tw table th,.tw table td{min-width:56px}
+.tw table th:first-child,.tw table td:first-child{min-width:130px}
 .page{display:none}.page.active{display:block}
 label.f{display:block;font-size:11.5px;color:var(--ink2);margin:10px 0 4px;font-weight:600}
 input[type=text],input[type=number],input[type=url],input[type=password],select{
@@ -337,12 +354,14 @@ input:focus,select:focus{outline:none;border-color:var(--teal);box-shadow:0 0 0 
 .pghead .ph-ico .ic{width:20px;height:20px;margin:0;color:#fff}
 h2 .ic{color:var(--teal)}
 .frow{display:grid;gap:10px;align-items:end}
-.frow.ymc{grid-template-columns:96px 150px minmax(160px,1fr)}
-.frow.cm{grid-template-columns:minmax(150px,.8fr) minmax(220px,2fr)}
-.frow.upt{grid-template-columns:110px 130px minmax(150px,1fr)}
-.frow.src{grid-template-columns:minmax(220px,1fr)}
-.frow.src.two{grid-template-columns:minmax(220px,1fr) minmax(200px,1fr)}
-.frow.cl{grid-template-columns:minmax(220px,1.1fr) minmax(180px,1fr)}
+/* ความกว้างขั้นต่ำต้องเล็กพอที่จะอยู่ในการ์ดครึ่งจอได้ (การ์ดใน .grid2 กว้างราว 370px)
+   ไม่งั้นคอลัมน์สุดท้ายจะโผล่ออกนอกกรอบการ์ด */
+.frow.ymc{grid-template-columns:minmax(70px,96px) minmax(94px,150px) minmax(110px,1fr)}
+.frow.cm{grid-template-columns:minmax(110px,.8fr) minmax(150px,2fr)}
+.frow.upt{grid-template-columns:minmax(78px,110px) minmax(88px,130px) minmax(110px,1fr)}
+.frow.src{grid-template-columns:minmax(0,1fr)}
+.frow.src.two{grid-template-columns:minmax(150px,1fr) minmax(140px,1fr)}
+.frow.cl{grid-template-columns:minmax(160px,1.1fr) minmax(130px,1fr)}
 #mYear{text-align:center}
 @media(max-width:900px){.frow.ymc,.frow.cm,.frow.upt,.frow.src.two,.frow.cl{grid-template-columns:1fr}}
 .kdd{position:relative;width:100%}
@@ -852,7 +871,7 @@ canvas{max-width:100%}
         <div><label class="f">รายการวัสดุ <span class="req">*</span></label><input type="text" id="mMat" list="mMatList" placeholder="พิมพ์ / เลือกจากรายการ"><datalist id="mMatList"></datalist></div>
       </div>
       <div class="frow upt">
-        <div><label class="f">หน่วย <span class="req">*</span></label><input type="text" id="mUnit" list="mUnitList"><datalist id="mUnitList"></datalist></div>
+        <div><label class="f">หน่วย <span class="req">*</span></label><input type="text" id="mUnit" list="mUnitList"><datalist id="mUnitList"></datalist><div class="hint" id="mUnitHint"></div></div>
         <div><label class="f">ราคา (ไม่รวมขนส่ง) <span class="req">*</span></label><input type="number" id="mPrice" step="0.01"></div>
         <div><label class="f">ประเภท <span class="req">*</span></label><select id="mType"></select></div>
       </div>
@@ -1057,6 +1076,8 @@ canvas{max-width:100%}
     <h2 data-ic="cloud">อัปโหลดบัญชีคุม (REGISTRY) ขึ้นคลัง</h2>
     <div class="statusline">
       <input type="file" id="regFile" accept=".xlsx">
+      <input type="password" id="regPass" placeholder="รหัสผู้ดูแล" autocomplete="new-password"
+             style="max-width:150px">
       <button class="btn" id="regUp">อัปโหลดขึ้นแท็บ REGISTRY</button>
     </div>
     <div class="hint" id="regStat" style="margin-top:8px">เลือกไฟล์ บัญชีคุมวัสดุ.xlsx แล้วกดอัปโหลด</div>
@@ -1116,7 +1137,7 @@ const EMPTY = () => P.series.length===0;
 let LIVE = {on:false, added:0};
 const fmt = n => n==null?'—':Number(n).toLocaleString('th-TH',{minimumFractionDigits:2,maximumFractionDigits:2});
 const $ = id => document.getElementById(id);
-const APPVER='6.2';        /* เลขรุ่นที่เดียว — ที่อื่นดึงจากตัวนี้ */
+const APPVER='6.4';        /* เลขรุ่นที่เดียว — ที่อื่นดึงจากตัวนี้ */
 /* ต้อง escape ทั้ง " และ ' ด้วย — ชื่อวัสดุในบัญชีคุมมีเครื่องหมายนิ้ว (") 1,687 ชื่อ และฟุต (') 71 ชื่อ
    ถ้าไม่ escape ค่าใน value="..." จะถูกตัดกลางคัน แล้วชื่อที่โดนตัดจะไหลเข้าคลังเป็นวัสดุใหม่ปลอม ๆ */
 const esc = s => String(s).replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;')
@@ -1221,7 +1242,7 @@ function mergeLive(rows){
   });
   return added;
 }
-let REG={on:false, map:{}, cat:{}, n:0, nmap:{}, tmap:{}, ncat:{}, tcat:{}, gmap:{}, gcat:{}};
+let REG={on:false, map:{}, cat:{}, n:0, nmap:{}, tmap:{}, ncat:{}, tcat:{}, gmap:{}, gcat:{}, unit:{}};
 /* ทำความสะอาดชื่อก่อนเทียบ — ชื่อจากพาณิชย์มีช่องว่างซ้อน/NBSP ปนมาเยอะ */
 const rNorm = s => String(s==null?'':s)
   .replace(/[\u00A0\u200B\u200C\u200D\uFEFF]/g,' ').replace(/\s+/g,' ').trim();
@@ -1248,12 +1269,16 @@ function rSig(s){
 /* หาชื่อมาตรฐาน/หมวดของชื่อดิบ: ตรงเป๊ะ → ยุบช่องว่าง → ตัดวรรณยุกต์ */
 function regStd(name){
   const raw=String(name==null?'':name).trim();
-  return REG.map[raw] || REG.nmap[rNorm(raw)] || REG.tmap[rTight(raw)] || REG.gmap[rSig(raw)] || null;
+  const sg=rSig(raw);                       /* ลายเซ็นว่าง = ไม่เอามาจับคู่ (จะจับได้มั่วไปหมด) */
+  return REG.map[raw] || REG.nmap[rNorm(raw)] || REG.tmap[rTight(raw)]
+      || (sg?REG.gmap[sg]:null) || null;
 }
 function regCat(name){
   const raw=String(name==null?'':name).trim();
-  return REG.cat[raw] || REG.ncat[rNorm(raw)] || REG.tcat[rTight(raw)] || REG.gcat[rSig(raw)] || null;
+  const sg=rSig(raw);
+  return REG.cat[raw] || REG.ncat[rNorm(raw)] || REG.tcat[rTight(raw)] || (sg?REG.gcat[sg]:null) || null;
 }
+let OILH=[];   /* ประวัติราคาน้ำมันจากแท็บ OIL — [{d,pv,p,ref,ym,day}] เรียงตามวันที่ */
 let CONN={sheet:null, web:null, ver:0, prices:0, reg:0, src:0, oil:null, at:''};
 function drawConn(){
   const el=$('tblConn'); if(!el) return;
@@ -1276,15 +1301,23 @@ function drawConn(){
 }
 function applyRegistry(rows){
   /* rows: [ลำดับ, ชื่อเดิม, หมวด, หน่วย, ชื่อมาตรฐาน] — ชื่อมาตรฐานว่าง = ใช้ชื่อเดิม */
-  REG.map={}; REG.cat={}; REG.nmap={}; REG.tmap={}; REG.ncat={}; REG.tcat={}; REG.gmap={}; REG.gcat={};
+  REG.map={}; REG.cat={}; REG.nmap={}; REG.tmap={}; REG.ncat={}; REG.tcat={}; REG.gmap={}; REG.gcat={}; REG.unit={};
   rows.forEach(r=>{
     const old=String(r[1]||'').trim(); if(!old) return;
     const std=String(r[4]||'').trim()||old;
     REG.map[old]=std; REG.nmap[rNorm(old)]=std; REG.tmap[rTight(old)]=std;
-    const g=rSig(old); if(!(g in REG.gmap)) REG.gmap[g]=std;
+    /* ชั้น "ลายเซ็นสเปก" ต้องกันไว้ 2 อย่าง ไม่งั้นจับคู่ผิดยี่ห้อ
+       ① ลายเซ็นว่าง (ชื่อที่มีแต่คำว่า ตรา/รุ่น/มอก. จะเหลือว่าง) ห้ามเข้าเป็นคีย์
+       ② ลายเซ็นเดียวกันแต่ชี้ชื่อมาตรฐานคนละตัว (ปูนตราช้าง vs ตราเสือ ตัดยี่ห้อแล้วเหมือนกัน)
+          = กำกวม ต้องตัดทิ้งทั้งคู่ ไม่ใช่ให้แถวแรกชนะ ไม่งั้นราคาตราอินทรีจะไปโผล่ในเส้นตราช้าง */
+    const g=rSig(old);
+    if(g){ if(!(g in REG.gmap)) REG.gmap[g]=std;
+           else if(REG.gmap[g]!==std) REG.gmap[g]=null; }
     const c=String(r[2]||'').trim();
+    /* หน่วยตามบัญชีคุม — เอาไว้เตือนตอนกรอกหน่วยไม่ตรง (คนละหน่วย = คนละเส้นราคา คนละแถวในคลัง) */
+    const u=String(r[3]||'').trim(); if(u&&!REG.unit[std]) REG.unit[std]=u;
     if(c&&!REG.cat[std]){ REG.cat[std]=c; REG.ncat[rNorm(std)]=c; REG.tcat[rTight(std)]=c; }
-    if(c){ const g2=rSig(old); if(!(g2 in REG.gcat)) REG.gcat[g2]=c; }
+    if(c){ const g2=rSig(old); if(g2 && !(g2 in REG.gcat)) REG.gcat[g2]=c; }
   });
   REG.n=Object.keys(REG.map).length;
   if(!REG.n) return;
@@ -1428,10 +1461,19 @@ async function loadLive(){
         if(m.upd||m.add) regTxt+=' · พิกัด อัปเดต '+m.upd+' เพิ่ม '+m.add; }
     }catch(e){}
     try{
-      for(let i=rOil.length-1;i>=1;i--){ const c=rOil[i];
-        const pv=isNaN(parseFloat(c[1]))?c[1]:'ขอนแก่น';
+      /* เก็บประวัติราคาน้ำมันทั้งแท็บไว้ ใช้กับการ์ด "น้ำมันดีเซล" ในหน้าสรุป
+         (ราคาน้ำมันไม่ได้อยู่ในแท็บ PRICES เหมือนวัสดุอื่น การ์ดจึงต้องอ่านจากที่นี่) */
+      OILH=[];
+      for(let i=1;i<rOil.length;i++){ const c=rOil[i];
+        const pv=isNaN(parseFloat(c[1]))?String(c[1]||'').trim():'ขอนแก่น';
         const pr=parseFloat(isNaN(parseFloat(c[1]))?c[2]:c[1]);
-        if(pr>=20&&pr<70){ CONN.oil={d:c[0],pv:pv,p:pr.toFixed(2)}; break; } }
+        if(!(pr>=20&&pr<70)) continue;
+        const dt=String(c[0]||'').trim(), m=dt.match(/^(\d{1,2})\/(\d{1,2})\/(\d{4})$/);
+        OILH.push({d:dt, pv, p:pr, ref:String(c[3]||'').trim(),
+                   ym: m?(+m[3])*100+(+m[2]):0, day: m?+m[1]:0});
+      }
+      OILH.sort((a,b)=>(a.ym-b.ym)||(a.day-b.day));
+      if(OILH.length){ const L=OILH[OILH.length-1]; CONN.oil={d:L.d,pv:L.pv,p:L.p.toFixed(2)}; }
     }catch(e){}
     const tAll=performance.now()-t0;
     if(st) st.innerHTML='<span class="pill ok">เชื่อมคลังสำเร็จ</span> อ่าน '+CONN.prices.toLocaleString()+' แถว เพิ่มเข้าจอ '+LIVE.added.toLocaleString()+' ค่า'
@@ -1807,7 +1849,8 @@ function buildSummary(){
       ['ยางแอสฟัลต์ EAP', /\bEAP\b|อีเอพี/i, /^ตัน/],
       ['ยางแอสฟัลต์ CRS-2', /CRS[ .-]?2\b/i, /^ตัน/],
       ['สารฟื้นสภาพ Rejuvenator', /reju|รีจู|ฟื้นสภาพแอสฟัลต์/i, /^ตัน/],
-      ['น้ำมันดีเซล', /ดีเซล/, /ลิตร/]]],
+      /* น้ำมันดีเซลไม่ได้อยู่ในแท็บ PRICES — การ์ดนี้อ่านจากแท็บ OIL แทน (ตัวที่ 4 = 'oil') */
+      ['น้ำมันดีเซล', null, null, 'oil']]],
     ['งานโครงสร้าง', [
       ['ปูนซีเมนต์ปอร์ตแลนด์', /ปอร์ตแลนด์/, /^ตัน/],
       ['ปูนซีเมนต์ไฮดรอลิก', /^(?![\s\S]*ท่อ)[\s\S]*ไฮดรอลิก/, /^ตัน/],
@@ -1824,7 +1867,49 @@ function buildSummary(){
       ['RCBO 2P 10A', /RCBO[\s\S]*2 ?P[\s\S]*10 ?A/i, /^ชุด|^อัน|^ตัว/],
       ['MCCB 2P 80A 30KA', /MCCB[\s\S]*2 ?P[\s\S]*80 ?A/i, /^ชุด|^อัน|^ตัว/]]],
   ];
-  const kcard = ([label,re,unitRe])=>{
+  /* ── การ์ดน้ำมันดีเซล ── อ่านจากแท็บ OIL ไม่ใช่ PRICES
+     โชว์ราคาล่าสุดของจังหวัดที่เลือกในหน้าคำนวณ (ปกติคือขอนแก่น) ณ อำเภอเมือง
+     เส้นแนวโน้ม = ราคาปิดของแต่ละเดือน · กดแล้วเด้งไปหน้าคำนวณระยะขนส่ง */
+  const oilCard = (label)=>{
+    const prov=(($('dProv')||{}).value||(PROVS&&PROVS[0])||'ขอนแก่น');
+    const hist=OILH.filter(o=>o.pv===prov);
+    if(!hist.length){
+      const other=[...new Set(OILH.map(o=>o.pv))].filter(Boolean);
+      return `<div class="kcard empty"><div class="t">${label}</div><div class="v" style="color:var(--muted)">—</div>
+        <div class="s">${OILH.length
+          ? 'แท็บ OIL ยังไม่มีราคาของ '+esc(prov)+' (มีของ '+esc(other.slice(0,3).join(' / '))+') — กด ⟳ ราคาล่าสุด ที่หน้าคำนวณระยะขนส่ง'
+          : 'แท็บ OIL ยังไม่มีข้อมูล — ตั้งทริกเกอร์ updateOilAuto ในชีท หรือกด ⟳ ราคาล่าสุด ที่หน้าคำนวณระยะขนส่ง'}</div></div>`;
+    }
+    const last=hist[hist.length-1];
+    /* ราคาปิดของแต่ละเดือน (แถวสุดท้ายของเดือนนั้น) */
+    const byM={}; hist.forEach(o=>{ if(o.ym) byM[o.ym]=o.p; });
+    const keys=Object.keys(byM).map(Number).sort();
+    const vals=keys.map(k=>byM[k]);
+    const prev=vals.length>1?vals[vals.length-2]:null;
+    const d=prev!=null?(last.p-prev)/prev*100:null;
+    const cls=d==null?'fl':d>0.05?'up':d<-0.05?'dn':'fl';
+    let sp='';
+    if(vals.length>1){
+      const mn=Math.min(...vals), mx=Math.max(...vals), W=100,H=24,pad=2.5;
+      const X=i=>pad+(W-2*pad)*i/Math.max(1,vals.length-1);
+      const Y=v=>mx===mn?H/2:pad+(H-2*pad)*(1-(v-mn)/(mx-mn));
+      const path=vals.map((v,i)=>(i?'L':'M')+X(i).toFixed(1)+' '+Y(v).toFixed(1)).join(' ');
+      sp=`<svg class="spark" viewBox="0 0 ${W} ${H}" preserveAspectRatio="none"><path d="${path}"/>`
+        +`<circle cx="${X(vals.length-1).toFixed(1)}" cy="${Y(vals[vals.length-1]).toFixed(1)}" r="2.3"/></svg>`;
+    }
+    const loc=(last.ref.match(/^\s*ปตท\.\s*(.*?)\s*\(/)||[])[1]||'';
+    return `<div class="kcard" role="button" tabindex="0" data-go="oil"
+        title="ราคาขายปลีก ปตท. ณ อำเภอเมือง ใช้เปิดตารางค่าขนส่ง ว 477 — กดเพื่อไปหน้าคำนวณระยะขนส่ง">
+      <div class="t">${label}</div>
+      <div class="v">${last.p.toFixed(2)} <span class="u">บาท/ลิตร</span></div>
+      <div class="s">ราคามีผล <b>${esc(last.d)}</b> · ${esc(prov)}${loc?' · '+esc(loc):''}
+        <br>ปตท. ขายปลีก ณ อำเภอเมือง (แท็บ OIL · ${hist.length.toLocaleString()} ครั้ง)</div>
+      ${sp}
+      <div class="d ${cls}">${d==null?'ยังไม่มีเดือนก่อนให้เทียบ':(d>0?'▲ +':d<0?'▼ ':'—  ')+Math.abs(d).toFixed(2)+'% จากเดือนก่อน'}</div>
+      <div class="kgo">ไปหน้าคำนวณระยะขนส่ง →</div></div>`;
+  };
+  const kcard = ([label,re,unitRe,kind])=>{
+    if(kind==='oil') return oilCard(label);
     const mi = new Set(); P.mats.forEach((m,i)=>{ if(re.test(m)) mi.add(i); });
     const all = P.series.filter(s=>mi.has(s[0]));
     /* ล็อกหน่วย — ไอเท็มหน่วยไม่ตรงไม่เอามาเทียบเด็ดขาด */
@@ -1872,6 +1957,13 @@ function buildSummary(){
   $('keyCards').innerHTML = GROUPS.map(([g,items])=>
     `<div class="kgroup"><div class="kg-lab">${g}</div>
      <div class="kcards">${items.map(kcard).join('')}</div></div>`).join('');
+  /* การ์ดน้ำมันดีเซล → เด้งไปหน้าคำนวณระยะขนส่ง (ที่เดียวที่ใช้ราคาน้ำมัน) */
+  $('keyCards').querySelectorAll('.kcard[data-go=oil]').forEach(c=>{
+    const go=()=>{ const b=document.querySelector('#nav button[data-p=dist]'); if(b) b.click();
+      setTimeout(()=>{ const el=$('oilStat'); if(el&&el.scrollIntoView) el.scrollIntoView({behavior:'smooth',block:'center'}); },80); };
+    c.onclick=go;
+    c.onkeydown=e=>{ if(e.key==='Enter'||e.key===' '){ e.preventDefault(); go(); } };
+  });
   /* กดการ์ด → เด้งไปหน้าสถิติราคา พร้อมเลือกรายการ+แหล่งที่ถูกสุดให้เลย */
   $('keyCards').querySelectorAll('.kcard[data-mi]').forEach(c=>{
     const go=()=>gotoStat(+c.dataset.mi, -1);   /* โชว์ทุกแหล่ง จะได้เห็นว่าถูกสุดห่างจากเจ้าอื่นแค่ไหน */
@@ -2024,8 +2116,9 @@ async function fetchOil(silent){
      dt  = วันที่ "ราคามีผล" ที่ ปตท. ประกาศ ไม่ใช่วันที่กดดึง */
   const useHit=(dt,pv,pr,extra,ref)=>{ $('dDiesel').value=(+pr).toFixed(2);
     oilMeta={date:dt,prov:pv,ref:ref||''};
-    st.innerHTML=`<span class="pill ok">${extra||'จากชีท OIL'} · ${esc(pv)}${ref?' · '+esc(ref):''}`
-      +` · ราคามีผล ${esc(dt)}</span>`;
+    /* แยกเป็น pill สั้น + ข้อความปกติ เพื่อให้ตัดบรรทัดในการ์ดแคบได้ ไม่ล้นกรอบ */
+    st.innerHTML=`<span class="pill ok">${esc(extra||'จากชีท OIL')}</span> `
+      +`${esc(pv)}${ref?' · '+esc(ref):''}<br>ราคามีผล ${esc(dt)}`;
     dieselIdx(); renderAll(); };
   /* ที่มาในชีทเก็บเป็น "ปตท. อ.เมืองขอนแก่น (อัตโนมัติ 18/08/2569)"
      — วงเล็บหน้าคือจุดอ้างอิง วงเล็บหลังคือวันที่ไปดึงมา (คนละอันกับวันที่ราคามีผล) */
@@ -2054,7 +2147,7 @@ async function fetchOil(silent){
   /* ราคาน้ำมันไม่ได้เปลี่ยนทุกวัน — ถือว่าสดถ้า "ไปดึงมาแล้ววันนี้" ไม่ใช่ "ราคามีผลวันนี้"
      ไม่งั้นกดทีไรก็ต้องยิงสดทุกครั้ง เพราะวันที่มีผลค้างอยู่หลายวัน */
   const fresh = hit && (hit.got===today || hit.dt===today);
-  if(hit&&(silent||fresh)){ useHit(hit.dt,hit.pv,hit.pr,fresh?'ราคาล่าสุด (ตรวจแล้ววันนี้)':'จากชีท OIL',hit.ref); return; }
+  if(hit&&(silent||fresh)){ useHit(hit.dt,hit.pv,hit.pr,fresh?'ตรวจแล้ววันนี้':'จากชีท OIL',hit.ref); return; }
   if(silent) return;
   /* ขั้น 2 — ชีทยังไม่มีราคาวันนี้ → สั่ง WebApp ดึงสดจาก ปตท. (Code.gs รุ่น 11 ขึ้นไป · ครั้งแรกของวัน ~5-10 วิ) */
   const url=($('cfgUrl').value||'').trim();
@@ -2691,8 +2784,11 @@ $('dDate').onchange=()=>buildCalcSheet();
 $('dProj').onchange=()=>buildCalcSheet();
 $('dCopy').onclick=()=>{
   if(!dres.length) return;
-  const head='แหล่งวัสดุ\tระยะทาง (กม.)';
-  const body=dres.map(r=>r.src.name+'\t'+r.L.toFixed(2)).join('\n');
+  /* ต้องเป็น 4 คอลัมน์ให้ตรง Table4 (แหล่ง | 6 ล้อ | 10 ล้อ | 10 ล้อ พ่วง)
+     ของเดิมคัดลอกแค่ 2 คอลัมน์ พอวางลง Table4 ระยะรวมไปตกในช่อง "รถบรรทุก 6 ล้อ"
+     ทั้งที่ค่าตั้งต้นของระบบคือรถ 10 ล้อ */
+  const head='แหล่งวัสดุ\tรถบรรทุก 6 ล้อ\tรถบรรทุก 10 ล้อ\tรถบรรทุก 10 ล้อ พ่วง';
+  const body=dres.map(r=>r.src.name+'\t\t'+r.L.toFixed(2)+'\t').join('\n');
   navigator.clipboard.writeText(head+'\n'+body).then(()=>{$('dCopy').textContent='คัดลอกแล้ว ✓';setTimeout(()=>$('dCopy').textContent='คัดลอกลง Table4',1600);});
 };
 $('dCsv').onclick=()=>{
@@ -2740,21 +2836,29 @@ $('dXlsx').onclick=()=>{
    งานที่เดิมต้องเปิด Google Maps ไล่ทีละแหล่งแล้วพิมพ์ใส่ Excel เอง */
 $('dDist').onclick=()=>{
   if(typeof XLSX==='undefined'){ toast('ตัวสร้าง .xlsx ต้องต่ออินเทอร์เน็ตครั้งแรก'); return; }
+  /* ต้องไล่จาก dres (ทุกแหล่งที่วัดระยะได้) ไม่ใช่ cmpState (เฉพาะแหล่งที่มีราคาของวัสดุที่เลือก)
+     ของเดิมแหล่งที่วัดระยะแล้วแต่ยังไม่มีราคาในคลัง จะหายไปจากไฟล์เงียบ ๆ
+     ทั้งที่ปุ่มเขียนว่า "ระยะทางถนนจริงของทุกแหล่ง" */
+  const legOf={};   /* ถ้าผู้ใช้แก้ช่วงเดินทาง/ชนิดรถในตารางเปรียบเทียบ ให้ใช้ค่าที่แก้แทน */
+  Object.keys(cmpState).forEach(k=>{ (cmpState[k]||[]).forEach(r=>{ if(!legOf[r.nm]) legOf[r.nm]=r; }); });
   const seen={}, out=[];
-  Object.keys(cmpState).forEach(k=>{
-    (cmpState[k]||[]).forEach(r=>{
-      if(seen[r.nm]) return; seen[r.nm]=1;
-      const km={'6':0,'10':0,'10p':0};
-      (r.legs||[]).forEach(l=>{ km[l.truck]=(km[l.truck]||0)+(+l.L||0); });
-      const tot=(+r.L||0);
-      if(!tot && !km['6'] && !km['10'] && !km['10p']) return;
-      out.push([r.nm, km['6']||'', km['10']||(km['6']||km['10p']?'':tot), km['10p']||'',
-        Math.round(tot*100)/100,
-        r.mode==='road'?'ถนนจริง (OSRM)':r.mode==='est'?'ประมาณจากเส้นตรง':'กรอกเอง',
-        r.sc?(r.sc.lat.toFixed(6)+', '+r.sc.lon.toFixed(6)):'ไม่มีพิกัดในคลัง']);
-    });
+  const push=(nm,tot,mode,sc,legs)=>{
+    if(seen[nm]) return; seen[nm]=1;
+    const km={'6':0,'10':0,'10p':0};
+    (legs||[]).forEach(l=>{ km[l.truck]=(km[l.truck]||0)+(+l.L||0); });
+    const T=+tot||0;
+    if(!T && !km['6'] && !km['10'] && !km['10p']) return;
+    out.push([nm, km['6']||'', km['10']||(km['6']||km['10p']?'':T), km['10p']||'',
+      Math.round(T*100)/100,
+      mode==='road'?'ถนนจริง (OSRM)':mode==='est'?'ประมาณจากเส้นตรง':'กรอกเอง',
+      sc?(sc.lat.toFixed(6)+', '+sc.lon.toFixed(6)):'ไม่มีพิกัดในคลัง']);
+  };
+  (typeof dres!=='undefined'?dres:[]).forEach(d=>{
+    const nm=d.src?d.src.name:d.nm, ov=legOf[nm];
+    push(nm, ov?ov.L:d.L, ov?ov.mode:d.mode, d.src||(ov?ov.sc:null), ov?ov.legs:null);
   });
-  if(!out.length){ toast('ยังไม่มีระยะทาง — เลือกวัสดุแล้วกดคำนวณก่อน'); return; }
+  Object.keys(legOf).forEach(nm=>{ const r=legOf[nm]; push(nm,r.L,r.mode,r.sc,r.legs); });
+  if(!out.length){ toast('ยังไม่มีระยะทาง — กด "หาระยะทางทุกแหล่ง" หรือเลือกวัสดุแล้วกดคำนวณก่อน'); return; }
   out.sort((a,b)=>String(a[0]).localeCompare(String(b[0]),'th'));
   const dest=($('dDest').value||'').trim();
   const aoa=[['แหล่งวัสดุ','รถบรรทุก 6 ล้อ','รถบรรทุก 10 ล้อ','รถบรรทุก 10 ล้อ พ่วง','รวมระยะขนส่ง','วิธีวัด','พิกัดแหล่ง'],...out,
@@ -2999,7 +3103,16 @@ function covInit(){
   let t=null; $('covQ').oninput=()=>{ clearTimeout(t); t=setTimeout(drawCov,220); };
   $('covXlsx').onclick=()=>{
     if(typeof XLSX==='undefined'){ alert('ต้องต่ออินเทอร์เน็ตครั้งแรกเพื่อโหลดตัวสร้างไฟล์'); return; }
+    /* ไฟล์ต้องได้ครบทุกแถวเสมอ — เดิมใช้ covRows() ตรง ๆ ซึ่งติดตัวกรองบนจอ
+       (ค่าตั้งต้นคือ "เฉพาะที่ยังไม่ครบ") ถ้าข้อมูลครบหมด ชีตนี้จะมีแต่หัวตาราง */
+    const _cm=$('covMode')?$('covMode').value:'', _cq=$('covQ')?$('covQ').value:'', _cc=$('covCat')?$('covCat').value:'';
+    if($('covMode')) $('covMode').value='all';
+    if($('covQ'))    $('covQ').value='';
+    if($('covCat'))  $('covCat').value='-1';
     const rows=covRows();
+    if($('covMode')) $('covMode').value=_cm;
+    if($('covQ'))    $('covQ').value=_cq;
+    if($('covCat'))  $('covCat').value=_cc;
     const aoa=[['รายการวัสดุ','หมวด','จำนวนแหล่ง',...P.months.map((_,i)=>mLabI(i)),'จำนวนเดือนที่ยังไม่ครบ','เดือนที่ยังไม่ครบ']];
     rows.forEach(r=>aoa.push([r.nm, (REG.on?(P.matCat||{})[r.mi]:'')||'', r.tot,
       ...r.per.map((n,i)=>n+'/'+r.tot), r.missMonths.length, r.missMonths.map(i=>mLabI(i)).join(', ')]));
@@ -3165,6 +3278,16 @@ function impInit(){
     $('mMatList').innerHTML=names.slice(0,4000).map(n=>`<option value="${esc(n)}">`).join('');
   };
   $('mCat').onchange=fillMat; fillMat();
+  /* เลือกวัสดุแล้วเติมหน่วยตามบัญชีคุมให้เลย — หน่วยผิด = ได้แถวใหม่ในคลังแทนการอัปเดตแถวเดิม */
+  $('mMat').oninput=$('mMat').onchange=()=>{
+    const std=regStd($('mMat').value.trim())||$('mMat').value.trim();
+    const u=REG.unit[std]; const el=$('mUnit'); const h=$('mUnitHint');
+    if(u && !el.value.trim()){ el.value=u; }
+    if(h) h.innerHTML = u ? (el.value.trim()&&el.value.trim()!==u
+        ? '<span class="pill warn">หน่วยไม่ตรงบัญชีคุม</span> บัญชีคุมระบุ <b>'+esc(u)+'</b>'
+        : 'หน่วยตามบัญชีคุม: <b>'+esc(u)+'</b>') : '';
+  };
+  $('mUnit').oninput=()=>{ const ev=$('mMat').onchange; if(ev) ev(); };
   const getSrc=()=>$('mSrcSel').value==='__new__'?$('mSrc').value.trim():$('mSrcSel').value;
   $('mYear').value=P.ylist[LAST];
   $('mMonth').innerHTML=TH_M.map((t,i)=>`<option value="${i+1}" ${i+1===P.months[LAST]?'selected':''}>${t}</option>`).join('');
@@ -3180,7 +3303,8 @@ function impInit(){
     if(!$('mChan').value)   need.push(['mChan','ช่องทาง']);
     if(!mat)                need.push(['mMat','รายการวัสดุ']);
     if(!unit)               need.push(['mUnit','หน่วย']);
-    if(!(price>0))          need.push(['mPrice','ราคา']);
+    /* เพดานราคา — กันพิมพ์ผิดจนได้ตัวเลขมหาศาล (เดิมเช็คแค่ >0 พิมพ์ 1e30 ก็ผ่าน) */
+    if(!(price>0&&price<10000000)) need.push(['mPrice','ราคา (มากกว่า 0 และไม่เกิน 10,000,000)']);
     if(!$('mType').value)   need.push(['mType','ประเภท']);
     if(!$('mSrcSel').value) need.push(['mSrcSel','แหล่ง / ผู้ให้ราคา']);
     else if(isNew && !src)  need.push(['mSrc','ชื่อแหล่งใหม่']);
@@ -3194,22 +3318,103 @@ function impInit(){
     }
     const _url=($('mUrl').value||'').trim();
     const _ref=(_url?_url+' · ':'')+$('mRef').value.trim();
-    queue.push({y,mo,mat,unit,price,src,ref:_ref,typ:$('mType').value,chan:$('mChan').value,fromFile:0,known:P.mats.includes(mat)||!!regStd(mat)});
+    /* ใช้ชื่อมาตรฐานตามบัญชีคุม — ถ้าส่งชื่อดิบไป คลังจะได้แถวใหม่แทนการอัปเดตแถวเดิม */
+    const std=regStd(mat)||mat;
+    /* คีย์เดียวกันอยู่ในคิวแล้ว = แก้ราคา ไม่ใช่เพิ่มแถวใหม่ (เซิร์ฟเวอร์จะทิ้งแถวหลังเงียบ ๆ) */
+    const key=[y,mo,std,src,unit].join('|');
+    const at=queue.findIndex(q=>[q.y,q.mo,q.mat,q.src,q.unit].join('|')===key);
+    const row={y,mo,mat:std,unit,price,src,ref:_ref,typ:$('mType').value,chan:$('mChan').value,
+               raw:std!==mat?mat:'',fromFile:0,known:P.mats.includes(std)||!!regStd(mat)};
+    if(at>=0){ const old=queue[at].price; queue[at]=row;
+      toast('มีคีย์นี้ในคิวแล้ว — แทนราคาเดิม '+fmt(old)+' → '+fmt(price)); }
+    else { queue.push(row); toast('เพิ่มเข้าคิวแล้ว · รวม '+queue.length+' รายการ'); }
     $('mMat').value='';$('mPrice').value='';$('mUnit').value='';
     document.querySelectorAll('#impModeMan .miss').forEach(e=>e.classList.remove('miss'));
     renderQueue(); try{ drawNoGeo(); }catch(e){}
-    toast('เพิ่มเข้าคิวแล้ว · รวม '+queue.length+' รายการ');
   };
-  const TH_ABBR={'ม.ค.':1,'ก.พ.':2,'มี.ค.':3,'เม.ย.':4,'พ.ค.':5,'มิ.ย.':6,'ก.ค.':7,'ส.ค.':8,'ก.ย.':9,'ต.ค.':10,'พ.ย.':11,'ธ.ค.':12};
+  /* ชื่อเดือนที่ยอมรับ — ทั้งแบบย่อมีจุด แบบย่อไม่มีจุด และแบบเต็ม */
+  const TH_ABBR={};
+  (function(){
+    const ab=['ม.ค.','ก.พ.','มี.ค.','เม.ย.','พ.ค.','มิ.ย.','ก.ค.','ส.ค.','ก.ย.','ต.ค.','พ.ย.','ธ.ค.'];
+    const full=['มกราคม','กุมภาพันธ์','มีนาคม','เมษายน','พฤษภาคม','มิถุนายน',
+                'กรกฎาคม','สิงหาคม','กันยายน','ตุลาคม','พฤศจิกายน','ธันวาคม'];
+    ab.forEach((s,i)=>{ TH_ABBR[s]=i+1; TH_ABBR[s.replace(/\./g,'')]=i+1; });
+    full.forEach((s,i)=>{ TH_ABBR[s]=i+1; });
+  })();
+  /* แปลงข้อความเดือนเป็นเลข 1-12 · รับได้ทั้ง "8" "ส.ค." "สิงหาคม" "ส.ค. 69" "ส.ค.69" */
+  function thMonthNum(v){
+    if(v==null||v==='') return 0;
+    if(typeof v==='number') return (v>=1&&v<=12)?Math.round(v):0;
+    let t=String(v).replace(/[ ​]/g,' ').trim();
+    if(TH_ABBR[t]) return TH_ABBR[t];
+    if(/^\d+$/.test(t)){ const n=+t; return (n>=1&&n<=12)?n:0; }
+    for(const k in TH_ABBR){ if(k.length>2 && t.indexOf(k)===0) return TH_ABBR[k]; }
+    const n=parseInt(t); return (n>=1&&n<=12)?n:0;
+  }
+  /* แปลงข้อความราคาเป็นตัวเลข — เข้มงวด
+     ยอมให้มีเครื่องหมายสกุลเงิน/คำว่าบาท/หลักพันคั่นด้วยจุลภาค เท่านั้น
+     ถ้าเหลือเศษที่ไม่ใช่ตัวเลข (เช่น "250-300" "3 200" "1.234,50") ให้ตกไปเลย ไม่เดา
+     ของเดิมใช้ parseFloat ตรง ๆ "250-300" จึงกลายเป็น 250 เงียบ ๆ */
+  function parsePrice(v){
+    if(typeof v==='number') return isFinite(v)&&v>0?v:NaN;
+    let t=String(v==null?'':v).replace(/[ ​‌﻿]/g,' ').trim();
+    if(!t) return NaN;
+    t=t.replace(/^[฿]|บาท|บ\./g,'').replace(/\.-$/,'').trim();
+    if(/\.\d*,/.test(t)) return NaN;     /* "1.234,50" แบบยุโรป — ไม่เดา ให้ตกไป */
+    t=t.replace(/,/g,'');
+    return /^\d+(\.\d+)?$/.test(t) ? parseFloat(t) : NaN;
+  }
+  /* ── จับคู่หัวตาราง ──
+     ของเดิมใช้ hd.findIndex(h=>h.includes(t)) ชนกันเละ:
+       "ราคาต่อหน่วย" เข้าเงื่อนไขทั้ง 'ราคา' และ 'หน่วย' → หน่วยกลายเป็นราคา
+       "จำนวนหน่วย" มาก่อน "หน่วย" → หน่วยกลายเป็นจำนวน
+     ของใหม่ให้คะแนน: ตรงเป๊ะ 100 · ตัดวงเล็บแล้วตรง 90 · ขึ้นต้นด้วย 70 · มีคำนั้น 40
+     แล้วเลือกคู่คะแนนสูงสุดก่อน คอลัมน์หนึ่งใช้ได้ครั้งเดียว */
+  const H_FIELDS=[
+    {k:'mat', names:['รายการวัสดุ','ชื่อวัสดุ','ชื่อรายการ','รายการ','วัสดุ'], not:['ประเภท','หมวด','จำนวน']},
+    {k:'pr',  names:['ราคา','ราคาต่อหน่วย','ราคา/หน่วย','ราคาวัสดุ','ราคากลาง'], not:['จำนวน','หน่วยนับ','รวม']},
+    {k:'unit',names:['หน่วย','หน่วยนับ'], not:['ราคา','จำนวน','มูลค่า']},
+    {k:'src', names:['แหล่งวัสดุ','แหล่งที่มา','ผู้ให้ราคา','แหล่ง','ร้าน','ผู้ขาย'], not:[]},
+    {k:'y',   names:['ปี พ.ศ.','ปีพ.ศ.','พ.ศ.','ปี'], not:['ราคา']},
+    {k:'m',   names:['เดือน'], not:[]},
+    {k:'typ', names:['ประเภท','หมวด'], not:[]},
+    {k:'ref', names:['หมายเหตุ','ที่มา','อ้างอิง','เอกสารอ้างอิง'], not:[]},
+  ];
+  function mapHeader(hd){
+    const norm=s=>String(s==null?'':s).replace(/[ ​]/g,' ').replace(/\s+/g,' ').trim();
+    const bare=s=>s.replace(/\s*[\(（].*$/,'').replace(/\s*:$/,'').trim();
+    const H=hd.map(norm);
+    const cand=[];
+    H_FIELDS.forEach(f=>{
+      H.forEach((h,c)=>{
+        if(!h) return;
+        if(f.not.some(x=>h.indexOf(x)>=0 && !f.names.some(n=>n===h))) return;
+        let best=0;
+        f.names.forEach((n,ni)=>{
+          let sc=0;
+          if(h===n) sc=100;
+          else if(bare(h)===n) sc=90;
+          else if(h.indexOf(n)===0) sc=70-Math.min(20,h.length-n.length);
+          else if(h.indexOf(n)>=0) sc=40-Math.min(15,h.length-n.length);
+          if(sc) sc-=ni*0.1;      /* ชื่อลำดับต้น ๆ ในลิสต์ชนะเมื่อคะแนนเท่ากัน
+                                     เช่น มีทั้ง "ราคา" และ "ราคา/หน่วย" ต้องเอา "ราคา" */
+          if(sc>best) best=sc;
+        });
+        if(best>=30) cand.push({f:f.k,c,sc:best});
+      });
+    });
+    cand.sort((a,b)=>b.sc-a.sc);
+    const ci={y:-1,m:-1,mat:-1,unit:-1,pr:-1,src:-1,typ:-1,ref:-1}, usedCol={};
+    cand.forEach(x=>{ if(ci[x.f]<0 && !usedCol[x.c]){ ci[x.f]=x.c; usedCol[x.c]=1; } });
+    return ci;
+  }
+  window.mapHeader=mapHeader; window.parsePrice=parsePrice; window.thMonthNum=thMonthNum;  /* เปิดไว้ให้สคริปต์ทดสอบเรียกได้ */
   window.parseImpWb=function(wb){
-    /* ── ชีตราคา: เอาชีตชื่อ "ราคา" ก่อน ไม่มีค่อยใช้ชีตแรก ── */
-    const nameOf=re=>wb.SheetNames.find(n=>re.test(n));
-    const priceSheet = nameOf(/^ราคา/) || wb.SheetNames[0];
-    const ws=wb.Sheets[priceSheet];
     /* ── ชีตแหล่งวัสดุ: เก็บพิกัดเข้า GEOQ ไว้ให้การ์ด "แหล่งที่ยังไม่มีพิกัด" ── */
+    const nameOf=re=>wb.SheetNames.find(n=>re.test(n));
     let geo=0;
-    const sName=nameOf(/แหล่ง/);
-    if(sName&&sName!==priceSheet){
+    const sName=nameOf(/^แหล่ง/);
+    if(sName){
       const aoaS=XLSX.utils.sheet_to_json(wb.Sheets[sName],{header:1,defval:''});
       aoaS.slice(1).forEach(r=>{
         const nm=String(r[0]||'').trim(); const lat=parseFloat(r[1]), lon=parseFloat(r[2]);
@@ -3220,51 +3425,97 @@ function impInit(){
         geo++;
       });
     }
-    const aoa=XLSX.utils.sheet_to_json(ws,{header:1,defval:''});
-    if(!aoa.length){ try{drawNoGeo();}catch(e){} return {read:0,ok:0,skip:0,geo}; }
-    const hd=aoa[0].map(x=>String(x).trim());
-    const col=t=>hd.findIndex(h=>h.includes(t));
-    const ci={y:col('ปี'),m:col('เดือน'),mat:col('รายการ'),unit:col('หน่วย'),pr:col('ราคา'),
-              src:col('แหล่ง'),typ:col('ประเภท'),ref:col('หมายเหตุ')};
-    /* ช่องทาง + ที่มา เลือกจากแดชบอร์ดก่อนเลือกไฟล์ ใช้กับทุกแถวในไฟล์นี้
-       (ตัวเลือกเริ่มต้นเป็นค่าว่าง บังคับเลือกก่อน จะได้ไม่มีค่าตั้งต้นแอบติดไปกับข้อมูล) */
+    /* ช่องทาง + ที่มา เลือกจากแดชบอร์ดก่อนเลือกไฟล์ ใช้กับทุกแถวในไฟล์นี้ */
     const fileChan=($('xlChan').value||'').trim();
     const fileRef =($('xlRef').value||'').trim();
-    if(ci.mat<0||ci.pr<0) throw new Error('หัวตารางไม่ครบ — ต้องมีอย่างน้อย รายการวัสดุ และ ราคา (กดปุ่ม ดาวน์โหลดแบบฟอร์ม ดูตัวอย่าง)');
-    let ok=0,skip=0;
-    /* นับว่าไฟล์นี้เป็นของเดือนไหนบ้าง + มีกี่แถวที่ไม่ได้ระบุเดือน (ระบบเดาให้) — เอาไปเตือนหลังนำเข้า */
-    const mCount={}, noM={n:0};
-    aoa.slice(1).forEach(r=>{
-      const mat=String(r[ci.mat]||'').trim();
-      const price=parseFloat(String(r[ci.pr]).replace(/,/g,''));
-      if(!mat||!(price>0)){ if(mat||r[ci.pr]) skip++; return; }
-      /* ปี/เดือน ยึดตามคอลัมน์ในไฟล์ Excel เป็นหลักเสมอ
-         ช่องปี/เดือนบนหน้าจอเป็นแค่ค่าสำรอง ใช้เฉพาะตอนไฟล์ไม่มีคอลัมน์ หรือกรอกมาไม่ถูกต้อง */
-      let y=ci.y>=0?parseInt(r[ci.y]):P.ylist[LAST]; if(!(y>=2500)) y=P.ylist[LAST];
-      let mo=ci.m>=0?r[ci.m]:'';
-      if(typeof mo==='string'){ const t=mo.trim(); mo=TH_ABBR[t]||parseInt(t); }
-      mo=+mo;
-      if(!(mo>=1&&mo<=12)){ mo=P.months[LAST]; noM.n++; }   /* ไฟล์ไม่ได้ระบุเดือน - ระบบเดาให้ ต้องเตือน */
-      mCount[y*100+mo]=(mCount[y*100+mo]||0)+1;
-      const src=ci.src>=0?String(r[ci.src]||'').trim():'';
-      if(!src){ skip++; return; }
-      /* ทุกช่องมาจากไฟล์เท่านั้น — ไม่หยิบค่าจากฟอร์มกรอกมือ
-         ช่องทางที่ไฟล์ไม่ได้ระบุ ปล่อยว่างไว้ก่อน แล้วให้เติมที่แถบซ่อมข้อมูลก่อนส่งขึ้นคลัง */
-      const rowRef=ci.ref>=0?String(r[ci.ref]||'').trim():'';
-      queue.push({y,mo,mat,unit:ci.unit>=0?String(r[ci.unit]||'').trim():'',price,src,
-        ref: rowRef ? fileRef+' · '+rowRef : fileRef,
-        typ:ci.typ>=0?String(r[ci.typ]||'').trim():'',
-        chan: fileChan,
-        fromFile:1, known:P.mats.includes(mat)||!!regStd(mat)});
-      ok++;
+    /* ปี/เดือนสำรอง = ช่องบนหน้าจอ (แท็บกรอกมือ) ไม่ใช่เดือนล่าสุดในคลัง
+       เดิมใช้ P.ylist[LAST] ซึ่งผู้ใช้สั่งไม่ได้เลย ถ้าไฟล์ไม่มีคอลัมน์เดือนก็ยัดเข้าเดือนล่าสุดเงียบ ๆ */
+    const fbY=(()=>{ const v=parseInt(($('mYear')||{}).value); return (v>=2560&&v<=2600)?v:P.ylist[LAST]; })();
+    const fbM=(()=>{ const v=parseInt(($('mMonth')||{}).value); return (v>=1&&v<=12)?v:P.months[LAST]; })();
+    let ok=0,skip=0,badY=0,badP=0,noM=0,started=queue.length;
+    const mCount={}, sheetsRead=[], sheetsSkip=[], mapShown=[];
+    /* อ่านทุกชีตที่มีหัวตารางใช้ได้ — เดิมอ่านชีตเดียวแล้วชีตอื่นหายเงียบ ๆ
+       (ไฟล์แยกชีตต่อเดือน เป็นรูปแบบที่พบบ่อย) */
+    wb.SheetNames.forEach(sn=>{
+      if(sName&&sn===sName) return;
+      if(/^วิธีกรอก|^คำอธิบาย|^หมายเหตุ/.test(sn)) return;
+      const aoa=XLSX.utils.sheet_to_json(wb.Sheets[sn],{header:1,defval:''});
+      if(!aoa.length){ sheetsSkip.push(sn+' (ว่าง)'); return; }
+      /* หาแถวหัวตาราง — เผื่อมีแถวชื่อเรื่องอยู่ข้างบน มองลงไปได้ถึง 6 แถว */
+      let hr=-1, ci=null;
+      for(let i=0;i<Math.min(aoa.length,6);i++){
+        const c=mapHeader(aoa[i]||[]);
+        if(c.mat>=0&&c.pr>=0&&c.src>=0){ hr=i; ci=c; break; }
+      }
+      if(hr<0){
+        const c0=mapHeader(aoa[0]||[]);
+        const miss=[]; if(c0.mat<0)miss.push('รายการวัสดุ'); if(c0.pr<0)miss.push('ราคา'); if(c0.src<0)miss.push('แหล่งวัสดุ');
+        sheetsSkip.push(sn+(miss.length?' (ไม่มีคอลัมน์ '+miss.join(' / ')+')':' (หัวตารางไม่ครบ)'));
+        return;
+      }
+      const hdN=(aoa[hr]||[]).map(x=>String(x==null?'':x).trim());
+      mapShown.push(sn+': '+['mat','unit','pr','src','y','m','typ','ref']
+        .filter(k=>ci[k]>=0).map(k=>({mat:'รายการ',unit:'หน่วย',pr:'ราคา',src:'แหล่ง',y:'ปี',m:'เดือน',typ:'ประเภท',ref:'หมายเหตุ'})[k]+'←"'+hdN[ci[k]]+'"').join(' · '));
+      let n=0;
+      let lastY=null, lastM=null;   /* เผื่อเซลล์ ปี/เดือน ถูก merge (ค่าจะมาแถวแรกแถวเดียว) */
+      aoa.slice(hr+1).forEach(r=>{
+        const mat=String(r[ci.mat]==null?'':r[ci.mat]).trim();
+        const rawP=ci.pr>=0?r[ci.pr]:'';
+        const price=parsePrice(rawP);
+        if(!mat && !String(rawP||'').trim()) return;          /* แถวว่างล้วน ข้ามเงียบ ๆ */
+        if(!mat||!(price>0)){ skip++; if(mat&&String(rawP||'').trim()) badP++; return; }
+        /* ปี — ยึดคอลัมน์ในไฟล์ ต้องอยู่ในช่วง พ.ศ. ที่เป็นไปได้เท่านั้น
+           ของเดิมเช็คแค่ >=2500 พิมพ์ 25690 ทีเดียว คลังงอกเดือนผีขึ้นมาทั้งระบบ */
+        let y=NaN;
+        if(ci.y>=0){ const raw=String(r[ci.y]==null?'':r[ci.y]).trim();
+          if(raw){ y=parseInt(raw); if(!(y>=2560&&y<=2600)){ badY++; y=NaN; } else lastY=y; }
+          else if(lastY!=null) y=lastY; }
+        if(!(y>=2560&&y<=2600)) y=(ci.y>=0&&lastY!=null)?lastY:fbY;
+        let mo=0;
+        if(ci.m>=0){ const raw=r[ci.m];
+          mo=thMonthNum(raw);
+          if(mo) lastM=mo; else if(String(raw==null?'':raw).trim()==='' && lastM) mo=lastM; }
+        if(!(mo>=1&&mo<=12)){ mo=fbM; noM++; }
+        const src=String(r[ci.src]==null?'':r[ci.src]).trim();
+        if(!src){ skip++; return; }
+        mCount[y*100+mo]=(mCount[y*100+mo]||0)+1;
+        const rowRef=ci.ref>=0?String(r[ci.ref]||'').trim():'';
+        /* ใช้ชื่อมาตรฐานตามบัญชีคุมตั้งแต่ตอนเข้าคิว — ไม่งั้นชื่อดิบจะไปสร้างแถวซ้ำในคลัง
+           (คีย์ฝั่งเซิร์ฟเวอร์คือ ปี|เดือน|ชื่อ|แหล่ง|หน่วย ชื่อต่างนิดเดียวก็เป็นคนละแถว) */
+        const std=regStd(mat)||mat;
+        queue.push({y,mo,mat:std,unit:ci.unit>=0?String(r[ci.unit]||'').trim():'',price,src,
+          ref: rowRef ? (fileRef?fileRef+' · ':'')+rowRef : fileRef,
+          typ:ci.typ>=0?String(r[ci.typ]||'').trim():'',
+          chan: fileChan, raw: std!==mat?mat:'',
+          fromFile:1, known:P.mats.includes(std)||!!regStd(mat)});
+        ok++; n++;
+      });
+      sheetsRead.push(sn+' ('+n+' แถว)');
     });
+    if(!sheetsRead.length)
+      throw new Error('หัวตารางไม่ครบ — ต้องมีคอลัมน์ รายการวัสดุ · ราคา · แหล่งวัสดุ เป็นอย่างน้อย'
+        +(sheetsSkip.length?'\nชีตที่ลองอ่าน: '+sheetsSkip.join(' · '):'')
+        +'\n(กดปุ่ม ดาวน์โหลดแบบฟอร์ม ดูตัวอย่าง)');
+    /* กันคีย์ซ้ำในคิวเดียวกัน — ปี|เดือน|ชื่อ|แหล่ง|หน่วย ซ้ำ ฝั่งเซิร์ฟเวอร์จะทิ้งแถวหลังเงียบ ๆ */
+    const dup=dedupeQueue(started);
     renderQueue();
     try{ drawNoGeo(); }catch(e){}
     const TH_MS=['ม.ค.','ก.พ.','มี.ค.','เม.ย.','พ.ค.','มิ.ย.','ก.ค.','ส.ค.','ก.ย.','ต.ค.','พ.ย.','ธ.ค.'];
     const months=Object.keys(mCount).sort().map(k=>({
       lab: TH_MS[(+k%100)-1]+' '+String(Math.floor(+k/100)).slice(-2), n: mCount[k] }));
-    return {read:aoa.length-1,ok,skip,geo,months,noMonth:noM.n,sheet:priceSheet};
+    return {read:ok+skip,ok:ok-dup,skip,geo,months,noMonth:noM,badYear:badY,badPrice:badP,dup,
+            sheets:sheetsRead,sheetsSkip,map:mapShown,fbLab:TH_MS[fbM-1]+' '+String(fbY).slice(-2)};
   };
+  /* ทิ้งแถวที่คีย์ซ้ำกันในคิว เก็บแถวหลังสุด (ถือว่าเป็นค่าที่แก้แล้ว) */
+  function dedupeQueue(from){
+    const seen={}; let dup=0;
+    for(let i=queue.length-1;i>=(from||0);i--){
+      const q=queue[i];
+      const k=[q.y,q.mo,String(q.mat).trim(),String(q.src).trim(),String(q.unit||'').trim()].join('|');
+      if(seen[k]){ queue.splice(i,1); dup++; } else seen[k]=1;
+    }
+    return dup;
+  }
   /* สลับโหมด กรอกมือ ↔ ไฟล์ Excel */
   document.querySelectorAll('#impTabs .tabbtn').forEach(b=>b.onclick=()=>{
     document.querySelectorAll('#impTabs .tabbtn').forEach(x=>x.classList.toggle('on',x===b));
@@ -3294,11 +3545,20 @@ function impInit(){
       st.innerHTML='<span class="pill ok">เข้าคิว '+res.ok+' รายการ</span> จาก '+res.read+' แถว'
         +(res.skip?' · ข้าม '+res.skip+' แถวไม่สมบูรณ์':'')
         +(res.geo?' · พิกัดแหล่ง '+res.geo+' แหล่ง (ดูการ์ด <b>แหล่งที่ยังไม่มีพิกัด</b>)':'')
+        +'<br>อ่านชีต: <b>'+esc((res.sheets||[]).join(' · '))+'</b>'
+        +((res.sheetsSkip||[]).length?' · <span class="pill warn">ข้ามชีต</span> '+esc(res.sheetsSkip.join(' · ')):'')
+        +((res.map||[]).length?'<br><span class="hint">จับคู่หัวตาราง — '+esc(res.map.join(' | '))+'</span>':'')
         +(ms?'<br>เดือนของราคาในไฟล์: <b>'+esc(ms)+'</b>':'')
         +'<br>ช่องทาง: <b>'+esc(($('xlChan').value||'').trim())+'</b> · ที่มา: <b>'+esc(($('xlRef').value||'').trim())+'</b>'
-        +(res.noMonth?'<br><span class="pill bad">'+res.noMonth+' แถวไม่ได้ระบุเดือน</span> ระบบใส่ '
-            +mLabI(LAST)+' ให้แทน — ตรวจคอลัมน์ "เดือน" ในไฟล์ก่อนส่งขึ้นคลัง':'');
-    }catch(e){ st.textContent='อ่านไม่ได้: '+e.message; }
+        +(res.badPrice?'<br><span class="pill bad">'+res.badPrice+' แถวราคาอ่านไม่ออก</span>'
+            +' — ระบบไม่เดาให้ (เช่น "250-300" หรือ "3 200") แก้ในไฟล์แล้วนำเข้าใหม่':'')
+        +(res.badYear?'<br><span class="pill bad">'+res.badYear+' แถวปี พ.ศ. ผิดช่วง</span>'
+            +' — รับเฉพาะ 2560–2600 ระบบใช้ปีจากแถวก่อนหน้า/ช่องบนหน้าจอแทน':'')
+        +(res.dup?'<br><span class="pill warn">'+res.dup+' แถวคีย์ซ้ำในไฟล์</span>'
+            +' (ปี·เดือน·รายการ·แหล่ง·หน่วย เดียวกัน) — เก็บแถวล่างสุดไว้':'')
+        +(res.noMonth?'<br><span class="pill bad">'+res.noMonth+' แถวไม่ได้ระบุเดือน</span> ระบบใส่ <b>'
+            +esc(res.fbLab)+'</b> ให้แทน (ตามช่องปี/เดือนในแท็บกรอกทีละรายการ) — ตรวจคอลัมน์ "เดือน" ก่อนส่งขึ้นคลัง':'');
+    }catch(e){ st.innerHTML='<span class="pill bad">อ่านไม่ได้</span> '+esc(e.message).replace(/\n/g,'<br>'); }
     $('impFile').value='';
   };
   /* แบบฟอร์มเปล่า — โหลดไฟล์ที่จัดตารางไว้แล้ว (หัวสีเข้ม ตีเส้น ตรึงหัวตาราง มีชีตวิธีกรอก)
@@ -3532,12 +3792,146 @@ function expRows(mi,carry,cats){
     const v=valAt(s[4],mi,carry);
     if(!v){ dropped++; return; }
     if(v.carried) carried++;
-    rows.push([P.mats[s[0]], P.units[s[2]]||'', v.p, P.srcs[s[1]]||'', P.types[s[3]]||'', v.carried?mLabI(v.from):'']);
+    /* คอลัมน์ "ประเภท" ต้องเป็นค่าเดียวกับที่ใช้กรองหมวด (expCatOf) ไม่งั้นกรองหมวด "ซีเมนต์"
+       แล้วได้ไฟล์ที่ในคอลัมน์เขียนว่า "สืบราคา" — พิวอตในไฟล์ Estimate จะจัดกลุ่มผิด */
+    rows.push([P.mats[s[0]], P.units[s[2]]||'', v.p, P.srcs[s[1]]||'', expCatOf(s), v.carried?mLabI(v.from):'']);
   });
   return {rows,carried,dropped};
 }
+/* ═══ ตัวเขียนไฟล์ .xlsx เอง (เฉพาะไฟล์ราคารายเดือนที่ส่งให้ DRR_KK Estimate) ═══
+   เหตุผล: Power Query ในไฟล์ Estimate เดิมอ่าน Source{[Item="Table1",Kind="Table"]}
+   ซึ่งต้องเป็น "ตาราง (ListObject)" จริง ๆ  แต่ SheetJS รุ่นฟรีสร้างให้ไม่ได้
+   ของเดิมจึงได้แค่ "ชีตชื่อ Table1" — เปิดเองดูปกติ แต่ Estimate รีเฟรชแล้ว error
+   ตัวนี้เขียน zip เองแบบไม่บีบอัด (Excel รับได้) พร้อม xl/tables/table1.xml จริง */
+const _CRC=(()=>{ const t=new Int32Array(256);
+  for(let n=0;n<256;n++){ let c=n; for(let k=0;k<8;k++) c=c&1?0xEDB88320^(c>>>1):c>>>1; t[n]=c; }
+  return b=>{ let c=-1; for(let i=0;i<b.length;i++) c=t[(c^b[i])&0xFF]^(c>>>8); return (c^-1)>>>0; };
+})();
+function zipStore(files){
+  const enc=new TextEncoder(), parts=[], dir=[]; let off=0;
+  const u16=n=>[n&255,(n>>8)&255], u32=n=>[n&255,(n>>8)&255,(n>>16)&255,(n>>>24)&255];
+  files.forEach(f=>{
+    const nm=enc.encode(f.name), data=typeof f.data==='string'?enc.encode(f.data):f.data;
+    const crc=_CRC(data);
+    const hdr=[].concat([0x50,0x4b,0x03,0x04],u16(20),u16(0x0800),u16(0),u16(0),u16(0),
+      u32(crc),u32(data.length),u32(data.length),u16(nm.length),u16(0));
+    parts.push(new Uint8Array(hdr),nm,data);
+    dir.push({nm,crc,len:data.length,off});
+    off+=hdr.length+nm.length+data.length;
+  });
+  const cen=[];
+  dir.forEach(d=>{
+    const h=[].concat([0x50,0x4b,0x01,0x02],u16(20),u16(20),u16(0x0800),u16(0),u16(0),u16(0),
+      u32(d.crc),u32(d.len),u32(d.len),u16(d.nm.length),u16(0),u16(0),u16(0),u16(0),u32(0),u32(d.off));
+    cen.push(new Uint8Array(h),d.nm);
+  });
+  const cenLen=cen.reduce((a,b)=>a+b.length,0);
+  const end=new Uint8Array([].concat([0x50,0x4b,0x05,0x06],u16(0),u16(0),
+    u16(dir.length),u16(dir.length),u32(cenLen),u32(off),u16(0)));
+  const all=[...parts,...cen,end];
+  const total=all.reduce((a,b)=>a+b.length,0);
+  const buf=new Uint8Array(total); let p=0;
+  all.forEach(b=>{ buf.set(b,p); p+=b.length; });
+  return buf;
+}
+const _xe=s=>String(s==null?'':s).replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;')
+  .replace(/"/g,'&quot;').replace(/\x00-\x08|\x0b|\x0c|\x0e-\x1f/g,'');
+const _colName=n=>{ let s=''; n++; while(n>0){ const m=(n-1)%26; s=String.fromCharCode(65+m)+s; n=(n-m-1)/26; } return s; };
+function _sheetXml(aoa,opt){
+  opt=opt||{};
+  const nR=aoa.length, nC=Math.max(...aoa.map(r=>r.length),1);
+  const dim='A1:'+_colName(nC-1)+nR;
+  let body='';
+  aoa.forEach((row,ri)=>{
+    let cells='';
+    for(let c=0;c<nC;c++){
+      const v=row[c], ref=_colName(c)+(ri+1);
+      if(v==null||v==='') continue;
+      const st=ri===0?' s="1"':'';
+      if(typeof v==='number'&&isFinite(v)) cells+=`<c r="${ref}"${st}><v>${v}</v></c>`;
+      else cells+=`<c r="${ref}"${st} t="inlineStr"><is><t xml:space="preserve">${_xe(v)}</t></is></c>`;
+    }
+    body+=`<row r="${ri+1}">${cells}</row>`;
+  });
+  const cols=(opt.w||[]).map((w,i)=>`<col min="${i+1}" max="${i+1}" width="${w}" customWidth="1"/>`).join('');
+  return `<?xml version="1.0" encoding="UTF-8" standalone="yes"?>`
+   +`<worksheet xmlns="http://schemas.openxmlformats.org/spreadsheetml/2006/main"`
+   +` xmlns:r="http://schemas.openxmlformats.org/officeDocument/2006/relationships">`
+   +`<dimension ref="${dim}"/>`
+   +`<sheetViews><sheetView workbookViewId="0">`
+   +`<pane ySplit="1" topLeftCell="A2" activePane="bottomLeft" state="frozen"/></sheetView></sheetViews>`
+   +`<sheetFormatPr defaultRowHeight="15"/>`
+   +(cols?`<cols>${cols}</cols>`:'')
+   +`<sheetData>${body}</sheetData>`
+   +(opt.table?'':`<autoFilter ref="${dim}"/>`)
+   +(opt.table?`<tableParts count="1"><tablePart r:id="rId1"/></tableParts>`:'')
+   +`</worksheet>`;
+}
+function estWorkbook(aoa,extra){
+  const nR=aoa.length, nC=aoa[0].length, ref='A1:'+_colName(nC-1)+nR;
+  const W=[52,10,13,28,16];
+  const sheets=[{n:'Sheet1',x:_sheetXml(aoa,{w:W})},
+                {n:'Table1',x:_sheetXml(aoa,{w:W,table:1})}];
+  if(extra) sheets.push({n:extra.name,x:_sheetXml(extra.aoa,{w:[46,26,14,14,13]})});
+  const tableXml=`<?xml version="1.0" encoding="UTF-8" standalone="yes"?>`
+   +`<table xmlns="http://schemas.openxmlformats.org/spreadsheetml/2006/main" id="1"`
+   +` name="Table1" displayName="Table1" ref="${ref}" totalsRowShown="0">`
+   +`<autoFilter ref="${ref}"/><tableColumns count="${nC}">`
+   +aoa[0].map((h,i)=>`<tableColumn id="${i+1}" name="${_xe(h)}"/>`).join('')
+   +`</tableColumns><tableStyleInfo name="TableStyleMedium2" showFirstColumn="0"`
+   +` showLastColumn="0" showRowStripes="1" showColumnStripes="0"/></table>`;
+  const files=[
+    {name:'[Content_Types].xml',data:`<?xml version="1.0" encoding="UTF-8" standalone="yes"?>`
+      +`<Types xmlns="http://schemas.openxmlformats.org/package/2006/content-types">`
+      +`<Default Extension="rels" ContentType="application/vnd.openxmlformats-package.relationships+xml"/>`
+      +`<Default Extension="xml" ContentType="application/xml"/>`
+      +`<Override PartName="/xl/workbook.xml" ContentType="application/vnd.openxmlformats-officedocument.spreadsheetml.sheet.main+xml"/>`
+      +sheets.map((s,i)=>`<Override PartName="/xl/worksheets/sheet${i+1}.xml" ContentType="application/vnd.openxmlformats-officedocument.spreadsheetml.worksheet+xml"/>`).join('')
+      +`<Override PartName="/xl/styles.xml" ContentType="application/vnd.openxmlformats-officedocument.spreadsheetml.styles+xml"/>`
+      +`<Override PartName="/xl/tables/table1.xml" ContentType="application/vnd.openxmlformats-officedocument.spreadsheetml.table+xml"/>`
+      +`</Types>`},
+    {name:'_rels/.rels',data:`<?xml version="1.0" encoding="UTF-8" standalone="yes"?>`
+      +`<Relationships xmlns="http://schemas.openxmlformats.org/package/2006/relationships">`
+      +`<Relationship Id="rId1" Type="http://schemas.openxmlformats.org/officeDocument/2006/relationships/officeDocument" Target="xl/workbook.xml"/>`
+      +`</Relationships>`},
+    {name:'xl/workbook.xml',data:`<?xml version="1.0" encoding="UTF-8" standalone="yes"?>`
+      +`<workbook xmlns="http://schemas.openxmlformats.org/spreadsheetml/2006/main"`
+      +` xmlns:r="http://schemas.openxmlformats.org/officeDocument/2006/relationships"><sheets>`
+      +sheets.map((s,i)=>`<sheet name="${_xe(s.n)}" sheetId="${i+1}" r:id="rId${i+1}"/>`).join('')
+      +`</sheets></workbook>`},
+    {name:'xl/_rels/workbook.xml.rels',data:`<?xml version="1.0" encoding="UTF-8" standalone="yes"?>`
+      +`<Relationships xmlns="http://schemas.openxmlformats.org/package/2006/relationships">`
+      +sheets.map((s,i)=>`<Relationship Id="rId${i+1}" Type="http://schemas.openxmlformats.org/officeDocument/2006/relationships/worksheet" Target="worksheets/sheet${i+1}.xml"/>`).join('')
+      +`<Relationship Id="rId${sheets.length+1}" Type="http://schemas.openxmlformats.org/officeDocument/2006/relationships/styles" Target="styles.xml"/>`
+      +`</Relationships>`},
+    {name:'xl/styles.xml',data:`<?xml version="1.0" encoding="UTF-8" standalone="yes"?>`
+      +`<styleSheet xmlns="http://schemas.openxmlformats.org/spreadsheetml/2006/main">`
+      +`<fonts count="2"><font><sz val="11"/><name val="Tahoma"/></font>`
+      +`<font><b/><sz val="11"/><name val="Tahoma"/></font></fonts>`
+      +`<fills count="2"><fill><patternFill patternType="none"/></fill>`
+      +`<fill><patternFill patternType="gray125"/></fill></fills>`
+      +`<borders count="1"><border><left/><right/><top/><bottom/><diagonal/></border></borders>`
+      +`<cellStyleXfs count="1"><xf numFmtId="0" fontId="0" fillId="0" borderId="0"/></cellStyleXfs>`
+      +`<cellXfs count="2"><xf numFmtId="0" fontId="0" fillId="0" borderId="0" xfId="0"/>`
+      +`<xf numFmtId="0" fontId="1" fillId="0" borderId="0" xfId="0" applyFont="1"/></cellXfs>`
+      +`</styleSheet>`},
+    {name:'xl/tables/table1.xml',data:tableXml},
+    {name:'xl/worksheets/_rels/sheet2.xml.rels',data:`<?xml version="1.0" encoding="UTF-8" standalone="yes"?>`
+      +`<Relationships xmlns="http://schemas.openxmlformats.org/package/2006/relationships">`
+      +`<Relationship Id="rId1" Type="http://schemas.openxmlformats.org/officeDocument/2006/relationships/table" Target="../tables/table1.xml"/>`
+      +`</Relationships>`},
+  ];
+  sheets.forEach((s,i)=>files.push({name:`xl/worksheets/sheet${i+1}.xml`,data:s.x}));
+  return new Blob([zipStore(files)],
+    {type:'application/vnd.openxmlformats-officedocument.spreadsheetml.sheet'});
+}
 function expInit(){
-  $('eMonth').innerHTML=P.months.map((m,i)=>`<option value="${i}" ${i===LAST?'selected':''}>${mLabI(i)}</option>`).join('');
+  /* คงเดือนที่ผู้ใช้เลือกไว้ — expInit ถูกเรียกซ้ำทุกครั้งที่ loadLive() เสร็จ (3-10 วิหลังเปิด)
+     ของเดิมเด้งกลับเดือนล่าสุดเงียบ ๆ เลือก ก.ค. ไว้แล้วกดส่งออกอาจได้ไฟล์ ก.ย. */
+  const _prevYM=(()=>{ const i=+($('eMonth').value); return (i>=0&&i<P.months.length)?P.ylist[i]*100+P.months[i]:0; })();
+  const _keep=_prevYM?P.months.findIndex((m,i)=>P.ylist[i]*100+m===_prevYM):-1;
+  const _sel=_keep>=0?_keep:LAST;
+  $('eMonth').innerHTML=P.months.map((m,i)=>`<option value="${i}" ${i===_sel?'selected':''}>${mLabI(i)}</option>`).join('');
   /* หมวดกรอง (เลือกหลายหมวด) — จากบัญชีคุมถ้ามี ไม่มีใช้ประเภทที่พบในคลัง */
   const ecats=[...new Set(P.series.map(expCatOf).filter(Boolean))].sort((a,b)=>a.localeCompare(b,'th'));
   eCatSel=new Set([...eCatSel].filter(c=>ecats.includes(c)));   /* ตัดหมวดที่ไม่มีแล้วออก */
@@ -3573,24 +3967,19 @@ function expInit(){
   drawCat();
   $('eMonth').onchange=upd; $('eCarry').onchange=upd; upd();
   const buildXlsx=(fname)=>{
-    if(typeof XLSX==='undefined'){ alert('ตัวสร้าง .xlsx ต้องต่ออินเทอร์เน็ตครั้งแรก — ระหว่างนี้ใช้ปุ่ม .csv แทนได้'); return; }
     const mi=+$('eMonth').value, carry=$('eCarry').value==='1';
     const {rows}=expRows(mi,carry,eCatSel);
     const aoa=[['รายการวัสดุ','หน่วย','ราคา','แหล่งวัสดุ','ประเภท'],...rows.map(r=>r.slice(0,5))];
-    const ws=XLSX.utils.aoa_to_sheet(aoa);
-    ws['!cols']=[{wch:52},{wch:10},{wch:13},{wch:28},{wch:16}];
-    ws['!autofilter']={ref:XLSX.utils.encode_range({s:{r:0,c:0},e:{r:aoa.length-1,c:4}})};
-    ws['!freeze']={xSplit:0,ySplit:1};
-    const wb=XLSX.utils.book_new();
-    XLSX.utils.book_append_sheet(wb,ws,'Sheet1');      /* ตัวเชื่อมแบบเก่า (OLEDB) อ่าน Sheet1$ */
-    XLSX.utils.book_append_sheet(wb,XLSX.utils.aoa_to_sheet(aoa),'Table1');  /* Power Query อ่านชื่อนี้ */
     const noted=rows.filter(r=>r[5]);
-    if(noted.length){
-      const aoa2=[['รายการวัสดุ','แหล่งวัสดุ','เดือนที่ส่งออก','ใช้ราคาเดือน','ราคา'],
-        ...noted.map(r=>[r[0],r[3],mLabI(mi),r[5],r[2]])];
-      XLSX.utils.book_append_sheet(wb,XLSX.utils.aoa_to_sheet(aoa2),'หมายเหตุยกยอด');
-    }
-    XLSX.writeFile(wb,fname);
+    const extra = noted.length ? {name:'หมายเหตุยกยอด',
+      aoa:[['รายการวัสดุ','แหล่งวัสดุ','เดือนที่ส่งออก','ใช้ราคาเดือน','ราคา'],
+           ...noted.map(r=>[r[0],r[3],mLabI(mi),r[5],r[2]])]} : null;
+    /* สร้างไฟล์เองไม่ผ่าน SheetJS เพราะ SheetJS รุ่นฟรีสร้าง "ตาราง (ListObject)" ไม่ได้
+       — ได้แค่ชีตชื่อ Table1 ซึ่ง Power Query เดิมในไฟล์ Estimate อ่านไม่เจอ */
+    const blob=estWorkbook(aoa,extra);
+    const a=document.createElement('a'); a.href=URL.createObjectURL(blob); a.download=fname;
+    document.body.appendChild(a); a.click(); a.remove();
+    setTimeout(()=>URL.revokeObjectURL(a.href),4000);
   };
   /* ชื่อไฟล์ต้องตรงแบบที่ Power Query ในไฟล์ DRR_KK Estimate ไล่หา:
      ขึ้นต้นด้วย "<เลขเดือน>." + มีตัวย่อเดือนไทย + ลงท้าย .xlsx
@@ -3625,7 +4014,7 @@ function expInit(){
     const mi=+$('eMonth').value, carry=$('eCarry').value==='1';
     const {rows}=expRows(mi,carry,eCatSel);
     const t=[['รายการวัสดุ','หน่วย','ราคา','แหล่งวัสดุ','ประเภท'],...rows.map(r=>r.slice(0,5))]
-      .map(r=>r.map(x=>/[",\n]/.test(x)?'"'+String(x).replace(/"/g,'""')+'"':x).join(',')).join('\n');
+      .map(r=>r.map(x=>/[",\r\n]/.test(x)?'"'+String(x).replace(/"/g,'""')+'"':x).join(',')).join('\n');
     const blob=new Blob(['﻿'+t],{type:'text/csv;charset=utf-8'});
     const a=document.createElement('a');a.href=URL.createObjectURL(blob);a.download=`ราคาวัสดุ_พศ${P.ylist[mi]}${String(P.months[mi]).padStart(2,'0')}.csv`;a.click();
   };
@@ -3679,6 +4068,10 @@ function regInit(){
     const url=($('cfgUrl').value||'').trim();
     if(!f){ st.textContent='เลือกไฟล์ บัญชีคุมวัสดุ.xlsx ก่อน'; return; }
     if(!url){ st.textContent='ยังไม่ตั้ง WebApp URL ด้านบน'; return; }
+    /* คำสั่ง registry/sources แบบ replace = ล้างแท็บทิ้งแล้วเขียนใหม่ ต้องใส่รหัสผู้ดูแล
+       (เดิมใครก็ตามที่เปิดดูซอร์สหน้าเว็บได้ ก็ยิงคำสั่งนี้ล้างบัญชีคุมได้เลย) */
+    const _pw=($('regPass')?$('regPass').value:'').trim();
+    if(!_pw){ st.textContent='ใส่รหัสผู้ดูแลก่อน — คำสั่งนี้เขียนทับบัญชีคุมทั้งแท็บ'; return; }
     if(typeof XLSX==='undefined'){ st.textContent='ตัวอ่าน .xlsx ยังไม่โหลด — ต่ออินเทอร์เน็ตแล้วรีเฟรชหน้า'; return; }
     btn.disabled=true;
     try{
@@ -3696,7 +4089,7 @@ function regInit(){
       for(let i=0;i<rows.length;i+=CH){
         st.textContent='กำลังส่ง '+Math.min(i+CH,rows.length)+' / '+rows.length+' แถว…';
         const r=await fetch(url,{method:'POST',headers:{'Content-Type':'text/plain;charset=utf-8'},
-          body:JSON.stringify({token:WTOKEN,action:'registry',mode:i===0?'replace':'append',rows:rows.slice(i,i+CH)})});
+          body:JSON.stringify({token:WTOKEN,action:'registry',mode:i===0?'replace':'append',pass:_pw,rows:rows.slice(i,i+CH)})});
         const res=await r.json();
         if(!res.ok) throw new Error(res.error||'ส่งไม่สำเร็จ');
         done+=res.added||0;
@@ -3711,7 +4104,7 @@ function regInit(){
           if(rowsS.length){
             st.textContent='กำลังส่งพิกัดแหล่งวัสดุ '+rowsS.length+' แหล่ง…';
             const rS=await fetch(url,{method:'POST',headers:{'Content-Type':'text/plain;charset=utf-8'},
-              body:JSON.stringify({token:WTOKEN,action:'sources',mode:'replace',rows:rowsS})});
+              body:JSON.stringify({token:WTOKEN,action:'sources',mode:'replace',pass:_pw,rows:rowsS})});
             const resS=await rS.json();
             if(!resS.ok) throw new Error(resS.error||'ส่งพิกัดไม่สำเร็จ');
             srcTxt=' · พิกัดแหล่งวัสดุ '+rowsS.length+' แหล่งขึ้นแท็บ SOURCES แล้ว';
