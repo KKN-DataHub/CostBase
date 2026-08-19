@@ -654,7 +654,7 @@ canvas{max-width:100%}
     <div class="ph-act">
       <button class="btn ghost" id="dCsv">⬇ CSV</button>
       <button class="btn ghost" id="dXlsx">⬇ Excel เปรียบเทียบ</button>
-      <button class="btn ghost" id="dDist" title="ระยะทางถนนจริงของทุกแหล่ง สำหรับวางลงตาราง ข้อมูลวัสดุก่อสร้าง (Table4) ในไฟล์ DRR_KK Estimate">⬇ ตารางระยะขนส่ง → Estimate</button>
+      <button class="btn ghost" id="dDist" title="ได้ไฟล์ ระยะขนส่ง.xlsx — วางไว้โฟลเดอร์เดียวกับไฟล์ Estimate แล้วกด ข้อมูล → รีเฟรชทั้งหมด ช่องระยะใน Table4 จะเติมเอง">⬇ ระยะขนส่ง.xlsx → Estimate</button>
       <button class="btn gold" id="dPrint">🖨 พิมพ์ / PDF</button>
     </div>
   </div>
@@ -953,14 +953,6 @@ canvas{max-width:100%}
         <button class="btn ghost" id="eCsv">.csv</button>
       </div>
       <div class="hint" id="eInfo" style="margin-top:10px">—</div>
-      <div class="notebox teal" style="font-size:11.5px">
-        <b>ต่อกับไฟล์ประมาณราคายังไง</b> — ไฟล์ที่ได้มี 5 คอลัมน์ รายการวัสดุ · หน่วย · ราคา · แหล่งวัสดุ · ประเภท
-        อยู่ทั้งชีต <b>Table1</b> (Power Query อ่าน) และ <b>Sheet1</b> (ตัวเชื่อมแบบเก่าอ่าน)
-        <br>ชื่อไฟล์ตั้งให้ตรงแบบที่ Power Query ไล่หาอยู่แล้ว เช่น <b id="eName">—</b>
-        <br>เอาไปวางที่ <span class="mono">…\ระบบฐานข้อมูลวัสดุ\ราคาวัสดุรายเดือน\ปี <span id="eYr">69</span>\</span>
-        แล้วในไฟล์ Estimate กด <b>ข้อมูล → รีเฟรชทั้งหมด</b> — Power Query จะหยิบไฟล์เดือนล่าสุดให้เอง
-        <button class="btn ghost" id="eMcode" style="margin-top:8px;padding:4px 10px;font-size:11px">คัดลอกโค้ด Power Query (แก้ครั้งเดียว)</button>
-      </div>
     </div>
     <div class="card">
       <h2 data-ic="table">ตัวอย่างข้อมูลที่จะส่งออก</h2>
@@ -1137,7 +1129,7 @@ const EMPTY = () => P.series.length===0;
 let LIVE = {on:false, added:0};
 const fmt = n => n==null?'—':Number(n).toLocaleString('th-TH',{minimumFractionDigits:2,maximumFractionDigits:2});
 const $ = id => document.getElementById(id);
-const APPVER='6.5';        /* เลขรุ่นที่เดียว — ที่อื่นดึงจากตัวนี้ */
+const APPVER='6.6';        /* เลขรุ่นที่เดียว — ที่อื่นดึงจากตัวนี้ */
 const APPDATE='19 ส.ค. 2569';   /* วันที่ของรุ่นนี้ ที่เดียวเหมือนกัน */
 /* ⚠ ป้ายรุ่นบนแถบข้างเคยเป็นข้อความตายตัวใน HTML (v6.2) พอขึ้นรุ่นใหม่แล้วลืมแก้
    ผู้ใช้เลยเห็นเลขรุ่นเก่าทั้งที่โค้ดใหม่หมดแล้ว — ต่อไปนี้เขียนจาก APPVER เสมอ */
@@ -2840,10 +2832,8 @@ $('dXlsx').onclick=()=>{
    ระยะที่ได้เป็นระยะถนนจริงจากระบบนำทาง (OSRM) ที่วัดจากจุดกึ่งกลางโครงการที่ตั้งไว้
    งานที่เดิมต้องเปิด Google Maps ไล่ทีละแหล่งแล้วพิมพ์ใส่ Excel เอง */
 $('dDist').onclick=()=>{
-  if(typeof XLSX==='undefined'){ toast('ตัวสร้าง .xlsx ต้องต่ออินเทอร์เน็ตครั้งแรก'); return; }
   /* ต้องไล่จาก dres (ทุกแหล่งที่วัดระยะได้) ไม่ใช่ cmpState (เฉพาะแหล่งที่มีราคาของวัสดุที่เลือก)
-     ของเดิมแหล่งที่วัดระยะแล้วแต่ยังไม่มีราคาในคลัง จะหายไปจากไฟล์เงียบ ๆ
-     ทั้งที่ปุ่มเขียนว่า "ระยะทางถนนจริงของทุกแหล่ง" */
+     ของเดิมแหล่งที่วัดระยะแล้วแต่ยังไม่มีราคาในคลัง จะหายไปจากไฟล์เงียบ ๆ */
   const legOf={};   /* ถ้าผู้ใช้แก้ช่วงเดินทาง/ชนิดรถในตารางเปรียบเทียบ ให้ใช้ค่าที่แก้แทน */
   Object.keys(cmpState).forEach(k=>{ (cmpState[k]||[]).forEach(r=>{ if(!legOf[r.nm]) legOf[r.nm]=r; }); });
   const seen={}, out=[];
@@ -2851,10 +2841,10 @@ $('dDist').onclick=()=>{
     if(seen[nm]) return; seen[nm]=1;
     const km={'6':0,'10':0,'10p':0};
     (legs||[]).forEach(l=>{ km[l.truck]=(km[l.truck]||0)+(+l.L||0); });
-    const T=+tot||0;
+    const T=Math.round((+tot||0)*100)/100;
     if(!T && !km['6'] && !km['10'] && !km['10p']) return;
-    out.push([nm, km['6']||'', km['10']||(km['6']||km['10p']?'':T), km['10p']||'',
-      Math.round(T*100)/100,
+    const r2=v=>v?Math.round(v*100)/100:'';
+    out.push([nm, r2(km['6']), km['10']?r2(km['10']):((km['6']||km['10p'])?'':T), r2(km['10p']), T,
       mode==='road'?'ถนนจริง (OSRM)':mode==='est'?'ประมาณจากเส้นตรง':'กรอกเอง',
       sc?(sc.lat.toFixed(6)+', '+sc.lon.toFixed(6)):'ไม่มีพิกัดในคลัง']);
   };
@@ -2866,16 +2856,28 @@ $('dDist').onclick=()=>{
   if(!out.length){ toast('ยังไม่มีระยะทาง — กด "หาระยะทางทุกแหล่ง" หรือเลือกวัสดุแล้วกดคำนวณก่อน'); return; }
   out.sort((a,b)=>String(a[0]).localeCompare(String(b[0]),'th'));
   const dest=($('dDest').value||'').trim();
-  const aoa=[['แหล่งวัสดุ','รถบรรทุก 6 ล้อ','รถบรรทุก 10 ล้อ','รถบรรทุก 10 ล้อ พ่วง','รวมระยะขนส่ง','วิธีวัด','พิกัดแหล่ง'],...out,
-    [],['จุดกึ่งกลางโครงการที่ใช้วัด: '+(dest||'—')],
-    ['วิธีใช้: คัดลอกคอลัมน์ รถบรรทุก 6/10/พ่วง ไปวางในชีต "ข้อมูลวัสดุก่อสร้าง" (Table4) ของไฟล์ DRR_KK Estimate'],
-    ['ให้ตรงแถวของแหล่งเดียวกัน — คอลัมน์ "รวมระยะขนส่ง" ในไฟล์นั้นเป็นสูตร ไม่ต้องวางทับ']];
-  const ws=XLSX.utils.aoa_to_sheet(aoa);
-  ws['!cols']=[{wch:34},{wch:15},{wch:15},{wch:19},{wch:15},{wch:20},{wch:26}];
-  ws['!freeze']={xSplit:0,ySplit:1};
-  const wb=XLSX.utils.book_new(); XLSX.utils.book_append_sheet(wb,ws,'ระยะขนส่ง');
-  XLSX.writeFile(wb,'ระยะขนส่ง_สำหรับEstimate.xlsx');
-  toast('ได้ระยะทาง '+out.length+' แหล่ง');
+  /* ชีตข้อมูลต้องสะอาด ห้ามมีแถวหมายเหตุปน ไม่งั้น Power Query จะดูดแถวขยะเข้าไปด้วย
+     หมายเหตุแยกไปไว้อีกชีตหนึ่ง */
+  const aoa=[['แหล่งวัสดุ','รถบรรทุก 6 ล้อ','รถบรรทุก 10 ล้อ','รถบรรทุก 10 ล้อ พ่วง',
+              'รวมระยะขนส่ง','วิธีวัด','พิกัดแหล่ง'],...out];
+  const note=[['ที่มาของไฟล์นี้'],
+    ['สร้างจาก CostBase v'+APPVER+' หน้า คำนวณระยะขนส่ง'],
+    ['จุดกึ่งกลางโครงการที่ใช้วัด: '+(dest||'—')],
+    ['โครงการ: '+(($('dProj').value||'').trim()||'—')],
+    ['วันที่กำหนดราคากลาง: '+(($('dDate').value||'').trim()||'—')],
+    ['ระยะเป็นระยะถนนจริงจากระบบนำทาง (OSRM) วัดจากจุดกึ่งกลางโครงการถึงหน้าแหล่ง'],
+    [''],
+    ['วิธีใช้กับไฟล์ DRR_KK Estimate'],
+    ['1. วางไฟล์นี้ชื่อ  ระยะขนส่ง.xlsx  ไว้โฟลเดอร์เดียวกับไฟล์ Estimate ของโครงการ'],
+    ['2. ในไฟล์ Estimate กด ข้อมูล → รีเฟรชทั้งหมด'],
+    ['3. ช่อง รถบรรทุก 6/10/10 พ่วง ใน Table4 จะเติมเองจากชื่อแหล่งที่ตรงกัน'],
+    ['(ตั้งคิวรีครั้งแรกครั้งเดียว ดูขั้นตอนในคู่มือระบบ หัวข้อ "ระยะขนส่งอัตโนมัติ")']];
+  const blob=xlsxBuild([
+    {n:'ระยะขนส่ง',aoa,w:[34,15,15,19,15,20,26],table:1},
+    {n:'อ่านก่อนใช้',aoa:note,w:[96]}
+  ]);
+  saveBlob(blob,'ระยะขนส่ง.xlsx');
+  toast('ได้ระยะทาง '+out.length+' แหล่ง — วางไฟล์ไว้โฟลเดอร์เดียวกับไฟล์ Estimate แล้วกด รีเฟรชทั้งหมด');
 };
 $('dPrint').onclick=()=>{buildCalcSheet(); if(map){map.invalidateSize(); setTimeout(()=>window.print(),350);} else window.print();};
 
@@ -3872,19 +3874,13 @@ function _sheetXml(aoa,opt){
    +(opt.table?`<tableParts count="1"><tablePart r:id="rId1"/></tableParts>`:'')
    +`</worksheet>`;
 }
-function estWorkbook(aoa,extra){
-  const nR=aoa.length, nC=aoa[0].length, ref='A1:'+_colName(nC-1)+nR;
-  const W=[52,10,13,28,16];
-  const sheets=[{n:'Sheet1',x:_sheetXml(aoa,{w:W})},
-                {n:'Table1',x:_sheetXml(aoa,{w:W,table:1})}];
-  if(extra) sheets.push({n:extra.name,x:_sheetXml(extra.aoa,{w:[46,26,14,14,13]})});
-  const tableXml=`<?xml version="1.0" encoding="UTF-8" standalone="yes"?>`
-   +`<table xmlns="http://schemas.openxmlformats.org/spreadsheetml/2006/main" id="1"`
-   +` name="Table1" displayName="Table1" ref="${ref}" totalsRowShown="0">`
-   +`<autoFilter ref="${ref}"/><tableColumns count="${nC}">`
-   +aoa[0].map((h,i)=>`<tableColumn id="${i+1}" name="${_xe(h)}"/>`).join('')
-   +`</tableColumns><tableStyleInfo name="TableStyleMedium2" showFirstColumn="0"`
-   +` showLastColumn="0" showRowStripes="1" showColumnStripes="0"/></table>`;
+/* ตัวสร้างสมุดงาน: รับหลายชีต ชีตไหนตั้ง table:1 จะได้ "ตาราง (ListObject)" ชื่อ Table1
+   Power Query ในไฟล์ Estimate อ่าน Source{[Item="Table1",Kind="Table"]} จึงต้องเป็นตารางจริง
+   หนึ่งไฟล์มีตารางได้ 1 ตาราง (พอสำหรับงานนี้) */
+function xlsxBuild(sheets){
+  const ti=sheets.findIndex(s=>s.table);
+  const tSheet=ti>=0?sheets[ti]:null;
+  const ref=tSheet?('A1:'+_colName(tSheet.aoa[0].length-1)+tSheet.aoa.length):'';
   const files=[
     {name:'[Content_Types].xml',data:`<?xml version="1.0" encoding="UTF-8" standalone="yes"?>`
       +`<Types xmlns="http://schemas.openxmlformats.org/package/2006/content-types">`
@@ -3893,7 +3889,7 @@ function estWorkbook(aoa,extra){
       +`<Override PartName="/xl/workbook.xml" ContentType="application/vnd.openxmlformats-officedocument.spreadsheetml.sheet.main+xml"/>`
       +sheets.map((s,i)=>`<Override PartName="/xl/worksheets/sheet${i+1}.xml" ContentType="application/vnd.openxmlformats-officedocument.spreadsheetml.worksheet+xml"/>`).join('')
       +`<Override PartName="/xl/styles.xml" ContentType="application/vnd.openxmlformats-officedocument.spreadsheetml.styles+xml"/>`
-      +`<Override PartName="/xl/tables/table1.xml" ContentType="application/vnd.openxmlformats-officedocument.spreadsheetml.table+xml"/>`
+      +(tSheet?`<Override PartName="/xl/tables/table1.xml" ContentType="application/vnd.openxmlformats-officedocument.spreadsheetml.table+xml"/>`:'')
       +`</Types>`},
     {name:'_rels/.rels',data:`<?xml version="1.0" encoding="UTF-8" standalone="yes"?>`
       +`<Relationships xmlns="http://schemas.openxmlformats.org/package/2006/relationships">`
@@ -3920,15 +3916,35 @@ function estWorkbook(aoa,extra){
       +`<cellXfs count="2"><xf numFmtId="0" fontId="0" fillId="0" borderId="0" xfId="0"/>`
       +`<xf numFmtId="0" fontId="1" fillId="0" borderId="0" xfId="0" applyFont="1"/></cellXfs>`
       +`</styleSheet>`},
-    {name:'xl/tables/table1.xml',data:tableXml},
-    {name:'xl/worksheets/_rels/sheet2.xml.rels',data:`<?xml version="1.0" encoding="UTF-8" standalone="yes"?>`
+  ];
+  if(tSheet){
+    files.push({name:'xl/tables/table1.xml',data:`<?xml version="1.0" encoding="UTF-8" standalone="yes"?>`
+      +`<table xmlns="http://schemas.openxmlformats.org/spreadsheetml/2006/main" id="1"`
+      +` name="Table1" displayName="Table1" ref="${ref}" totalsRowShown="0">`
+      +`<autoFilter ref="${ref}"/><tableColumns count="${tSheet.aoa[0].length}">`
+      +tSheet.aoa[0].map((h,i)=>`<tableColumn id="${i+1}" name="${_xe(h)}"/>`).join('')
+      +`</tableColumns><tableStyleInfo name="TableStyleMedium2" showFirstColumn="0"`
+      +` showLastColumn="0" showRowStripes="1" showColumnStripes="0"/></table>`});
+    files.push({name:`xl/worksheets/_rels/sheet${ti+1}.xml.rels`,data:`<?xml version="1.0" encoding="UTF-8" standalone="yes"?>`
       +`<Relationships xmlns="http://schemas.openxmlformats.org/package/2006/relationships">`
       +`<Relationship Id="rId1" Type="http://schemas.openxmlformats.org/officeDocument/2006/relationships/table" Target="../tables/table1.xml"/>`
-      +`</Relationships>`},
-  ];
-  sheets.forEach((s,i)=>files.push({name:`xl/worksheets/sheet${i+1}.xml`,data:s.x}));
+      +`</Relationships>`});
+  }
+  sheets.forEach((s,i)=>files.push({name:`xl/worksheets/sheet${i+1}.xml`,
+    data:_sheetXml(s.aoa,{w:s.w,table:s.table?1:0})}));
   return new Blob([zipStore(files)],
     {type:'application/vnd.openxmlformats-officedocument.spreadsheetml.sheet'});
+}
+function saveBlob(blob,fname){
+  const a=document.createElement('a'); a.href=URL.createObjectURL(blob); a.download=fname;
+  document.body.appendChild(a); a.click(); a.remove();
+  setTimeout(()=>URL.revokeObjectURL(a.href),4000);
+}
+function estWorkbook(aoa,extra){
+  const W=[52,10,13,28,16];
+  const sheets=[{n:'Sheet1',aoa,w:W},{n:'Table1',aoa,w:W,table:1}];
+  if(extra) sheets.push({n:extra.name,aoa:extra.aoa,w:[46,26,14,14,13]});
+  return xlsxBuild(sheets);
 }
 function expInit(){
   /* คงเดือนที่ผู้ใช้เลือกไว้ — expInit ถูกเรียกซ้ำทุกครั้งที่ loadLive() เสร็จ (3-10 วิหลังเปิด)
@@ -3991,26 +4007,6 @@ function expInit(){
      เช่น  8. ราคาวัสดุ เดือน ส.ค. 69.xlsx   (วางในโฟลเดอร์ "ปี 69") */
   const estName=mi=>`${P.months[mi]}. ราคาวัสดุ เดือน ${TH_M[P.months[mi]-1]} ${String(P.ylist[mi]).slice(-2)}.xlsx`;
   $('eXlsx').onclick=()=>buildXlsx(estName(+$('eMonth').value));
-  const MCODE = [
-    '// วางทับบรรทัดเดิมในคิวรี "ราคาประจำเดือน" (Power Query → ตัวแก้ไขขั้นสูง)',
-    '// ของเดิมรับเฉพาะตาราง Table1 ถ้าไฟล์ไม่มีตารางจะพัง — ตัวนี้รับได้ทั้งตารางและชีตธรรมดา',
-    '    Source = Excel.Workbook(File.Contents(SourcePath), null, true),',
-    '    PickTbl = try Source{[Item="Table1",Kind="Table"]}[Data] otherwise null,',
-    '    PickSht = if PickTbl <> null then null else',
-    '                Table.PromoteHeaders(Source{[Item="Table1",Kind="Sheet"]}[Data], [PromoteAllScalars=true]),',
-    '    Table1_Table = if PickTbl <> null then PickTbl else PickSht,'
-  ].join('\n');
-  const eSync=()=>{
-    const mi=+$('eMonth').value;
-    if($('eName')) $('eName').textContent=estName(mi);
-    if($('eYr'))   $('eYr').textContent=String(P.ylist[mi]).slice(-2);
-  };
-  $('eMonth').addEventListener('change',eSync); eSync();
-  if($('eMcode')) $('eMcode').onclick=()=>{
-    navigator.clipboard.writeText(MCODE).then(()=>{
-      $('eMcode').textContent='คัดลอกแล้ว ✓'; setTimeout(()=>$('eMcode').textContent='คัดลอกโค้ด Power Query (แก้ครั้งเดียว)',1800);
-    }).catch(()=>toast('คัดลอกไม่ได้ — เปิดคู่มือระบบดูโค้ดแทน'));
-  };
   $('eXlsxM').onclick=()=>{
     const mi=+$('eMonth').value;
     buildXlsx(`ราคาวัสดุ_พศ${P.ylist[mi]}${String(P.months[mi]).padStart(2,'0')}.xlsx`);
