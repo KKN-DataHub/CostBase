@@ -460,8 +460,12 @@ tr.detail>td{background:#F8F7F3;border-top:none;padding:10px 14px}
 .fixbar{border:1px solid #E4C98A;background:#FDF6E7;border-radius:10px;padding:10px 12px}
 .fixbar .fx-h{font-size:12.5px;font-weight:700;color:#8a6212;margin-bottom:8px}
 .fixbar .fx-b{display:grid;grid-template-columns:200px 1fr auto;gap:10px;align-items:end}
-.frow.rl{display:grid;grid-template-columns:minmax(190px,1fr) minmax(190px,1fr) 160px;gap:10px}
-@media(max-width:820px){.frow.rl{grid-template-columns:1fr}}
+/* auto-fit เพื่อให้ห่อบรรทัดตามความกว้างของ 'การ์ด' ไม่ใช่ความกว้างจอ
+   (การ์ดนี้อยู่ในกริด 2 คอลัมน์ จอกว้างแต่การ์ดแคบได้) */
+.frow.xlmeta{display:grid;grid-template-columns:repeat(auto-fit,minmax(210px,1fr));gap:10px}
+.req{color:#b23b3b;font-weight:700}
+.btn[disabled]{opacity:.45;cursor:not-allowed}
+.btn[disabled]:hover{background:var(--teal)}
 @media(max-width:820px){.fixbar .fx-b{grid-template-columns:1fr}}
 /* กล่องกราฟ — ล็อกความสูงไม่ให้กราฟกินพื้นที่จนไม่เห็นตารางข้างล่าง */
 .chartbox{position:relative;height:300px}
@@ -559,7 +563,7 @@ canvas{max-width:100%}
   <div class="brand">
     <h1><span class="blogo" aria-hidden="true"></span>CostBase</h1>
     <div class="sub">ฐานข้อมูลราคาวัสดุ · แขวงทางหลวงชนบทขอนแก่น</div>
-    <div class="chips"><span class="chip" id="bLatest">—</span><span class="chip" id="bVer">v6.0</span></div>
+    <div class="chips"><span class="chip" id="bLatest">—</span><span class="chip" id="bVer">v6.1</span></div>
     <button class="instbtn" id="installBtn" style="display:none" title="เพิ่ม CostBase ลงหน้าจอโฮม เปิดใช้เหมือนแอป">⤓ ติดตั้งลงหน้าจอโฮม</button>
   </div>
   <nav class="nav" id="nav">
@@ -813,16 +817,18 @@ canvas{max-width:100%}
 
       <!-- ── โหมด 2: ไฟล์ Excel — ไม่ยืมค่าจากฟอร์มกรอกมือแม้แต่ช่องเดียว ── -->
       <div id="impModeXl" style="display:none">
-        <div class="hint" style="margin-bottom:10px">
-          โหมดนี้ <b>อ่านจากไฟล์อย่างเดียว</b> ทุกคอลัมน์ — ปี · เดือน · รายการ · หน่วย · ราคา · แหล่ง · ประเภท · <b>ช่องทาง</b> · หมายเหตุ
-          <br>ช่องกรอกมือด้านซ้ายไม่มีผลกับไฟล์เลย จะได้ไม่ต้องกรอกซ้ำและไม่มีค่าตั้งต้นแอบติดไปกับข้อมูล
+        <div class="frow xlmeta">
+          <div><label class="f">ช่องทางของไฟล์นี้ <span class="req">*</span></label>
+            <select id="xlChan"></select></div>
+          <div><label class="f">ที่มา / เลขที่เอกสาร <span class="req">*</span></label>
+            <input type="text" id="xlRef" placeholder="เช่น ใบเสนอราคา SQ.690801 ลว. 10 ส.ค. 69 · ไม่รวม VAT"></div>
         </div>
-        <div class="statusline">
-          <button class="btn" id="impXl">เลือกไฟล์ Excel</button>
+        <div class="statusline" style="margin-top:12px">
+          <button class="btn" id="impXl" disabled>เลือกไฟล์ Excel</button>
           <button class="btn ghost" id="impTpl">ดาวน์โหลดแบบฟอร์มเปล่า</button>
+          <span class="hint" id="xlGate"></span>
         </div>
         <div class="hint" id="impXlStat" style="margin-top:10px"></div>
-        <div id="impFixBox" style="margin-top:10px"></div>
       </div>
 
       <!-- ── โหมด 1: กรอกทีละรายการ ── -->
@@ -1014,21 +1020,6 @@ canvas{max-width:100%}
     <div class="tw" style="margin-top:12px"><table id="tblConn"></table></div>
   </div>
   <div class="card" style="margin-top:12px">
-    <h2 data-ic="tag">เปลี่ยนป้ายช่องทางย้อนหลัง</h2>
-    <div class="hint" style="margin-bottom:10px">ใช้ตอนติดป้ายช่องทางไว้คนละชื่อทั้งที่เป็นข้อมูลชุดเดียวกัน
-      · แก้เฉพาะชื่อช่องทาง <b>เลขที่หนังสือ/ใบเสนอราคาที่ต่อท้ายไม่ถูกแตะ</b> · สำรองแท็บ PRICES ให้ก่อนเสมอ</div>
-    <div class="frow rl">
-      <div><label class="f">ช่องทางเดิม</label><select id="rlFrom"></select></div>
-      <div><label class="f">เปลี่ยนเป็น</label><input type="text" id="rlTo" list="rlToList" placeholder="พิมพ์ / เลือก"><datalist id="rlToList"></datalist></div>
-      <div><label class="f">เฉพาะเดือน</label><select id="rlMonth"></select></div>
-    </div>
-    <div class="cl-auth" style="margin-top:10px">
-      <div><label class="f">รหัสผู้ดูแล</label><input type="password" id="rlPass" placeholder="รหัสเดียวกับคำสั่งล้างข้อมูล" style="max-width:230px"></div>
-      <button class="btn gold" id="rlGo">เปลี่ยนป้าย</button>
-    </div>
-    <div class="hint" id="rlStat" style="margin-top:10px"></div>
-  </div>
-  <div class="card" style="margin-top:12px">
     <h2 data-ic="trash">ล้างข้อมูลในคลัง</h2>
     <div class="frow cl">
       <div><label class="f">ขอบเขตที่จะล้าง</label><select id="clScope">
@@ -1114,7 +1105,7 @@ const EMPTY = () => P.series.length===0;
 let LIVE = {on:false, added:0};
 const fmt = n => n==null?'—':Number(n).toLocaleString('th-TH',{minimumFractionDigits:2,maximumFractionDigits:2});
 const $ = id => document.getElementById(id);
-const APPVER='6.0';        /* เลขรุ่นที่เดียว — ที่อื่นดึงจากตัวนี้ */
+const APPVER='6.1';        /* เลขรุ่นที่เดียว — ที่อื่นดึงจากตัวนี้ */
 /* ต้อง escape ทั้ง " และ ' ด้วย — ชื่อวัสดุในบัญชีคุมมีเครื่องหมายนิ้ว (") 1,687 ชื่อ และฟุต (') 71 ชื่อ
    ถ้าไม่ escape ค่าใน value="..." จะถูกตัดกลางคัน แล้วชื่อที่โดนตัดจะไหลเข้าคลังเป็นวัสดุใหม่ปลอม ๆ */
 const esc = s => String(s).replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;')
@@ -1361,7 +1352,7 @@ async function loadLive(){
 }
 function rerender(){
   try{ refreshCmpState(); }catch(e){}      /* ปรับราคา/เดือนในตารางเปรียบเทียบให้ตรงคลังใหม่ก่อนวาดอย่างอื่น */
-  [buildSummary, matInit, statInit, buildMovers, covInit, impInit, drawNoGeo, relabelInit, expInit, sysInit, drawMatChips,
+  [buildSummary, matInit, statInit, buildMovers, covInit, impInit, drawNoGeo, expInit, sysInit, drawMatChips,
    ()=>{ if(matSel.length){ renderCmp(); buildCalcSheet(); } }]
     .forEach(f=>{ try{ f(); }catch(e){ console.error('rerender:', f.name, e); } });
   kddAll(); kfreeAll(); paintIcons(); drawConn();
@@ -2953,12 +2944,21 @@ function sortableAll(){
 function countUp(el){
   const raw = el.dataset.cu != null ? el.dataset.cu : el.dataset.v;   /* รับได้ทั้ง data-cu และ data-v */
   if(raw==null) return;
-  const end=parseFloat(raw); if(!isFinite(end)) return;
-  const dec=(raw.split('.')[1]||'').length;
+  /* ⚠ ต้องตัดจุลภาคหลักพันก่อนแปลงเป็นตัวเลข ไม่งั้น "4,932" จะกลายเป็น 4
+     และต้องเก็บตัวอักษรหน้า/หลังไว้ด้วย ("100%" ต้องคงเครื่องหมาย % ไม่ใช่เหลือ 100) */
+  const m = String(raw).match(/^(\D*?)([\d,]+(?:\.\d+)?)(.*)$/);
+  if(!m) return;
+  const pre=m[1], numTxt=m[2].replace(/,/g,''), suf=m[3];
+  if(/[ก-๙]/.test(pre)){ el.textContent=raw; return; }   /* ค่าที่เป็นข้อความไทย เช่น "ส.ค. 69" ไม่ต้องนับขึ้น */
+  const end=parseFloat(numTxt);
+  if(!isFinite(end)) return;
+  const dec=(numTxt.split('.')[1]||'').length;
+  const fmtN=v=>v.toLocaleString('th-TH',{minimumFractionDigits:dec,maximumFractionDigits:dec});
+  if(end===0){ el.textContent=pre+fmtN(0)+suf; return; }
   const t0=performance.now(), dur=520;
   const step=t=>{
     const k=Math.min(1,(t-t0)/dur), e=1-Math.pow(1-k,3);
-    el.textContent=(end*e).toLocaleString('th-TH',{minimumFractionDigits:dec,maximumFractionDigits:dec});
+    el.textContent = pre + fmtN(k>=1?end:end*e) + suf;
     if(k<1) requestAnimationFrame(step);
   };
   requestAnimationFrame(step);
@@ -3073,7 +3073,11 @@ function impInit(){
     const hd=aoa[0].map(x=>String(x).trim());
     const col=t=>hd.findIndex(h=>h.includes(t));
     const ci={y:col('ปี'),m:col('เดือน'),mat:col('รายการ'),unit:col('หน่วย'),pr:col('ราคา'),
-              src:col('แหล่ง'),typ:col('ประเภท'),chan:col('ช่องทาง'),ref:col('หมายเหตุ')};
+              src:col('แหล่ง'),typ:col('ประเภท'),ref:col('หมายเหตุ')};
+    /* ช่องทาง + ที่มา เลือกจากแดชบอร์ดก่อนเลือกไฟล์ ใช้กับทุกแถวในไฟล์นี้
+       (ตัวเลือกเริ่มต้นเป็นค่าว่าง บังคับเลือกก่อน จะได้ไม่มีค่าตั้งต้นแอบติดไปกับข้อมูล) */
+    const fileChan=($('xlChan').value||'').trim();
+    const fileRef =($('xlRef').value||'').trim();
     if(ci.mat<0||ci.pr<0) throw new Error('หัวตารางไม่ครบ — ต้องมีอย่างน้อย รายการวัสดุ และ ราคา (กดปุ่ม ดาวน์โหลดแบบฟอร์ม ดูตัวอย่าง)');
     let ok=0,skip=0;
     /* นับว่าไฟล์นี้เป็นของเดือนไหนบ้าง + มีกี่แถวที่ไม่ได้ระบุเดือน (ระบบเดาให้) — เอาไปเตือนหลังนำเข้า */
@@ -3094,10 +3098,11 @@ function impInit(){
       if(!src){ skip++; return; }
       /* ทุกช่องมาจากไฟล์เท่านั้น — ไม่หยิบค่าจากฟอร์มกรอกมือ
          ช่องทางที่ไฟล์ไม่ได้ระบุ ปล่อยว่างไว้ก่อน แล้วให้เติมที่แถบซ่อมข้อมูลก่อนส่งขึ้นคลัง */
+      const rowRef=ci.ref>=0?String(r[ci.ref]||'').trim():'';
       queue.push({y,mo,mat,unit:ci.unit>=0?String(r[ci.unit]||'').trim():'',price,src,
-        ref:ci.ref>=0?String(r[ci.ref]||'').trim():'',
+        ref: rowRef ? fileRef+' · '+rowRef : fileRef,
         typ:ci.typ>=0?String(r[ci.typ]||'').trim():'',
-        chan:ci.chan>=0?String(r[ci.chan]||'').trim():'',
+        chan: fileChan,
         fromFile:1, known:P.mats.includes(mat)||!!regStd(mat)});
       ok++;
     });
@@ -3114,7 +3119,19 @@ function impInit(){
     $('impModeMan').style.display = b.dataset.im==='man'?'':'none';
     $('impModeXl').style.display  = b.dataset.im==='xl' ?'':'none';
   });
-  $('impXl').onclick=()=>$('impFile').click();
+  /* ── ประตูกั้น: ต้องเลือกช่องทาง + ใส่ที่มา ก่อนถึงจะเลือกไฟล์ได้ ── */
+  $('xlChan').innerHTML='<option value="">— เลือกช่องทางก่อน —</option>'
+    + CHAN_OPTS.map(c=>`<option value="${esc(c)}">${esc(c)}</option>`).join('');
+  const xlGate=()=>{
+    const c=($('xlChan').value||'').trim(), r=($('xlRef').value||'').trim();
+    const ok=!!c&&!!r;
+    $('impXl').disabled=!ok;
+    $('xlGate').innerHTML = ok ? '' :
+      '<span class="up">ระบุช่องทางและที่มาก่อน จึงจะเลือกไฟล์ได้</span>';
+    return ok;
+  };
+  $('xlChan').onchange=xlGate; $('xlRef').oninput=xlGate; xlGate();
+  $('impXl').onclick=()=>{ if(xlGate()) $('impFile').click(); };
   $('impFile').onchange=async()=>{
     const f=($('impFile').files||[])[0]; if(!f) return;
     const st=$('impXlStat');
@@ -3122,43 +3139,49 @@ function impInit(){
     try{
       const res=parseImpWb(XLSX.read(await f.arrayBuffer(),{type:'array'}));
       const ms=(res.months||[]).map(m=>m.lab+' ('+m.n.toLocaleString()+' แถว)').join(' · ');
-      st.innerHTML='อ่านชีต "'+esc(res.sheet||'')+'" '+res.read+' แถว เข้าคิว '+res.ok+' รายการ'+(res.skip?' (ข้าม '+res.skip+' แถวไม่สมบูรณ์)':'')
-        +(res.geo?' · อ่านพิกัดจากชีต "แหล่งวัสดุ" '+res.geo+' แหล่ง — ดูการ์ด <b>แหล่งที่ยังไม่มีพิกัด</b>':'')
-        +(ms?'<br><b>ไฟล์นี้เป็นราคาของเดือน:</b> '+esc(ms)+' <span class="hint">(ยึดตามคอลัมน์ "เดือน" ในไฟล์ ไม่ใช่ช่องเดือนบนหน้าจอ)</span>':'')
-        +(res.noMonth?'<br><span class="pill bad">'+res.noMonth+' แถวไม่ได้ระบุเดือนในไฟล์</span> ระบบใส่ '
+      st.innerHTML='<span class="pill ok">เข้าคิว '+res.ok+' รายการ</span> จาก '+res.read+' แถว'
+        +(res.skip?' · ข้าม '+res.skip+' แถวไม่สมบูรณ์':'')
+        +(res.geo?' · พิกัดแหล่ง '+res.geo+' แหล่ง (ดูการ์ด <b>แหล่งที่ยังไม่มีพิกัด</b>)':'')
+        +(ms?'<br>เดือนของราคาในไฟล์: <b>'+esc(ms)+'</b>':'')
+        +'<br>ช่องทาง: <b>'+esc(($('xlChan').value||'').trim())+'</b> · ที่มา: <b>'+esc(($('xlRef').value||'').trim())+'</b>'
+        +(res.noMonth?'<br><span class="pill bad">'+res.noMonth+' แถวไม่ได้ระบุเดือน</span> ระบบใส่ '
             +mLabI(LAST)+' ให้แทน — ตรวจคอลัมน์ "เดือน" ในไฟล์ก่อนส่งขึ้นคลัง':'');
     }catch(e){ st.textContent='อ่านไม่ได้: '+e.message; }
     $('impFile').value='';
   };
-  $('impTpl').onclick=()=>{
-    if(typeof XLSX==='undefined'){ alert('ต้องต่ออินเทอร์เน็ตครั้งแรกเพื่อโหลดตัวสร้างไฟล์'); return; }
-    /* แบบฟอร์ม 2 ชีต — ชีต "ราคา" คู่กับชีต "แหล่งวัสดุ"
-       ชื่อแหล่งในชีตราคา ต้องสะกดตรงกับชีตแหล่งวัสดุ ระบบจะได้จับคู่พิกัดให้อัตโนมัติ
-       ไม่มีพิกัด = คำนวณระยะขนส่งไม่ได้ */
-    const aoa=[['ปี พ.ศ.','เดือน','รายการวัสดุ','หน่วย','ราคา','แหล่งวัสดุ','ประเภท','ช่องทาง','หมายเหตุ'],
-      [P.ylist[LAST],P.months[LAST],'ยางแอสฟัลต์อิมัลชัน CSS-1h','ตัน',36500,'บจก.ตัวอย่าง','ยางแอสฟัลต์','ใบเสนอราคา','ใบเสนอราคา SQ.xxxx ลว. ... · ไม่รวม VAT'],
-      [P.ylist[LAST],'ส.ค.','หินคลุก','ลบ.ม.',250,'โรงโม่ตัวอย่าง','หิน','เว็บร้านค้า','เดือนใส่เป็นเลขหรือตัวย่อไทยก็ได้'],
-      [],['หมายเหตุ:'],
-      ['· ไฟล์นี้เป็นตัวกำหนดทุกอย่าง — ระบบไม่ดึงค่าจากช่องกรอกมือบนหน้าจอเลย'],
-      ['· ช่องทาง ใส่ได้: ใบเสนอราคา · หน่วยงานราชการ · เว็บร้านค้า · TPSO · กรอกเอง (ว่างไว้ได้ ระบบจะให้เติมทีหลังก่อนส่งขึ้นคลัง)'],
-      ['· หมายเหตุ ใส่เลขที่หนังสือ/ใบเสนอราคา + เงื่อนไข เช่น "ใบเสนอราคา SQ.690801 ลว. 10 ส.ค. 69 · ไม่รวม VAT"'],
-      ['· เดือนใส่เลข 1-12 หรือตัวย่อไทย (ส.ค.) ก็ได้ · แต่ละแถวเป็นคนละเดือนกันได้']];
+  /* แบบฟอร์มเปล่า — โหลดไฟล์ที่จัดตารางไว้แล้ว (หัวสีเข้ม ตีเส้น ตรึงหัวตาราง มีชีตวิธีกรอก)
+     ถ้าเปิด index.html จากเครื่องตรง ๆ จะโหลดไฟล์ข้างเว็บไม่ได้ ค่อยสร้างสำรองด้วย XLSX */
+  $('impTpl').onclick=async()=>{
+    const st=$('impXlStat');
+    try{
+      const r=await fetch('แบบฟอร์มนำเข้าราคา.xlsx',{cache:'no-store'});
+      if(!r.ok) throw 0;
+      const b=await r.blob();
+      if(b.size<2000) throw 0;
+      const u=URL.createObjectURL(b), a=document.createElement('a');
+      a.href=u; a.download='แบบฟอร์มนำเข้าราคา.xlsx'; a.click();
+      setTimeout(()=>URL.revokeObjectURL(u),4000);
+      return;
+    }catch(e){}
+    if(typeof XLSX==='undefined'){ st.textContent='โหลดแบบฟอร์มไม่ได้ — ต่ออินเทอร์เน็ตแล้วลองใหม่'; return; }
+    const aoa=[['ปี พ.ศ.','เดือน','รายการวัสดุ','หน่วย','ราคา','แหล่งวัสดุ','ประเภท','หมายเหตุ'],
+      [P.ylist[LAST],P.months[LAST],'ยางแอสฟัลต์อิมัลชัน CSS-1h','ตัน',36500,'บจก.ตัวอย่าง','ยางแอสฟัลต์','ราคาเงินสด'],
+      [P.ylist[LAST],'ส.ค.','หินคลุก','ลบ.ม.',250,'โรงโม่ตัวอย่าง','หิน','']];
     const aoaS=[['ชื่อแหล่ง','ละติจูด','ลองจิจูด','หมายเหตุ / ที่อยู่'],
-      ['บจก.ตัวอย่าง',16.432100,102.823600,'ชื่อต้องสะกดตรงกับคอลัมน์ แหล่งวัสดุ ในชีตราคา'],
-      ['โรงโม่ตัวอย่าง',16.680000,101.980000,'พิกัดเอาจาก Google Maps → คลิกขวาที่จุด → คลิกตัวเลขคู่แรก'],
-      [],['หมายเหตุ:'],
-      ['· แหล่งที่มีพิกัดแล้วในคลัง ไม่ต้องใส่ซ้ำ ระบบจะข้ามให้'],
-      ['· ไม่มีพิกัด = แดชบอร์ดหาเส้นทาง/ระยะทางไม่ได้ จึงคิดค่าขนส่งตาม ว 477 ไม่ได้'],
-      ['· ใส่พิกัดชุดเดียวกันนี้ในชีต "แหล่งวัสดุ" ของไฟล์บัญชีคุมด้วย จะได้เป็นแม่แบบถาวร']];
+      ['บจก.ตัวอย่าง',16.432100,102.823600,''],
+      ['โรงโม่ตัวอย่าง',16.680000,101.980000,'']];
     const wb=XLSX.utils.book_new();
     const ws=XLSX.utils.aoa_to_sheet(aoa);
-    ws['!cols']=[{wch:9},{wch:9},{wch:44},{wch:9},{wch:12},{wch:26},{wch:14},{wch:18},{wch:52}];
+    ws['!cols']=[{wch:9},{wch:9},{wch:52},{wch:10},{wch:13},{wch:30},{wch:16},{wch:46}];
+    ws['!freeze']={xSplit:0,ySplit:1};
     XLSX.utils.book_append_sheet(wb,ws,'ราคา');
     const wsS=XLSX.utils.aoa_to_sheet(aoaS);
-    wsS['!cols']=[{wch:30},{wch:13},{wch:13},{wch:66}];
+    wsS['!cols']=[{wch:34},{wch:14},{wch:14},{wch:58}];
+    wsS['!freeze']={xSplit:0,ySplit:1};
     XLSX.utils.book_append_sheet(wb,wsS,'แหล่งวัสดุ');
     XLSX.writeFile(wb,'แบบฟอร์มนำเข้าราคา.xlsx');
   };
+
   /* ชื่อผู้กรอก — จำไว้ในเครื่องนี้ */
   try{ $('mBy').value=localStorage.getItem('kkmat_by')||''; }catch(e){}
   $('mBy').oninput=()=>{ try{ localStorage.setItem('kkmat_by',$('mBy').value); }catch(e){} };
@@ -3341,43 +3364,9 @@ function renderQueue(){
   $('qRows').innerHTML=queue.map(q=>`<tr><td>${TH_M[q.mo-1]} ${String(q.y).slice(2)}</td><td>${esc(q.mat)}</td><td>${esc(q.unit)}</td><td class="num">${fmt(q.price)}</td><td>${esc(q.src)}</td>
     <td>${q.chan?esc(q.chan):'<span class="pill bad">ยังไม่ระบุ</span>'}</td><td>${esc(q.ref||'—')}</td>
     <td>${q.known?'<span class="pill ok">ตรงบัญชีคุม</span>':'<span class="pill warn">ชื่อใหม่ — รอจับคู่</span>'}</td></tr>`).join('');
-  drawImpFix();
 }
 
-/* ══════ แถบซ่อมข้อมูลที่ไฟล์ไม่ได้ระบุ ══════
-   โผล่เฉพาะตอนที่ไฟล์ขาดจริง ๆ — ไม่ใช่ให้กรอกซ้ำกับสิ่งที่มีอยู่แล้วในไฟล์
-   ตราบใดที่ยังมีแถวขาดช่องทาง ปุ่มส่งขึ้นคลังจะกดไม่ได้ กัน "ค่าตั้งต้นแอบติดไปกับข้อมูล" */
 const CHAN_OPTS=['ใบเสนอราคา','หน่วยงานราชการ','เว็บร้านค้า','TPSO','กรอกเอง'];
-function drawImpFix(){
-  const box=$('impFixBox'); if(!box) return;
-  const need=queue.filter(q=>!String(q.chan||'').trim());
-  const btn=$('mPush');
-  if(!need.length){
-    box.innerHTML=''; 
-    if(btn){ btn.disabled=false; btn.title=''; }
-    return;
-  }
-  if(btn){ btn.disabled=true; btn.title='ยังมีแถวที่ไม่ได้ระบุช่องทาง'; }
-  const months=[...new Set(need.map(q=>TH_M[q.mo-1]+' '+String(q.y).slice(2)))].join(' · ');
-  box.innerHTML=`<div class="fixbar">
-    <div class="fx-h">⚠ มี <b>${need.length}</b> แถวที่ไฟล์ไม่ได้ระบุ "ช่องทาง" (${esc(months)})</div>
-    <div class="fx-b">
-      <div><label class="f">ช่องทางของแถวเหล่านี้</label>
-        <select id="fxChan">${CHAN_OPTS.map(c=>`<option>${c}</option>`).join('')}</select></div>
-      <div><label class="f">หมายเหตุ / เลขที่เอกสาร (เติมเฉพาะแถวที่ยังว่าง)</label>
-        <input type="text" id="fxRef" placeholder="เช่น ใบเสนอราคา SQ.690801 ลว. 10 ส.ค. 69 · ไม่รวม VAT"></div>
-      <div style="align-self:end"><button class="btn" id="fxGo">เติมให้ครบ</button></div>
-    </div>
-    <div class="hint">เติมครั้งเดียวได้ทั้งชุด · ถ้าไฟล์ระบุมาแล้วบางแถว ระบบจะไม่ไปทับของเดิม
-      · อยากไม่ต้องเติมทุกครั้ง ให้ใส่คอลัมน์ "ช่องทาง" ไว้ในไฟล์เลย (มีในแบบฟอร์มเปล่าแล้ว)</div>
-  </div>`;
-  kddAll();
-  $('fxGo').onclick=()=>{
-    const c=$('fxChan').value, r=($('fxRef').value||'').trim();
-    queue.forEach(q=>{ if(!String(q.chan||'').trim()){ q.chan=c; if(r&&!q.ref) q.ref=r; } });
-    renderQueue();
-  };
-}
 
 /* ============ ส่งออกข้อมูล ============ */
 function expCatOf(s){          /* หมวดของคู่ราคา — ใช้บัญชีคุมก่อน ไม่มีค่อยใช้ประเภท */
@@ -3555,53 +3544,6 @@ function regInit(){
   };
 }
 
-/* ══════ เปลี่ยนป้ายช่องทางย้อนหลัง (ต้อง Code.gs รุ่น 21) ══════ */
-function relabelInit(){
-  const sel=$('rlFrom'); if(!sel) return;
-  const names=Object.keys(CHAN);
-  sel.innerHTML = names.length
-    ? names.map(n=>`<option value="${esc(n)}">${esc(n)} — ${fmtInt(Object.values(CHAN[n].ym).reduce((a,b)=>a+b,0))} แถว</option>`).join('')
-    : '<option value="">— ยังไม่ได้เชื่อมคลัง —</option>';
-  $('rlToList').innerHTML = [...new Set(CHAN_OPTS.concat(names))].map(n=>`<option value="${esc(n)}">`).join('');
-  $('rlMonth').innerHTML = '<option value="">ทุกเดือน</option>'
-    + P.months.map((_,i)=>`<option value="${i}">${mLabI(i)}</option>`).join('');
-  const preview=()=>{
-    const o=CHAN[sel.value]; const mi=$('rlMonth').value;
-    let n=0;
-    if(o){ if(mi==='') n=Object.values(o.ym).reduce((a,b)=>a+b,0);
-           else n=o.ym[P.ylist[+mi]*100+P.months[+mi]]||0; }
-    $('rlStat').innerHTML = o? 'จะเปลี่ยน <b>'+fmtInt(n)+'</b> แถว' : '';
-  };
-  sel.onchange=preview; $('rlMonth').onchange=preview; preview();
-  $('rlGo').onclick=async()=>{
-    const url=($('cfgUrl').value||'').trim(), st=$('rlStat');
-    const from=sel.value, to=($('rlTo').value||'').trim(), mi=$('rlMonth').value;
-    if(!url){ st.textContent='ยังไม่ตั้ง WebApp URL ด้านบน'; return; }
-    if(!from||!to){ st.innerHTML='<span class="up">เลือกช่องทางเดิม และพิมพ์ชื่อใหม่ก่อน</span>'; return; }
-    if(from===to){ st.innerHTML='<span class="up">ชื่อเดิมกับชื่อใหม่เหมือนกัน</span>'; return; }
-    const pass=$('rlPass').value;
-    if(!pass){ st.innerHTML='<span class="up">ใส่รหัสผู้ดูแลก่อน</span>'; return; }
-    const y = mi===''?0:P.ylist[+mi], m = mi===''?0:P.months[+mi];
-    if(!confirm('เปลี่ยน "'+from+'" → "'+to+'"\n'+(mi===''?'ทุกเดือน':'เฉพาะ '+mLabI(+mi))
-        +'\n\nเลขที่หนังสือที่ต่อท้ายไม่ถูกแตะ · ระบบสำรองแท็บ PRICES ให้ก่อน')) return;
-    $('rlGo').disabled=true; st.textContent='กำลังเปลี่ยน…';
-    try{
-      const r=await fetch(url,{method:'POST',headers:{'Content-Type':'text/plain;charset=utf-8'},
-        body:JSON.stringify({token:WTOKEN,action:'relabel',pass,from,to,y,m})});
-      const res=await r.json();
-      if(!res.ok) throw new Error(res.error||'ไม่สำเร็จ');
-      if(res.changed===undefined) throw new Error('ชีทยังใช้ Code.gs รุ่นเก่า — ต้องรุ่น 22 ขึ้นไป');
-      st.innerHTML='<span class="pill ok">เปลี่ยนแล้ว '+fmtInt(res.changed)+' แถว</span>'
-        +(res.backup?' · สำรองไว้ที่แท็บ '+esc(res.backup):'')+' — กำลังโหลดคลังใหม่…';
-      $('rlPass').value='';
-      await loadLive();
-      st.innerHTML='<span class="pill ok">เปลี่ยนแล้ว '+fmtInt(res.changed)+' แถว</span>'
-        +(res.backup?' · สำรองไว้ที่แท็บ '+esc(res.backup):'');
-    }catch(e){ st.innerHTML='<span class="up">ไม่สำเร็จ: '+esc(e.message)+'</span>'; }
-    $('rlGo').disabled=false;
-  };
-}
-
 /* ============ ล้างข้อมูลในคลัง ============ */
 function clearInit(){
   const sc=$('clScope'); if(!sc) return;
@@ -3654,7 +3596,7 @@ function clearInit(){
 }
 
 /* ============ boot ============ */
-[buildSummary, lawInit, provInit, matInit, initMap, statInit, covInit, impInit, noGeoInit, relabelInit, expInit, sysInit, regInit, clearInit, fullInit, distTabs, dieselIdx, drawMatChips, usageInit,
+[buildSummary, lawInit, provInit, matInit, initMap, statInit, covInit, impInit, noGeoInit, expInit, sysInit, regInit, clearInit, fullInit, distTabs, dieselIdx, drawMatChips, usageInit,
  sortableAll, countUpAll]   /* สองตัวนี้ต้องอยู่ท้ายสุด — ต้องรอให้ทุกตารางถูกวาดก่อน */
   .forEach(f=>{ try{ f(); }catch(e){ console.error('init:', f.name, e); } });
 kddAll(); kfreeAll(); paintIcons();

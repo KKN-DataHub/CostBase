@@ -2,9 +2,9 @@
    หน้าเว็บ: ยิงเน็ตก่อนเสมอ (network-first) ได้ของใหม่ทุกครั้งที่ออนไลน์
              ออฟไลน์ค่อยใช้ตัวที่เก็บไว้ — จะได้ไม่ค้างรุ่นเก่าเวลาอัปเดตไฟล์
    ราคา/ชีท/แผนที่: ไม่แคชเลย ต้องเป็นของสดเสมอ */
-const CACHE = 'costbase-v6.0';
+const CACHE = 'costbase-v6.1';
 const SHELL = ['./', './index.html', './icon-192.png', './icon-512.png',
-               './apple-touch-icon.png', './manifest.webmanifest'];
+               './apple-touch-icon.png', './manifest.webmanifest', './แบบฟอร์มนำเข้าราคา.xlsx'];
 
 self.addEventListener('install', e => {
   e.waitUntil(caches.open(CACHE).then(c => c.addAll(SHELL)).then(() => self.skipWaiting()));
