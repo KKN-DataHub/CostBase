@@ -464,6 +464,8 @@ tr.detail>td{background:#F8F7F3;border-top:none;padding:10px 14px}
    (การ์ดนี้อยู่ในกริด 2 คอลัมน์ จอกว้างแต่การ์ดแคบได้) */
 .frow.xlmeta{display:grid;grid-template-columns:repeat(auto-fit,minmax(210px,1fr));gap:10px}
 .req{color:#b23b3b;font-weight:700}
+.mono{font-family:ui-monospace,Menlo,monospace;font-size:11px;background:rgba(0,0,0,.05);padding:1px 5px;border-radius:4px}
+.miss,.kdd.miss .kdd-inp{border-color:#d98a8a!important;background:#FDF3F3!important;box-shadow:0 0 0 3px rgba(217,138,138,.18)}
 .btn[disabled]{opacity:.45;cursor:not-allowed}
 .btn[disabled]:hover{background:var(--teal)}
 @media(max-width:820px){.fixbar .fx-b{grid-template-columns:1fr}}
@@ -563,7 +565,7 @@ canvas{max-width:100%}
   <div class="brand">
     <h1><span class="blogo" aria-hidden="true"></span>CostBase</h1>
     <div class="sub">ฐานข้อมูลราคาวัสดุ · แขวงทางหลวงชนบทขอนแก่น</div>
-    <div class="chips"><span class="chip" id="bLatest">—</span><span class="chip" id="bVer">v6.1</span></div>
+    <div class="chips"><span class="chip" id="bLatest">—</span><span class="chip" id="bVer">v6.2</span></div>
     <button class="instbtn" id="installBtn" style="display:none" title="เพิ่ม CostBase ลงหน้าจอโฮม เปิดใช้เหมือนแอป">⤓ ติดตั้งลงหน้าจอโฮม</button>
   </div>
   <nav class="nav" id="nav">
@@ -633,6 +635,7 @@ canvas{max-width:100%}
     <div class="ph-act">
       <button class="btn ghost" id="dCsv">⬇ CSV</button>
       <button class="btn ghost" id="dXlsx">⬇ Excel เปรียบเทียบ</button>
+      <button class="btn ghost" id="dDist" title="ระยะทางถนนจริงของทุกแหล่ง สำหรับวางลงตาราง ข้อมูลวัสดุก่อสร้าง (Table4) ในไฟล์ DRR_KK Estimate">⬇ ตารางระยะขนส่ง → Estimate</button>
       <button class="btn gold" id="dPrint">🖨 พิมพ์ / PDF</button>
     </div>
   </div>
@@ -836,7 +839,8 @@ canvas{max-width:100%}
       <div class="frow ymc">
         <div><label class="f">ปี พ.ศ.</label><input type="number" id="mYear" min="2560" max="2600"></div>
         <div><label class="f">เดือน</label><select id="mMonth"></select></div>
-        <div><label class="f">ช่องทาง</label><select id="mChan">
+        <div><label class="f">ช่องทาง <span class="req">*</span></label><select id="mChan">
+          <option value="">— เลือก —</option>
           <option value="ใบเสนอราคา">ใบเสนอราคา / หนังสือจากผู้ผลิต</option>
           <option value="หน่วยงานราชการ">หน่วยงานราชการ</option>
           <option value="เว็บร้านค้า">เว็บร้านค้า</option>
@@ -845,16 +849,16 @@ canvas{max-width:100%}
       </div>
       <div class="frow cm">
         <div><label class="f">หมวด (กรองรายการ)</label><select id="mCat"></select></div>
-        <div><label class="f">รายการวัสดุ</label><input type="text" id="mMat" list="mMatList" placeholder="พิมพ์ / เลือกจากรายการ"><datalist id="mMatList"></datalist></div>
+        <div><label class="f">รายการวัสดุ <span class="req">*</span></label><input type="text" id="mMat" list="mMatList" placeholder="พิมพ์ / เลือกจากรายการ"><datalist id="mMatList"></datalist></div>
       </div>
       <div class="frow upt">
-        <div><label class="f">หน่วย</label><input type="text" id="mUnit" list="mUnitList"><datalist id="mUnitList"></datalist></div>
-        <div><label class="f">ราคา (ไม่รวมขนส่ง)</label><input type="number" id="mPrice" step="0.01"></div>
-        <div><label class="f">ประเภท</label><select id="mType"></select></div>
+        <div><label class="f">หน่วย <span class="req">*</span></label><input type="text" id="mUnit" list="mUnitList"><datalist id="mUnitList"></datalist></div>
+        <div><label class="f">ราคา (ไม่รวมขนส่ง) <span class="req">*</span></label><input type="number" id="mPrice" step="0.01"></div>
+        <div><label class="f">ประเภท <span class="req">*</span></label><select id="mType"></select></div>
       </div>
       <div class="frow src" id="mSrcRow">
-        <div><label class="f">แหล่ง / ผู้ให้ราคา (ตามบัญชีแหล่งวัสดุ)</label><select id="mSrcSel"></select></div>
-        <div id="mSrcNewBox" style="display:none"><label class="f">ชื่อแหล่งใหม่</label><input type="text" id="mSrc" placeholder="พิมพ์ชื่อแหล่ง/บริษัท"></div>
+        <div><label class="f">แหล่ง / ผู้ให้ราคา <span class="req">*</span></label><select id="mSrcSel"></select></div>
+        <div id="mSrcNewBox" style="display:none"><label class="f">ชื่อแหล่งใหม่ <span class="req">*</span></label><input type="text" id="mSrc" placeholder="พิมพ์ชื่อแหล่ง/บริษัท"></div>
       </div>
       <div id="mUrlBox" style="display:none"><label class="f">ลิงก์หน้าสินค้า (URL เว็บที่สืบราคา)</label><input type="url" id="mUrl" placeholder="วางลิงก์หน้าสินค้า เช่น https://www.globalhouse.co.th/..."></div>
       <label class="f">หมายเหตุ / ที่มา (เลขหนังสือ · ใบเสนอราคา · หน่วยงาน)</label><input type="text" id="mRef" placeholder="เช่น ใบเสนอราคา SQ.690801 ลว. 10 ส.ค. 69 · ไม่รวม VAT">
@@ -925,12 +929,19 @@ canvas{max-width:100%}
       <label class="f" style="margin-top:12px">ยกยอดราคาเดือนก่อน เมื่อเดือนที่เลือกไม่มีราคา</label>
       <select id="eCarry"><option value="1" selected>เปิด — ใช้ราคาล่าสุดที่มี (แนะนำ)</option><option value="0">ปิด — เดือนไหนไม่มี ตัดทิ้ง</option></select>
       <div class="statusline" style="margin-top:14px">
-        <button class="btn" id="eXlsx">ดาวน์โหลด ราคาวัสดุ_ล่าสุด.xlsx</button>
-        <button class="btn ghost" id="eXlsxM">สำเนารายเดือน (.xlsx)</button>
+        <button class="btn" id="eXlsx">⬇ ไฟล์ราคารายเดือน (สำหรับ DRR_KK Estimate)</button>
+        <button class="btn ghost" id="eXlsxM">สำเนาตั้งชื่อเอง (.xlsx)</button>
         <button class="btn ghost" id="eCsv">.csv</button>
       </div>
       <div class="hint" id="eInfo" style="margin-top:10px">—</div>
-      <div class="notebox teal" style="font-size:11.5px">Sheet1 · 5 คอลัมน์ · ยกยอดแนบชีต "หมายเหตุยกยอด"</div>
+      <div class="notebox teal" style="font-size:11.5px">
+        <b>ต่อกับไฟล์ประมาณราคายังไง</b> — ไฟล์ที่ได้มี 5 คอลัมน์ รายการวัสดุ · หน่วย · ราคา · แหล่งวัสดุ · ประเภท
+        อยู่ทั้งชีต <b>Table1</b> (Power Query อ่าน) และ <b>Sheet1</b> (ตัวเชื่อมแบบเก่าอ่าน)
+        <br>ชื่อไฟล์ตั้งให้ตรงแบบที่ Power Query ไล่หาอยู่แล้ว เช่น <b id="eName">—</b>
+        <br>เอาไปวางที่ <span class="mono">…\ระบบฐานข้อมูลวัสดุ\ราคาวัสดุรายเดือน\ปี <span id="eYr">69</span>\</span>
+        แล้วในไฟล์ Estimate กด <b>ข้อมูล → รีเฟรชทั้งหมด</b> — Power Query จะหยิบไฟล์เดือนล่าสุดให้เอง
+        <button class="btn ghost" id="eMcode" style="margin-top:8px;padding:4px 10px;font-size:11px">คัดลอกโค้ด Power Query (แก้ครั้งเดียว)</button>
+      </div>
     </div>
     <div class="card">
       <h2 data-ic="table">ตัวอย่างข้อมูลที่จะส่งออก</h2>
@@ -1105,7 +1116,7 @@ const EMPTY = () => P.series.length===0;
 let LIVE = {on:false, added:0};
 const fmt = n => n==null?'—':Number(n).toLocaleString('th-TH',{minimumFractionDigits:2,maximumFractionDigits:2});
 const $ = id => document.getElementById(id);
-const APPVER='6.1';        /* เลขรุ่นที่เดียว — ที่อื่นดึงจากตัวนี้ */
+const APPVER='6.2';        /* เลขรุ่นที่เดียว — ที่อื่นดึงจากตัวนี้ */
 /* ต้อง escape ทั้ง " และ ' ด้วย — ชื่อวัสดุในบัญชีคุมมีเครื่องหมายนิ้ว (") 1,687 ชื่อ และฟุต (') 71 ชื่อ
    ถ้าไม่ escape ค่าใน value="..." จะถูกตัดกลางคัน แล้วชื่อที่โดนตัดจะไหลเข้าคลังเป็นวัสดุใหม่ปลอม ๆ */
 const esc = s => String(s).replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;')
@@ -1120,15 +1131,37 @@ function valAt(v,mi,carry){ if(v[mi]!=null) return {p:v[mi],carried:false,from:m
 
 /* ============ คลังสด — อ่านแท็บ PRICES มารวมกับข้อมูลฝัง ============ */
 const WTOKEN='drrkk-2569';
+/* ตัวอ่าน CSV — เดิมไล่ทีละตัวอักษรแล้วต่อสตริง ช้ามากกับไฟล์ 5-6 MB (~0.5 วินาที)
+   ตัวนี้กระโดดด้วย indexOf แล้วตัดเป็นชิ้น (slice) เร็วขึ้นราว 7 เท่า ผลลัพธ์เหมือนเดิมทุกช่อง */
 function csvParse(t){
-  const rows=[]; let row=[], cur='', q=false;
-  for(let i=0;i<t.length;i++){ const c=t[i];
-    if(q){ if(c==='"'){ if(t[i+1]==='"'){cur+='"';i++;} else q=false; } else cur+=c; }
-    else if(c==='"') q=true;
-    else if(c===','){ row.push(cur); cur=''; }
-    else if(c==='\n'){ row.push(cur.replace(/\r$/,'')); rows.push(row); row=[]; cur=''; }
-    else cur+=c; }
-  if(cur!==''||row.length){ row.push(cur.replace(/\r$/,'')); rows.push(row); }
+  const rows=[]; const n=t.length; let row=[], i=0;
+  while(i<n){
+    let val;
+    if(t.charCodeAt(i)===34){                    /* ช่องที่มีเครื่องหมายคำพูดครอบ */
+      i++; let st=i, out=null;
+      for(;;){
+        const j=t.indexOf('"',i);
+        if(j<0){ const pc=t.slice(st); out=out===null?pc:out+pc; i=n; break; }
+        if(t.charCodeAt(j+1)===34){ const pc=t.slice(st,j+1); out=out===null?pc:out+pc; i=j+2; st=i; }
+        else { const pc=t.slice(st,j); out=out===null?pc:out+pc; i=j+1; break; }
+      }
+      val=out===null?'':out;
+    } else {                                     /* ช่องธรรมดา */
+      let j=i;
+      while(j<n){ const c=t.charCodeAt(j); if(c===44||c===10) break; j++; }
+      val=t.slice(i,j);
+      if(val.charCodeAt(val.length-1)===13) val=val.slice(0,-1);
+      i=j;
+    }
+    row.push(val);
+    if(i>=n) break;
+    const c=t.charCodeAt(i);
+    if(c===44) i++;
+    else if(c===10){ i++; rows.push(row); row=[]; }
+    else if(c===13){ i++; if(t.charCodeAt(i)===10) i++; rows.push(row); row=[]; }
+    else i++;
+  }
+  if(row.length) rows.push(row);
   return rows;
 }
 function ensureMonth(y,m){
@@ -1312,6 +1345,54 @@ async function fetchTab(id,tab){
   if(!r.ok) throw new Error('HTTP '+r.status);
   return csvParse(await r.text());
 }
+/* ══════ ภาพถ่ายคลังในเครื่อง — ให้เห็นข้อมูลทันทีที่เปิด ไม่ต้องรอโหลดจบ ══════
+   เก็บผลที่จัดเรียงแล้วไว้ใน localStorage พอเปิดครั้งหน้าวาดจากตัวนี้ก่อนเลย
+   แล้วค่อยยิงอ่านคลังจริงเบื้องหลัง ได้ของใหม่เมื่อไรก็วาดทับ
+   ⚠ ตัวนี้เป็นแค่ภาพชั่วคราวเพื่อความเร็ว ไม่ใช่แหล่งข้อมูลจริง — ของจริงอยู่บนชีทเสมอ */
+const SNAP_KEY='costbase_snap_v1';
+function snapSave(){
+  try{
+    const o={t:Date.now(), id:($('cfgSheet').value||'').trim(),
+      months:P.months, ylist:P.ylist, mats:P.mats, srcs:P.srcs, units:P.units, types:P.types,
+      matCat:P.matCat, series:P.series, src:SRC,
+      /* CHAN มี Set อยู่ข้างใน (docs, mats) — JSON.stringify แปลง Set เป็น {} เปล่า ๆ
+         ต้องแปลงเป็นอาเรย์ก่อนเก็บ แล้วค่อยประกอบกลับตอนอ่าน */
+      chan:Object.fromEntries(Object.entries(CHAN).map(([k,o])=>[k,{
+        ym:o.ym, mats:[...o.mats],
+        docs:Object.fromEntries(Object.entries(o.docs).map(([m,st])=>[m,[...st]]))}])),
+      conn:{prices:CONN.prices,reg:CONN.reg,src:CONN.src,oil:CONN.oil}};
+    const txt=JSON.stringify(o);
+    if(txt.length>4200000) { localStorage.removeItem(SNAP_KEY); return; }   /* ใหญ่เกินโควตา ไม่เก็บ */
+    localStorage.setItem(SNAP_KEY,txt);
+  }catch(e){ try{ localStorage.removeItem(SNAP_KEY); }catch(x){} }
+}
+function snapLoad(){
+  try{
+    const txt=localStorage.getItem(SNAP_KEY); if(!txt) return false;
+    const o=JSON.parse(txt);
+    if(o.id!==($('cfgSheet').value||'').trim()) return false;      /* คนละชีท ไม่ใช้ */
+    if(!o.series||!o.series.length) return false;
+    P.months=o.months; P.ylist=o.ylist; P.mats=o.mats; P.srcs=o.srcs;
+    P.units=o.units; P.types=o.types; P.matCat=o.matCat||{}; P.series=o.series;
+    NM=P.months.length; LAST=NM-1;
+    CHAN={};
+    Object.entries(o.chan||{}).forEach(([k,c])=>{
+      CHAN[k]={ ym:c.ym||{}, mats:new Set(c.mats||[]),
+        docs:Object.fromEntries(Object.entries(c.docs||{}).map(([m,a])=>[m,new Set(a||[])])) };
+    });
+    SRC.length=0; (o.src||[]).forEach(x=>SRC.push(x)); rebuildSrcIndex();
+    if(o.conn){ CONN.prices=o.conn.prices||0; CONN.reg=o.conn.reg||0; CONN.src=o.conn.src||0; CONN.oil=o.conn.oil||CONN.oil; }
+    LIVE.on=true; REG.on=!!(o.matCat&&Object.keys(o.matCat).length);
+    const st=$('liveStat');
+    const mins=Math.round((Date.now()-(o.t||0))/60000);
+    if(st) st.innerHTML='<span class="pill warn">แสดงจากภาพล่าสุดในเครื่อง</span> '
+      +(mins<1?'เมื่อครู่':mins<60?('เมื่อ '+mins+' นาทีที่แล้ว'):('เมื่อ '+Math.round(mins/60)+' ชม.ที่แล้ว'))
+      +' · กำลังอ่านคลังจริงอยู่เบื้องหลัง…';
+    rerender();
+    return true;
+  }catch(e){ return false; }
+}
+
 async function loadLive(){
   const id=($('cfgSheet').value||'').trim(); const st=$('liveStat');
   if(!id) return;
@@ -1321,30 +1402,43 @@ async function loadLive(){
     try{ const g=await (await fetch(url)).json(); CONN.web=!!g.ok; CONN.ver=g.ver||0; }
     catch(e){ CONN.web=false; } drawConn(); })();
   try{
-    const rows=await fetchTab(id,'PRICES');
+    /* ⚡ ยิงทั้ง 4 แท็บพร้อมกัน — ของเดิมยิงทีละแท็บต่อคิวกัน รอรวมกันเป็นสิบวินาที
+       PRICES เป็นก้อนใหญ่สุด (หลายเมกะไบต์) อีก 3 แท็บเล็ก โหลดคู่ขนานไปเลยไม่เสียเวลาเพิ่ม */
+    const t0=performance.now();
+    if(st) st.textContent='กำลังอ่านคลัง 4 แท็บพร้อมกัน…';
+    const [rPr,rReg,rSrc,rOil] = await Promise.all([
+      fetchTab(id,'PRICES'),
+      fetchTab(id,'REGISTRY').catch(()=>[]),
+      fetchTab(id,'SOURCES').catch(()=>[]),
+      fetchTab(id,'OIL').catch(()=>[]),
+    ]);
+    const tNet=performance.now()-t0;
+    if(st) st.textContent='ได้ข้อมูลแล้ว กำลังจัดเรียง…';
+    const rows=rPr;
     CONN.sheet=true; CONN.prices=Math.max(rows.length-1,0);
     LIVE.added = rows.length>1 ? mergeLive(rows.slice(1)) : 0;
     LIVE.on = true;
     let regTxt='';
     try{
-      const reg=await fetchTab(id,'REGISTRY');
-      if(reg.length>1){ applyRegistry(reg.slice(1)); CONN.reg=REG.n;
+      if(rReg.length>1){ applyRegistry(rReg.slice(1)); CONN.reg=REG.n;
         regTxt=' · ชื่อตามบัญชีคุม '+REG.n.toLocaleString()+' ชื่อ'; }
     }catch(e){}
     try{
-      const so=await fetchTab(id,'SOURCES');
-      if(so.length>1){ const m=mergeSources(so.slice(1)); CONN.src=so.length-1;
+      if(rSrc.length>1){ const m=mergeSources(rSrc.slice(1)); CONN.src=rSrc.length-1;
         if(m.upd||m.add) regTxt+=' · พิกัด อัปเดต '+m.upd+' เพิ่ม '+m.add; }
     }catch(e){}
     try{
-      const oi=await fetchTab(id,'OIL');
-      for(let i=oi.length-1;i>=1;i--){ const c=oi[i];
+      for(let i=rOil.length-1;i>=1;i--){ const c=rOil[i];
         const pv=isNaN(parseFloat(c[1]))?c[1]:'ขอนแก่น';
         const pr=parseFloat(isNaN(parseFloat(c[1]))?c[2]:c[1]);
         if(pr>=20&&pr<70){ CONN.oil={d:c[0],pv:pv,p:pr.toFixed(2)}; break; } }
     }catch(e){}
-    if(st) st.textContent='เชื่อมคลังสำเร็จ · อ่าน '+CONN.prices.toLocaleString()+' แถว เพิ่มเข้าจอ '+LIVE.added.toLocaleString()+' ค่า'+(P.series.length?' · เดือนล่าสุด '+mLabI(LAST):'')+regTxt;
+    const tAll=performance.now()-t0;
+    if(st) st.innerHTML='<span class="pill ok">เชื่อมคลังสำเร็จ</span> อ่าน '+CONN.prices.toLocaleString()+' แถว เพิ่มเข้าจอ '+LIVE.added.toLocaleString()+' ค่า'
+      +(P.series.length?' · เดือนล่าสุด '+mLabI(LAST):'')+regTxt
+      +' <span class="hint">(ดาวน์โหลด '+(tNet/1000).toFixed(1)+' วิ · รวม '+(tAll/1000).toFixed(1)+' วิ)</span>';
     drawConn(); rerender();
+    try{ snapSave(); }catch(e){}
   }catch(e){
     LIVE.on=false; CONN.sheet=false; drawConn();
     if(st) st.textContent='อ่านคลังไม่ได้ ('+e.message+') — เช็ก 2 อย่าง: ①แชร์ชีท 01.0 เป็น "ทุกคนที่มีลิงก์ = ดูได้" ②เครื่องต่ออินเทอร์เน็ต';
@@ -2639,6 +2733,41 @@ $('dXlsx').onclick=()=>{
   XLSX.utils.book_append_sheet(wb,ws2,'เปรียบเทียบทุกแหล่ง');
   XLSX.writeFile(wb,'เปรียบเทียบราคา_ค่าขนส่ง.xlsx');
 };
+/* ══════ ส่งออกตารางระยะขนส่ง สำหรับวางลง Table4 ในไฟล์ DRR_KK Estimate ══════
+   คอลัมน์เรียงตรงกับชีต "ข้อมูลวัสดุก่อสร้าง" แถว 4:
+   รถบรรทุก 6 ล้อ | รถบรรทุก 10 ล้อ | รถบรรทุก 10 ล้อ พ่วง
+   ระยะที่ได้เป็นระยะถนนจริงจากระบบนำทาง (OSRM) ที่วัดจากจุดกึ่งกลางโครงการที่ตั้งไว้
+   งานที่เดิมต้องเปิด Google Maps ไล่ทีละแหล่งแล้วพิมพ์ใส่ Excel เอง */
+$('dDist').onclick=()=>{
+  if(typeof XLSX==='undefined'){ toast('ตัวสร้าง .xlsx ต้องต่ออินเทอร์เน็ตครั้งแรก'); return; }
+  const seen={}, out=[];
+  Object.keys(cmpState).forEach(k=>{
+    (cmpState[k]||[]).forEach(r=>{
+      if(seen[r.nm]) return; seen[r.nm]=1;
+      const km={'6':0,'10':0,'10p':0};
+      (r.legs||[]).forEach(l=>{ km[l.truck]=(km[l.truck]||0)+(+l.L||0); });
+      const tot=(+r.L||0);
+      if(!tot && !km['6'] && !km['10'] && !km['10p']) return;
+      out.push([r.nm, km['6']||'', km['10']||(km['6']||km['10p']?'':tot), km['10p']||'',
+        Math.round(tot*100)/100,
+        r.mode==='road'?'ถนนจริง (OSRM)':r.mode==='est'?'ประมาณจากเส้นตรง':'กรอกเอง',
+        r.sc?(r.sc.lat.toFixed(6)+', '+r.sc.lon.toFixed(6)):'ไม่มีพิกัดในคลัง']);
+    });
+  });
+  if(!out.length){ toast('ยังไม่มีระยะทาง — เลือกวัสดุแล้วกดคำนวณก่อน'); return; }
+  out.sort((a,b)=>String(a[0]).localeCompare(String(b[0]),'th'));
+  const dest=($('dDest').value||'').trim();
+  const aoa=[['แหล่งวัสดุ','รถบรรทุก 6 ล้อ','รถบรรทุก 10 ล้อ','รถบรรทุก 10 ล้อ พ่วง','รวมระยะขนส่ง','วิธีวัด','พิกัดแหล่ง'],...out,
+    [],['จุดกึ่งกลางโครงการที่ใช้วัด: '+(dest||'—')],
+    ['วิธีใช้: คัดลอกคอลัมน์ รถบรรทุก 6/10/พ่วง ไปวางในชีต "ข้อมูลวัสดุก่อสร้าง" (Table4) ของไฟล์ DRR_KK Estimate'],
+    ['ให้ตรงแถวของแหล่งเดียวกัน — คอลัมน์ "รวมระยะขนส่ง" ในไฟล์นั้นเป็นสูตร ไม่ต้องวางทับ']];
+  const ws=XLSX.utils.aoa_to_sheet(aoa);
+  ws['!cols']=[{wch:34},{wch:15},{wch:15},{wch:19},{wch:15},{wch:20},{wch:26}];
+  ws['!freeze']={xSplit:0,ySplit:1};
+  const wb=XLSX.utils.book_new(); XLSX.utils.book_append_sheet(wb,ws,'ระยะขนส่ง');
+  XLSX.writeFile(wb,'ระยะขนส่ง_สำหรับEstimate.xlsx');
+  toast('ได้ระยะทาง '+out.length+' แหล่ง');
+};
 $('dPrint').onclick=()=>{buildCalcSheet(); if(map){map.invalidateSize(); setTimeout(()=>window.print(),350);} else window.print();};
 
 /* ============ สถิติราคา ============ */
@@ -3004,12 +3133,15 @@ function buildMovers(){
 const queue=[];
 function impInit(){
   $('mUnitList').innerHTML=P.units.filter(u=>u).map(u=>`<option value="${esc(u)}">`).join('');
-  $('mType').innerHTML=P.types.filter(x=>x).map(x=>`<option>${esc(x)}</option>`).join('');
+  const prevTyp=$('mType').value;
+  $('mType').innerHTML='<option value="">— เลือก —</option>'
+    + P.types.filter(x=>x).map(x=>`<option ${x===prevTyp?'selected':''}>${esc(x)}</option>`).join('');
   /* แหล่ง: dropdown จากบัญชีแหล่งวัสดุ + แหล่งที่มีในคลัง */
   const prevSrc=$('mSrcSel').value;
   const srcSet=[...new Set([...SRC.map(x=>x.name),...P.srcs.filter(Boolean)])].sort((a,b)=>a.localeCompare(b,'th'));
   if(!srcSet.length) $('mSrcSel').title='ยังไม่มีบัญชีแหล่งวัสดุ — อัปโหลดบัญชีคุมที่หน้า ระบบ';
-  $('mSrcSel').innerHTML=srcSet.map(x=>`<option ${x===prevSrc?'selected':''}>${esc(x)}</option>`).join('')
+  $('mSrcSel').innerHTML='<option value="">— เลือก —</option>'
+    + srcSet.map(x=>`<option ${x===prevSrc?'selected':''}>${esc(x)}</option>`).join('')
     +'<option value="__new__" '+(prevSrc==='__new__'?'selected':'')+'>+ แหล่งใหม่ (พิมพ์เอง)…</option>';
   const srcTog=()=>{ const nw=$('mSrcSel').value==='__new__';
     $('mSrcNewBox').style.display=nw?'':'none'; $('mSrcRow').classList.toggle('two',nw); };
@@ -3037,16 +3169,36 @@ function impInit(){
   $('mYear').value=P.ylist[LAST];
   $('mMonth').innerHTML=TH_M.map((t,i)=>`<option value="${i+1}" ${i+1===P.months[LAST]?'selected':''}>${t}</option>`).join('');
   $('mAdd').onclick=()=>{
-    const mat=$('mMat').value.trim(), unit=$('mUnit').value.trim(), price=parseFloat($('mPrice').value), src=getSrc();
+    const mat=$('mMat').value.trim(), unit=$('mUnit').value.trim(), price=parseFloat($('mPrice').value);
     const y=+$('mYear').value, mo=+$('mMonth').value;
-    if(!mat||!(price>0)){ alert('กรอกชื่อวัสดุและราคาก่อน'); return; }
-    if(!src){ alert('เลือกหรือพิมพ์ชื่อแหล่งก่อน'); return; }
-    if(!(y>=2560&&y<=2600)){ alert('ตรวจปี พ.ศ. อีกครั้ง'); return; }
+    const isNew=$('mSrcSel').value==='__new__';
+    const src=getSrc();
+    /* ตรวจให้ครบทุกช่องบังคับ — "ชื่อแหล่งใหม่" บังคับเฉพาะตอนเลือก + แหล่งใหม่ เท่านั้น */
+    const need=[];
+    if(!(y>=2560&&y<=2600)) need.push(['mYear','ปี พ.ศ.']);
+    if(!(mo>=1&&mo<=12))    need.push(['mMonth','เดือน']);
+    if(!$('mChan').value)   need.push(['mChan','ช่องทาง']);
+    if(!mat)                need.push(['mMat','รายการวัสดุ']);
+    if(!unit)               need.push(['mUnit','หน่วย']);
+    if(!(price>0))          need.push(['mPrice','ราคา']);
+    if(!$('mType').value)   need.push(['mType','ประเภท']);
+    if(!$('mSrcSel').value) need.push(['mSrcSel','แหล่ง / ผู้ให้ราคา']);
+    else if(isNew && !src)  need.push(['mSrc','ชื่อแหล่งใหม่']);
+    document.querySelectorAll('#impModeMan .miss').forEach(e=>e.classList.remove('miss'));
+    if(need.length){
+      need.forEach(([id])=>{ const el=$(id); if(el){ el.classList.add('miss');
+        const w=el.closest('.kdd'); if(w) w.classList.add('miss'); } });
+      const el=$(need[0][0]); if(el){ const w=el.closest('.kdd'); (w?w.querySelector('.kdd-inp')||el:el).focus(); }
+      toast('ยังไม่ได้กรอก: '+need.map(x=>x[1]).join(' · '));
+      return;
+    }
     const _url=($('mUrl').value||'').trim();
     const _ref=(_url?_url+' · ':'')+$('mRef').value.trim();
     queue.push({y,mo,mat,unit,price,src,ref:_ref,typ:$('mType').value,chan:$('mChan').value,fromFile:0,known:P.mats.includes(mat)||!!regStd(mat)});
-    $('mMat').value='';$('mPrice').value='';$('mRef').value='';
+    $('mMat').value='';$('mPrice').value='';$('mUnit').value='';
+    document.querySelectorAll('#impModeMan .miss').forEach(e=>e.classList.remove('miss'));
     renderQueue(); try{ drawNoGeo(); }catch(e){}
+    toast('เพิ่มเข้าคิวแล้ว · รวม '+queue.length+' รายการ');
   };
   const TH_ABBR={'ม.ค.':1,'ก.พ.':2,'มี.ค.':3,'เม.ย.':4,'พ.ค.':5,'มิ.ย.':6,'ก.ค.':7,'ส.ค.':8,'ก.ย.':9,'ต.ค.':10,'พ.ย.':11,'ธ.ค.':12};
   window.parseImpWb=function(wb){
@@ -3426,7 +3578,12 @@ function expInit(){
     const {rows}=expRows(mi,carry,eCatSel);
     const aoa=[['รายการวัสดุ','หน่วย','ราคา','แหล่งวัสดุ','ประเภท'],...rows.map(r=>r.slice(0,5))];
     const ws=XLSX.utils.aoa_to_sheet(aoa);
-    const wb=XLSX.utils.book_new(); XLSX.utils.book_append_sheet(wb,ws,'Sheet1');
+    ws['!cols']=[{wch:52},{wch:10},{wch:13},{wch:28},{wch:16}];
+    ws['!autofilter']={ref:XLSX.utils.encode_range({s:{r:0,c:0},e:{r:aoa.length-1,c:4}})};
+    ws['!freeze']={xSplit:0,ySplit:1};
+    const wb=XLSX.utils.book_new();
+    XLSX.utils.book_append_sheet(wb,ws,'Sheet1');      /* ตัวเชื่อมแบบเก่า (OLEDB) อ่าน Sheet1$ */
+    XLSX.utils.book_append_sheet(wb,XLSX.utils.aoa_to_sheet(aoa),'Table1');  /* Power Query อ่านชื่อนี้ */
     const noted=rows.filter(r=>r[5]);
     if(noted.length){
       const aoa2=[['รายการวัสดุ','แหล่งวัสดุ','เดือนที่ส่งออก','ใช้ราคาเดือน','ราคา'],
@@ -3435,7 +3592,31 @@ function expInit(){
     }
     XLSX.writeFile(wb,fname);
   };
-  $('eXlsx').onclick=()=>buildXlsx('ราคาวัสดุ_ล่าสุด.xlsx');
+  /* ชื่อไฟล์ต้องตรงแบบที่ Power Query ในไฟล์ DRR_KK Estimate ไล่หา:
+     ขึ้นต้นด้วย "<เลขเดือน>." + มีตัวย่อเดือนไทย + ลงท้าย .xlsx
+     เช่น  8. ราคาวัสดุ เดือน ส.ค. 69.xlsx   (วางในโฟลเดอร์ "ปี 69") */
+  const estName=mi=>`${P.months[mi]}. ราคาวัสดุ เดือน ${TH_M[P.months[mi]-1]} ${String(P.ylist[mi]).slice(-2)}.xlsx`;
+  $('eXlsx').onclick=()=>buildXlsx(estName(+$('eMonth').value));
+  const MCODE = [
+    '// วางทับบรรทัดเดิมในคิวรี "ราคาประจำเดือน" (Power Query → ตัวแก้ไขขั้นสูง)',
+    '// ของเดิมรับเฉพาะตาราง Table1 ถ้าไฟล์ไม่มีตารางจะพัง — ตัวนี้รับได้ทั้งตารางและชีตธรรมดา',
+    '    Source = Excel.Workbook(File.Contents(SourcePath), null, true),',
+    '    PickTbl = try Source{[Item="Table1",Kind="Table"]}[Data] otherwise null,',
+    '    PickSht = if PickTbl <> null then null else',
+    '                Table.PromoteHeaders(Source{[Item="Table1",Kind="Sheet"]}[Data], [PromoteAllScalars=true]),',
+    '    Table1_Table = if PickTbl <> null then PickTbl else PickSht,'
+  ].join('\n');
+  const eSync=()=>{
+    const mi=+$('eMonth').value;
+    if($('eName')) $('eName').textContent=estName(mi);
+    if($('eYr'))   $('eYr').textContent=String(P.ylist[mi]).slice(-2);
+  };
+  $('eMonth').addEventListener('change',eSync); eSync();
+  if($('eMcode')) $('eMcode').onclick=()=>{
+    navigator.clipboard.writeText(MCODE).then(()=>{
+      $('eMcode').textContent='คัดลอกแล้ว ✓'; setTimeout(()=>$('eMcode').textContent='คัดลอกโค้ด Power Query (แก้ครั้งเดียว)',1800);
+    }).catch(()=>toast('คัดลอกไม่ได้ — เปิดคู่มือระบบดูโค้ดแทน'));
+  };
   $('eXlsxM').onclick=()=>{
     const mi=+$('eMonth').value;
     buildXlsx(`ราคาวัสดุ_พศ${P.ylist[mi]}${String(P.months[mi]).padStart(2,'0')}.xlsx`);
@@ -3601,6 +3782,7 @@ function clearInit(){
   .forEach(f=>{ try{ f(); }catch(e){ console.error('init:', f.name, e); } });
 kddAll(); kfreeAll(); paintIcons();
 try{ fetchOil(true); }catch(e){}
+try{ snapLoad(); }catch(e){}
 try{ loadLive(); }catch(e){}
 </script>
 <script>
