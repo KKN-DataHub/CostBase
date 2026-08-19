@@ -1,0 +1,24 @@
+{
+  "name": "CostBase — ฐานข้อมูลราคาวัสดุ ขทช.ขอนแก่น",
+  "short_name": "CostBase",
+  "description": "ฐานข้อมูลราคาวัสดุก่อสร้าง ค่าขนส่งตาม ว 477 และสถิติราคา — แขวงทางหลวงชนบทขอนแก่น",
+  "lang": "th",
+  "dir": "ltr",
+  "start_url": "./",
+  "scope": "./",
+  "display": "standalone",
+  "orientation": "any",
+  "theme_color": "#1B2A4A",
+  "background_color": "#1B2A4A",
+  "categories": ["productivity", "business", "utilities"],
+  "icons": [
+    { "src": "./icon-192.png", "sizes": "192x192", "type": "image/png", "purpose": "any" },
+    { "src": "./icon-512.png", "sizes": "512x512", "type": "image/png", "purpose": "any" },
+    { "src": "./icon-512-maskable.png", "sizes": "512x512", "type": "image/png", "purpose": "maskable" }
+  ],
+  "shortcuts": [
+    { "name": "คำนวณระยะขนส่ง", "short_name": "ค่าขนส่ง", "url": "./#dist", "icons": [{ "src": "./icon-192.png", "sizes": "192x192" }] },
+    { "name": "นำเข้าข้อมูล", "short_name": "นำเข้า", "url": "./#imp", "icons": [{ "src": "./icon-192.png", "sizes": "192x192" }] },
+    { "name": "สถิติราคา", "short_name": "สถิติ", "url": "./#stat", "icons": [{ "src": "./icon-192.png", "sizes": "192x192" }] }
+  ]
+}

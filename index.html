@@ -7,7 +7,15 @@
 <meta name="description" content="CostBase — ระบบฐานข้อมูลราคาวัสดุก่อสร้างและค่าขนส่งตาม ว 477 · แขวงทางหลวงชนบทขอนแก่น">
 <meta name="theme-color" content="#1B2A4A">
 <link rel="icon" type="image/svg+xml" href="data:image/svg+xml,%3Csvg%20xmlns%3D%27http%3A%2F%2Fwww.w3.org%2F2000%2Fsvg%27%20viewBox%3D%270%200%2064%2064%27%3E%3Crect%20width%3D%2764%27%20height%3D%2764%27%20rx%3D%2714%27%20fill%3D%27%231B2A4A%27%2F%3E%3Crect%20x%3D%2713%27%20y%3D%2734%27%20width%3D%277%27%20height%3D%2716%27%20rx%3D%272%27%20fill%3D%27%230d9488%27%2F%3E%3Crect%20x%3D%2724%27%20y%3D%2726%27%20width%3D%277%27%20height%3D%2724%27%20rx%3D%272%27%20fill%3D%27%233fb9a8%27%2F%3E%3Crect%20x%3D%2735%27%20y%3D%2718%27%20width%3D%277%27%20height%3D%2732%27%20rx%3D%272%27%20fill%3D%27%23C99B3F%27%2F%3E%3Cpath%20d%3D%27M46%2020%20L52%2014%20M52%2014%20L52%2020%20M52%2014%20L46%2014%27%20stroke%3D%27%23C99B3F%27%20stroke-width%3D%273%27%20stroke-linecap%3D%27round%27%20stroke-linejoin%3D%27round%27%20fill%3D%27none%27%2F%3E%3C%2Fsvg%3E">
-<link rel="apple-touch-icon" href="data:image/svg+xml,%3Csvg%20xmlns%3D%27http%3A%2F%2Fwww.w3.org%2F2000%2Fsvg%27%20viewBox%3D%270%200%2064%2064%27%3E%3Crect%20width%3D%2764%27%20height%3D%2764%27%20rx%3D%2714%27%20fill%3D%27%231B2A4A%27%2F%3E%3Crect%20x%3D%2713%27%20y%3D%2734%27%20width%3D%277%27%20height%3D%2716%27%20rx%3D%272%27%20fill%3D%27%230d9488%27%2F%3E%3Crect%20x%3D%2724%27%20y%3D%2726%27%20width%3D%277%27%20height%3D%2724%27%20rx%3D%272%27%20fill%3D%27%233fb9a8%27%2F%3E%3Crect%20x%3D%2735%27%20y%3D%2718%27%20width%3D%277%27%20height%3D%2732%27%20rx%3D%272%27%20fill%3D%27%23C99B3F%27%2F%3E%3Cpath%20d%3D%27M46%2020%20L52%2014%20M52%2014%20L52%2020%20M52%2014%20L46%2014%27%20stroke%3D%27%23C99B3F%27%20stroke-width%3D%273%27%20stroke-linecap%3D%27round%27%20stroke-linejoin%3D%27round%27%20fill%3D%27none%27%2F%3E%3C%2Fsvg%3E">
+<link rel="apple-touch-icon" sizes="180x180" href="apple-touch-icon.png">
+<link rel="icon" type="image/png" sizes="32x32" href="favicon-32.png">
+<link rel="icon" type="image/png" sizes="192x192" href="icon-192.png">
+<link rel="manifest" href="manifest.webmanifest">
+<meta name="apple-mobile-web-app-capable" content="yes">
+<meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
+<meta name="apple-mobile-web-app-title" content="CostBase">
+<meta name="application-name" content="CostBase">
+<meta name="mobile-web-app-capable" content="yes">
 <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/leaflet/1.9.4/leaflet.min.css">
 <style>
 @import url('https://fonts.googleapis.com/css2?family=Sarabun:wght@400;600;700&display=swap');
@@ -189,6 +197,10 @@ tbody tr:hover{background:var(--teal-soft)}
 @media(min-width:1700px){.main{padding:20px 40px 40px}}
 @media(min-width:2200px){.main{padding:20px 72px 40px}}
 .brand .chip{color:#fff}
+.instbtn{margin-top:9px;width:100%;background:rgba(13,148,136,.22);border:1px solid rgba(63,185,168,.55);
+  color:#bfeee5;font-family:inherit;font-size:11.5px;font-weight:600;padding:6px 8px;border-radius:8px;
+  cursor:pointer;transition:background .18s}
+.instbtn:hover{background:rgba(13,148,136,.38);color:#fff}
 .cheap td{background:#FDF6E3!important}
 .newsitem{padding:7px 0;border-bottom:1px dashed var(--grid);font-size:12.5px;line-height:1.6}
 .newsitem:last-child{border-bottom:none}
@@ -548,6 +560,7 @@ canvas{max-width:100%}
     <h1><span class="blogo" aria-hidden="true"></span>CostBase</h1>
     <div class="sub">ฐานข้อมูลราคาวัสดุ · แขวงทางหลวงชนบทขอนแก่น</div>
     <div class="chips"><span class="chip" id="bLatest">—</span><span class="chip" id="bVer">v6.0</span></div>
+    <button class="instbtn" id="installBtn" style="display:none" title="เพิ่ม CostBase ลงหน้าจอโฮม เปิดใช้เหมือนแอป">⤓ ติดตั้งลงหน้าจอโฮม</button>
   </div>
   <nav class="nav" id="nav">
     <button data-p="sum" class="active"><span class="ico">▦</span>หน้าสรุป</button>
@@ -3647,6 +3660,27 @@ function clearInit(){
 kddAll(); kfreeAll(); paintIcons();
 try{ fetchOil(true); }catch(e){}
 try{ loadLive(); }catch(e){}
+</script>
+<script>
+/* ── ติดตั้งลงหน้าจอโฮมได้ (PWA) ────────────────────────────────
+   ทำงานเฉพาะตอนเปิดผ่าน http/https (เช่น GitHub Pages)
+   ถ้าเปิดไฟล์ index.html จากเครื่องตรง ๆ จะข้ามส่วนนี้ ใช้งานได้เหมือนเดิมทุกอย่าง */
+if('serviceWorker' in navigator && location.protocol.indexOf('http')===0){
+  window.addEventListener('load',()=>navigator.serviceWorker.register('sw.js').catch(()=>{}));
+}
+let deferredPrompt=null;
+window.addEventListener('beforeinstallprompt',e=>{
+  e.preventDefault(); deferredPrompt=e;
+  const b=document.getElementById('installBtn'); if(b) b.style.display='';
+});
+window.addEventListener('appinstalled',()=>{
+  const b=document.getElementById('installBtn'); if(b) b.style.display='none';
+});
+document.addEventListener('click',e=>{
+  const t=e.target.closest&&e.target.closest('#installBtn'); if(!t||!deferredPrompt) return;
+  deferredPrompt.prompt();
+  deferredPrompt.userChoice.finally(()=>{ deferredPrompt=null; t.style.display='none'; });
+});
 </script>
 </body>
 </html>
