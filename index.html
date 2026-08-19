@@ -948,8 +948,9 @@ canvas{max-width:100%}
       <label class="f" style="margin-top:12px">ยกยอดราคาเดือนก่อน เมื่อเดือนที่เลือกไม่มีราคา</label>
       <select id="eCarry"><option value="1" selected>เปิด — ใช้ราคาล่าสุดที่มี (แนะนำ)</option><option value="0">ปิด — เดือนไหนไม่มี ตัดทิ้ง</option></select>
       <div class="statusline" style="margin-top:14px">
-        <button class="btn" id="eXlsx">⬇ ไฟล์ราคารายเดือน (สำหรับ DRR_KK Estimate)</button>
-        <button class="btn ghost" id="eXlsxM">สำเนาตั้งชื่อเอง (.xlsx)</button>
+        <button class="btn" id="eXlsx" title="ชื่อไฟล์คงที่เสมอ — วางทับไฟล์เดิมแล้วกดรีเฟรชในไฟล์ Estimate ได้เลย">⬇ ราคาวัสดุประจำเดือน.xlsx → Estimate</button>
+        <button class="btn ghost" id="eXlsxM" title="ชื่อตามเดือน เอาไว้เก็บประวัติย้อนหลัง">สำเนาเก็บประวัติ (ชื่อตามเดือน)</button>
+        <button class="btn ghost" id="eSrcX" title="บัญชีแหล่งวัสดุ + พิกัด จากบัญชีคุม — ไฟล์กลางที่ Estimate ทุกไฟล์ชี้ (อัปเดตเฉพาะตอนบัญชีแหล่งเปลี่ยน)">⬇ แหล่งวัสดุ.xlsx</button>
         <button class="btn ghost" id="eCsv">.csv</button>
       </div>
       <div class="hint" id="eInfo" style="margin-top:10px">—</div>
@@ -1129,7 +1130,7 @@ const EMPTY = () => P.series.length===0;
 let LIVE = {on:false, added:0};
 const fmt = n => n==null?'—':Number(n).toLocaleString('th-TH',{minimumFractionDigits:2,maximumFractionDigits:2});
 const $ = id => document.getElementById(id);
-const APPVER='6.6';        /* เลขรุ่นที่เดียว — ที่อื่นดึงจากตัวนี้ */
+const APPVER='6.8';        /* เลขรุ่นที่เดียว — ที่อื่นดึงจากตัวนี้ */
 const APPDATE='19 ส.ค. 2569';   /* วันที่ของรุ่นนี้ ที่เดียวเหมือนกัน */
 /* ⚠ ป้ายรุ่นบนแถบข้างเคยเป็นข้อความตายตัวใน HTML (v6.2) พอขึ้นรุ่นใหม่แล้วลืมแก้
    ผู้ใช้เลยเห็นเลขรุ่นเก่าทั้งที่โค้ดใหม่หมดแล้ว — ต่อไปนี้เขียนจาก APPVER เสมอ */
@@ -3992,9 +3993,14 @@ function expInit(){
     const {rows}=expRows(mi,carry,eCatSel);
     const aoa=[['รายการวัสดุ','หน่วย','ราคา','แหล่งวัสดุ','ประเภท'],...rows.map(r=>r.slice(0,5))];
     const noted=rows.filter(r=>r[5]);
-    const extra = noted.length ? {name:'หมายเหตุยกยอด',
-      aoa:[['รายการวัสดุ','แหล่งวัสดุ','เดือนที่ส่งออก','ใช้ราคาเดือน','ราคา'],
-           ...noted.map(r=>[r[0],r[3],mLabI(mi),r[5],r[2]])]} : null;
+    /* ชื่อไฟล์คงที่แล้ว เดือนเลยต้องประกาศไว้ในไฟล์แทน — ไว้ชีตหมายเหตุ ไม่แตะ Table1 */
+    const extra = {name:'หมายเหตุ',
+      aoa:[['ราคาของเดือน', mLabI(mi)],
+           ['ส่งออกจาก','CostBase v'+APPVER],
+           ['จำนวนแถว', rows.length],
+           ...(noted.length?[[''],['รายการที่ยกยอดราคาจากเดือนก่อน (เดือนที่เลือกยังไม่มีราคา)'],
+             ['รายการวัสดุ','แหล่งวัสดุ','ใช้ราคาเดือน','ราคา'],
+             ...noted.map(r=>[r[0],r[3],r[5],r[2]])]:[])]};
     /* สร้างไฟล์เองไม่ผ่าน SheetJS เพราะ SheetJS รุ่นฟรีสร้าง "ตาราง (ListObject)" ไม่ได้
        — ได้แค่ชีตชื่อ Table1 ซึ่ง Power Query เดิมในไฟล์ Estimate อ่านไม่เจอ */
     const blob=estWorkbook(aoa,extra);
@@ -4005,11 +4011,34 @@ function expInit(){
   /* ชื่อไฟล์ต้องตรงแบบที่ Power Query ในไฟล์ DRR_KK Estimate ไล่หา:
      ขึ้นต้นด้วย "<เลขเดือน>." + มีตัวย่อเดือนไทย + ลงท้าย .xlsx
      เช่น  8. ราคาวัสดุ เดือน ส.ค. 69.xlsx   (วางในโฟลเดอร์ "ปี 69") */
-  const estName=mi=>`${P.months[mi]}. ราคาวัสดุ เดือน ${TH_M[P.months[mi]-1]} ${String(P.ylist[mi]).slice(-2)}.xlsx`;
-  $('eXlsx').onclick=()=>buildXlsx(estName(+$('eMonth').value));
+  /* ชื่อไฟล์หลักคงที่เสมอ — Power Query ในไฟล์ Estimate ชี้ไฟล์เดียวครั้งเดียว
+     เดือนใหม่ก็ส่งออกทับไฟล์เดิม แล้วกดรีเฟรชอย่างเดียว ไม่ต้องไล่หาไฟล์ทีละเดือน
+     (ของเดิมตั้งชื่อตามเดือน "8. ราคาวัสดุ เดือน ส.ค. 69.xlsx" คิวรีต้องไล่หาไฟล์เอง) */
+  $('eXlsx').onclick=()=>buildXlsx('ราคาวัสดุประจำเดือน.xlsx');
+  /* สำเนาเก็บประวัติ — ชื่อตามเดือน เอาไว้เก็บย้อนหลังในโฟลเดอร์ ปี 69 */
   $('eXlsxM').onclick=()=>{
     const mi=+$('eMonth').value;
-    buildXlsx(`ราคาวัสดุ_พศ${P.ylist[mi]}${String(P.months[mi]).padStart(2,'0')}.xlsx`);
+    buildXlsx(`${P.months[mi]}. ราคาวัสดุ เดือน ${TH_M[P.months[mi]-1]} ${String(P.ylist[mi]).slice(-2)}.xlsx`);
+  };
+  /* บัญชีแหล่งวัสดุกลาง — ไฟล์เดียวใช้ร่วมกันทุกไฟล์ Estimate เหมือนไฟล์ราคา
+     Table4 ดึงพิกัด + เช็คชื่อแหล่งจากไฟล์นี้ อัปเดตเฉพาะตอนบัญชีแหล่งเปลี่ยน (นาน ๆ ที) */
+  if($('eSrcX')) $('eSrcX').onclick=()=>{
+    if(!SRC.length){ toast('ยังไม่มีบัญชีแหล่งวัสดุ — อัปโหลดบัญชีคุม (ชีต แหล่งวัสดุ) ที่หน้า ระบบ ก่อน'); return; }
+    const aoa=[['แหล่งวัสดุ','ชนิด','ละติจูด','ลองจิจูด','พิกัด'],
+      ...SRC.slice().sort((a,b)=>a.name.localeCompare(b.name,'th'))
+        .map(x=>[x.name, x.t||'', x.lat, x.lon, x.lat.toFixed(6)+', '+x.lon.toFixed(6)])];
+    const note=[['ที่มาของไฟล์นี้'],
+      ['บัญชีแหล่งวัสดุจากบัญชีคุม (แท็บ SOURCES) · CostBase v'+APPVER],
+      ['จำนวนแหล่ง', SRC.length],
+      [''],
+      ['ไฟล์นี้เป็นไฟล์กลาง วางที่เดียวกับ ราคาวัสดุประจำเดือน.xlsx'],
+      ['ทุกไฟล์ Estimate ชี้มาที่นี่ — อัปเดตเฉพาะตอนเพิ่ม/แก้แหล่งในบัญชีคุม'],
+      ['ห้ามแก้หัวตารางชีต "แหล่งวัสดุ" — Power Query อ่านตามชื่อคอลัมน์']];
+    const blob=xlsxBuild([
+      {n:'แหล่งวัสดุ',aoa,w:[40,14,13,13,26],table:1},
+      {n:'อ่านก่อนใช้',aoa:note,w:[70]}]);
+    saveBlob(blob,'แหล่งวัสดุ.xlsx');
+    toast('ได้บัญชีแหล่ง '+SRC.length+' แหล่ง — วางที่เดียวกับไฟล์ราคา แล้วทุก Estimate กดรีเฟรช');
   };
   $('eCsv').onclick=()=>{
     const mi=+$('eMonth').value, carry=$('eCarry').value==='1';
