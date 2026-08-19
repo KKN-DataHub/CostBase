@@ -655,7 +655,6 @@ canvas{max-width:100%}
       <button class="btn ghost" id="dCsv">⬇ CSV</button>
       <button class="btn ghost" id="dXlsx">⬇ Excel เปรียบเทียบ</button>
       <button class="btn ghost" id="dDist" title="ได้ไฟล์ ระยะขนส่ง.xlsx — วางไว้โฟลเดอร์เดียวกับไฟล์ Estimate แล้วกด ข้อมูล → รีเฟรชทั้งหมด ช่องระยะใน Table4 จะเติมเอง">⬇ ระยะขนส่ง.xlsx → Estimate</button>
-      <button class="btn gold" id="dPrint">🖨 พิมพ์ / PDF</button>
     </div>
   </div>
   <div class="tabbar no-print">
@@ -706,12 +705,21 @@ canvas{max-width:100%}
     </div>
     <div>
       <div id="viewCmp">
+        <div class="statusline no-print" style="margin-bottom:10px">
+          <button class="btn gold" id="dPrint"
+            title="พิมพ์ 1 ชุด: บันทึกตรวจสอบระยะทาง+ค่าขนส่ง · ตารางเปรียบเทียบทุกวัสดุที่เลือก · ช่องลงชื่อ — ใช้แนบเรื่องราคากลาง">🖨 พิมพ์เอกสารเปรียบเทียบ / PDF</button>
+          <span class="hint">พิมพ์: บันทึกตรวจระยะ+ค่าขนส่ง · ตารางเปรียบเทียบ<b>ทุกวัสดุที่เลือก</b> · ช่องลงชื่อ (สำหรับแนบเรื่องราคากลาง)</span>
+        </div>
         <div id="cmpCards"><div class="card"><div class="hint" style="padding:8px">เลือกหมวด → เลือกวัสดุ → กด คำนวณ · ระบบจะแสดงทุกแหล่งที่มีวัสดุนั้น (ทั้งโรงโม่และพาณิชย์) เรียงราคารวมถูกสุดขึ้นก่อน</div></div></div>
       </div>
       <div id="viewDist" style="display:none">
         <div class="card">
           <h2>ระยะทางจากทุกแหล่งถึงจุดกึ่งกลางโครงการ</h2>
-          <div class="statusline no-print"><button class="btn ghost" id="dCopy">คัดลอกลง Table4</button></div>
+          <div class="statusline no-print">
+            <button class="btn ghost" id="dCopy"
+              title="คัดลอกตารางนี้ (แหล่ง | รถ 6 ล้อ | รถ 10 ล้อ | รถพ่วง) เข้าคลิปบอร์ด — ไปกด Ctrl+V วางใน Excel ได้เลย สำหรับคนที่อยากวางมือเร็ว ๆ ไม่ใช้ไฟล์">คัดลอกทั้งตาราง (วางใน Excel)</button>
+            <button class="btn gold" id="dPrint2" title="พิมพ์เอกสารชุดเดียวกับหน้าเปรียบเทียบ">🖨 พิมพ์ / PDF</button>
+          </div>
           <div style="margin-top:9px"><table id="tblDist"><thead><tr>
             <th style="width:48px">ลำดับ</th><th style="text-align:left">แหล่งวัสดุ</th><th style="width:130px">ชนิด</th>
             <th class="num" style="width:120px">ระยะ L (กม.)</th><th style="width:150px">วิธีวัด</th><th style="width:110px">แผนที่</th>
@@ -856,8 +864,8 @@ canvas{max-width:100%}
       <!-- ── โหมด 1: กรอกทีละรายการ ── -->
       <div id="impModeMan">
       <div class="frow ymc">
-        <div><label class="f">ปี พ.ศ.</label><input type="number" id="mYear" min="2560" max="2600"></div>
-        <div><label class="f">เดือน</label><select id="mMonth"></select></div>
+        <div><label class="f">ปี พ.ศ. <span class="req">*</span></label><input type="number" id="mYear" min="2560" max="2600"></div>
+        <div><label class="f">เดือน <span class="req">*</span></label><select id="mMonth"></select></div>
         <div><label class="f">ช่องทาง <span class="req">*</span></label><select id="mChan">
           <option value="">— เลือก —</option>
           <option value="ใบเสนอราคา">ใบเสนอราคา / หนังสือจากผู้ผลิต</option>
@@ -1130,7 +1138,7 @@ const EMPTY = () => P.series.length===0;
 let LIVE = {on:false, added:0};
 const fmt = n => n==null?'—':Number(n).toLocaleString('th-TH',{minimumFractionDigits:2,maximumFractionDigits:2});
 const $ = id => document.getElementById(id);
-const APPVER='6.8';        /* เลขรุ่นที่เดียว — ที่อื่นดึงจากตัวนี้ */
+const APPVER='6.9';        /* เลขรุ่นที่เดียว — ที่อื่นดึงจากตัวนี้ */
 const APPDATE='19 ส.ค. 2569';   /* วันที่ของรุ่นนี้ ที่เดียวเหมือนกัน */
 /* ⚠ ป้ายรุ่นบนแถบข้างเคยเป็นข้อความตายตัวใน HTML (v6.2) พอขึ้นรุ่นใหม่แล้วลืมแก้
    ผู้ใช้เลยเห็นเลขรุ่นเก่าทั้งที่โค้ดใหม่หมดแล้ว — ต่อไปนี้เขียนจาก APPVER เสมอ */
@@ -2880,7 +2888,9 @@ $('dDist').onclick=()=>{
   saveBlob(blob,'ระยะขนส่ง.xlsx');
   toast('ได้ระยะทาง '+out.length+' แหล่ง — วางไฟล์ไว้โฟลเดอร์เดียวกับไฟล์ Estimate แล้วกด รีเฟรชทั้งหมด');
 };
-$('dPrint').onclick=()=>{buildCalcSheet(); if(map){map.invalidateSize(); setTimeout(()=>window.print(),350);} else window.print();};
+const _doPrint=()=>{buildCalcSheet(); if(map){map.invalidateSize(); setTimeout(()=>window.print(),350);} else window.print();};
+$('dPrint').onclick=_doPrint;
+if($('dPrint2')) $('dPrint2').onclick=_doPrint;
 
 /* ============ สถิติราคา ============ */
 let sChart=null, sSel={type:'-1', mat:-1, srcs:new Set()};
@@ -3297,8 +3307,13 @@ function impInit(){
   };
   $('mUnit').oninput=()=>{ const ev=$('mMat').onchange; if(ev) ev(); };
   const getSrc=()=>$('mSrcSel').value==='__new__'?$('mSrc').value.trim():$('mSrcSel').value;
-  $('mYear').value=P.ylist[LAST];
-  $('mMonth').innerHTML=TH_M.map((t,i)=>`<option value="${i+1}" ${i+1===P.months[LAST]?'selected':''}>${t}</option>`).join('');
+  /* ปี/เดือน ก็ต้องเริ่มว่างเหมือนช่องอื่น — ไม่ทิ้งค่าตั้งต้นให้เผลอติดไปกับข้อมูล
+     (คงค่าที่ผู้ใช้เลือกไว้ ถ้า impInit ถูกเรียกซ้ำตอนคลังโหลดเสร็จ) */
+  if(!$('mYear').value) $('mYear').placeholder='เช่น '+P.ylist[LAST];
+  { const keep=$('mMonth').value;
+    $('mMonth').innerHTML='<option value="">— เลือก —</option>'
+      +TH_M.map((t,i)=>`<option value="${i+1}">${t}</option>`).join('');
+    if(keep) $('mMonth').value=keep; }
   $('mAdd').onclick=()=>{
     const mat=$('mMat').value.trim(), unit=$('mUnit').value.trim(), price=parseFloat($('mPrice').value);
     const y=+$('mYear').value, mo=+$('mMonth').value;
