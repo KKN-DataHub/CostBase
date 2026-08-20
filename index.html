@@ -17,6 +17,18 @@
 <meta name="application-name" content="CostBase">
 <meta name="mobile-web-app-capable" content="yes">
 <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/leaflet/1.9.4/leaflet.min.css">
+<!--
+════════════════════════════════════════════════════════════════
+สัญญาก่อนแก้ไฟล์นี้ (อ่านก่อนเสมอ — สำหรับคนและ AI)
+1. อ่าน "ธรรมนูญระบบ CostBase.md" ในโฟลเดอร์เดียวกัน: กฎเหล็ก 12 ข้อ
+   ทุกข้อมาจากบั๊กจริง · สัญญาข้อมูล · ระเบียบการแก้และปล่อยรุ่น
+2. แก้เสร็จรันชุดทดสอบ: bash ทดสอบระบบ/รันทดสอบ.sh  ต้องเขียวทุกชุด
+3. ปล่อยรุ่นผ่าน: python3 ทดสอบระบบ/ปล่อยรุ่น.py <เลขรุ่น>  ห้าม zip มือ
+4. กฎที่พลาดบ่อยสุด: R1 ห้ามอ้างเดือน/รายการด้วยลำดับช่อง ใช้ค่าจริง ·
+   R2 ช่องกรอกเริ่มว่าง · R3 เลขรุ่นดึงจาก APPVER เท่านั้น ·
+   R9 ชื่อไฟล์ส่งออก 3 ตัว เป็นสัญญากับไฟล์ Estimate ห้ามเปลี่ยน
+════════════════════════════════════════════════════════════════
+-->
 <style>
 @import url('https://fonts.googleapis.com/css2?family=Sarabun:wght@400;600;700&display=swap');
 /* ============================================================
@@ -1151,8 +1163,8 @@ const EMPTY = () => P.series.length===0;
 let LIVE = {on:false, added:0};
 const fmt = n => n==null?'—':Number(n).toLocaleString('th-TH',{minimumFractionDigits:2,maximumFractionDigits:2});
 const $ = id => document.getElementById(id);
-const APPVER='7.0';        /* เลขรุ่นที่เดียว — ที่อื่นดึงจากตัวนี้ */
-const APPDATE='19 ส.ค. 2569';   /* วันที่ของรุ่นนี้ ที่เดียวเหมือนกัน */
+const APPVER='7.2';        /* เลขรุ่นที่เดียว — ที่อื่นดึงจากตัวนี้ */
+const APPDATE='20 ส.ค. 2569';   /* วันที่ของรุ่นนี้ ที่เดียวเหมือนกัน */
 /* ⚠ ป้ายรุ่นบนแถบข้างเคยเป็นข้อความตายตัวใน HTML (v6.2) พอขึ้นรุ่นใหม่แล้วลืมแก้
    ผู้ใช้เลยเห็นเลขรุ่นเก่าทั้งที่โค้ดใหม่หมดแล้ว — ต่อไปนี้เขียนจาก APPVER เสมอ */
 try{ const _bv=document.getElementById('bVer'); if(_bv) _bv.textContent='v'+APPVER;
@@ -1412,7 +1424,8 @@ function snapSave(){
       chan:Object.fromEntries(Object.entries(CHAN).map(([k,o])=>[k,{
         ym:o.ym, mats:[...o.mats],
         docs:Object.fromEntries(Object.entries(o.docs).map(([m,st])=>[m,[...st]]))}])),
-      conn:{prices:CONN.prices,reg:CONN.reg,src:CONN.src,oil:CONN.oil}};
+      conn:{prices:CONN.prices,reg:CONN.reg,src:CONN.src,oil:CONN.oil},
+      oilh:OILH};                        /* การ์ดน้ำมันอ่านจาก OILH — ไม่เก็บไว้ จอแรกจะขึ้น "ยังไม่มีข้อมูล" ทั้งที่มี */
     const txt=JSON.stringify(o);
     if(txt.length>4200000) { localStorage.removeItem(SNAP_KEY); return; }   /* ใหญ่เกินโควตา ไม่เก็บ */
     localStorage.setItem(SNAP_KEY,txt);
@@ -1434,6 +1447,7 @@ function snapLoad(){
     });
     SRC.length=0; (o.src||[]).forEach(x=>SRC.push(x)); rebuildSrcIndex();
     if(o.conn){ CONN.prices=o.conn.prices||0; CONN.reg=o.conn.reg||0; CONN.src=o.conn.src||0; CONN.oil=o.conn.oil||CONN.oil; }
+    if(Array.isArray(o.oilh)) OILH=o.oilh;
     LIVE.on=true; REG.on=!!(o.matCat&&Object.keys(o.matCat).length);
     const st=$('liveStat');
     const mins=Math.round((Date.now()-(o.t||0))/60000);
@@ -2904,6 +2918,9 @@ $('dDist').onclick=()=>{
 /* พิมพ์แบบระบุขอบเขต — 'doc' = เอกสารเปรียบเทียบทั้งชุด · ส่ง element มา = พิมพ์เฉพาะชิ้นนั้น
    วิธีทำ: ย้ายชิ้นเข้า #prBox ชั่วคราว (จอปกติซ่อน ตอนพิมพ์โชว์เฉพาะกล่องนี้) พิมพ์เสร็จย้ายกลับที่เดิม */
 function printScope(mode){
+  if(printScope._busy) return;          /* กดรัว ๆ ระหว่างรอหน้าต่างพิมพ์ = เรียกซ้อน
+                                           ตัวที่สองจะย้ายชิ้นงานเข้ากล่องพิมพ์ค้างถาวร */
+  printScope._busy=true;
   const node = mode==='doc' ? (buildCalcSheet(), $('calcSheet')) : mode;
   const ph=document.createComment('pr'); node.parentNode.insertBefore(ph,node);
   $('prBox').appendChild(node);
@@ -2911,7 +2928,7 @@ function printScope(mode){
   let done=false;
   const back=()=>{ if(done) return; done=true;
     ph.parentNode.insertBefore(node,ph); ph.remove();
-    document.body.classList.remove('pr-one'); };
+    document.body.classList.remove('pr-one'); printScope._busy=false; };
   window.addEventListener('afterprint',back,{once:true});
   setTimeout(()=>{ window.print(); setTimeout(back,300); },80);
 }
@@ -3546,7 +3563,8 @@ function impInit(){
       throw new Error('หัวตารางไม่ครบ — ต้องมีคอลัมน์ รายการวัสดุ · ราคา · แหล่งวัสดุ เป็นอย่างน้อย'
         +(sheetsSkip.length?'\nชีตที่ลองอ่าน: '+sheetsSkip.join(' · '):'')
         +'\n(กดปุ่ม ดาวน์โหลดแบบฟอร์ม ดูตัวอย่าง)');
-    /* กันคีย์ซ้ำในคิวเดียวกัน — ปี|เดือน|ชื่อ|แหล่ง|หน่วย ซ้ำ ฝั่งเซิร์ฟเวอร์จะทิ้งแถวหลังเงียบ ๆ */
+    /* กันคีย์ซ้ำในคิวเดียวกัน — ปี|เดือน|ชื่อ|แหล่ง|หน่วย ซ้ำ เก็บแถวหลังสุดไว้แถวเดียว
+       (Code.gs รุ่น 24 ขึ้นไปให้แถวหลังทับแถวก่อนอยู่แล้ว ตัดตั้งแต่ฝั่งนี้ให้คิวสะอาดตา) */
     const dup=dedupeQueue(started);
     renderQueue();
     try{ drawNoGeo(); }catch(e){}
@@ -3885,7 +3903,7 @@ function zipStore(files){
   return buf;
 }
 const _xe=s=>String(s==null?'':s).replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;')
-  .replace(/"/g,'&quot;').replace(/\x00-\x08|\x0b|\x0c|\x0e-\x1f/g,'');
+  .replace(/"/g,'&quot;').replace(/[\x00-\x08\x0b\x0c\x0e-\x1f]/g,'');
 const _colName=n=>{ let s=''; n++; while(n>0){ const m=(n-1)%26; s=String.fromCharCode(65+m)+s; n=(n-m-1)/26; } return s; };
 function _sheetXml(aoa,opt){
   opt=opt||{};
@@ -3992,8 +4010,10 @@ function estWorkbook(aoa,extra){
 function expInit(){
   /* คงเดือนที่ผู้ใช้เลือกไว้ — expInit ถูกเรียกซ้ำทุกครั้งที่ loadLive() เสร็จ (3-10 วิหลังเปิด)
      ของเดิมเด้งกลับเดือนล่าสุดเงียบ ๆ เลือก ก.ค. ไว้แล้วกดส่งออกอาจได้ไฟล์ ก.ย. */
-  const _prevYM=(()=>{ const i=+($('eMonth').value); return (i>=0&&i<P.months.length)?P.ylist[i]*100+P.months[i]:0; })();
-  const _keep=_prevYM?P.months.findIndex((m,i)=>P.ylist[i]*100+m===_prevYM):-1;
+  /* คงเดือนที่ผู้ใช้เลือกไว้ — ต้องจำเป็น "ปี+เดือนจริง" ตอนที่ผู้ใช้กดเลือกเอง เท่านั้น
+     ห้ามอ่านย้อนจากลำดับช่องตอนวาดใหม่ เพราะ ① ช่องว่างตอนบูตจะถูกตีเป็นเดือนแรกสุด
+     ② โหลดคลังแล้วมีการแทรกเดือน ลำดับช่องเลื่อน ชี้กลับไปได้คนละเดือน */
+  const _keep=window._eMonthPick?P.months.findIndex((m,i)=>P.ylist[i]*100+m===window._eMonthPick):-1;
   const _sel=_keep>=0?_keep:LAST;
   $('eMonth').innerHTML=P.months.map((m,i)=>`<option value="${i}" ${i===_sel?'selected':''}>${mLabI(i)}</option>`).join('');
   /* หมวดกรอง (เลือกหลายหมวด) — จากบัญชีคุมถ้ามี ไม่มีใช้ประเภทที่พบในคลัง */
@@ -4029,6 +4049,9 @@ function expInit(){
     $('tblPrev').innerHTML=h+`</tbody>`;
   };
   drawCat();
+  if(!$('eMonth').dataset.pick){ $('eMonth').dataset.pick='1';
+    $('eMonth').addEventListener('change',()=>{ const i=+$('eMonth').value;
+      if(i>=0&&i<P.months.length) window._eMonthPick=P.ylist[i]*100+P.months[i]; }); }
   $('eMonth').onchange=upd; $('eCarry').onchange=upd; upd();
   const buildXlsx=(fname)=>{
     const mi=+$('eMonth').value, carry=$('eCarry').value==='1';
