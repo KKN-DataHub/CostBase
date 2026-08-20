@@ -570,11 +570,22 @@ th.sortable.desc::after{content:'↓';opacity:1}
 #covTabs{border-bottom:1px solid var(--hairline);gap:0;margin-bottom:0}
 canvas{max-width:100%}
 @media print{
-  .calcsheet{display:block}
+  /* ตอนพิมพ์ต้องปิดแอนิเมชันทั้งหมด — การ์ดใช้แอนิเมชันโผล่แบบ backwards
+     การ์ดที่อยู่ในมุมมองที่ยังไม่เคยเปิด แอนิเมชันไม่เคยเริ่ม opacity เลยค้างที่ 0
+     พิมพ์ออกมาได้กระดาษเปล่าทั้งแผ่น */
+  *,*::before,*::after{animation:none!important;transition:none!important}
+  /* คอนเซปปุ่มพิมพ์: ปุ่มบนหัวเพจ = พิมพ์ทั้งหน้าตามที่เห็น ·
+     ปุ่มเหนือตารางไหน = พิมพ์เฉพาะชิ้นนั้น (ชิ้นถูกย้ายเข้า #prBox ชั่วคราว) */
   .no-print{display:none!important}
   #map{height:340px}
   .page{display:none!important}.page.active{display:block!important}
+  body.pr-one .shell{display:none!important}
+  body.pr-one #prBox{display:block}
+  #prBox .calcsheet{display:block}
+  #prBox .tw{max-height:none!important;overflow:visible!important}
+  #prBox .card{box-shadow:none;border:none}
 }
+#prBox{display:none}
 </style>
 </head>
 <body>
@@ -655,6 +666,7 @@ canvas{max-width:100%}
       <button class="btn ghost" id="dCsv">⬇ CSV</button>
       <button class="btn ghost" id="dXlsx">⬇ Excel เปรียบเทียบ</button>
       <button class="btn ghost" id="dDist" title="ได้ไฟล์ ระยะขนส่ง.xlsx — วางไว้โฟลเดอร์เดียวกับไฟล์ Estimate แล้วกด ข้อมูล → รีเฟรชทั้งหมด ช่องระยะใน Table4 จะเติมเอง">⬇ ระยะขนส่ง.xlsx → Estimate</button>
+      <button class="btn gold" id="dPrintPage" title="พิมพ์ทั้งหน้าตามที่เห็นอยู่ตอนนี้ (มุมมองไหนเปิดอยู่ ก็พิมพ์มุมมองนั้น)">🖨 พิมพ์ทั้งหน้า</button>
     </div>
   </div>
   <div class="tabbar no-print">
@@ -718,7 +730,7 @@ canvas{max-width:100%}
           <div class="statusline no-print">
             <button class="btn ghost" id="dCopy"
               title="คัดลอกตารางนี้ (แหล่ง | รถ 6 ล้อ | รถ 10 ล้อ | รถพ่วง) เข้าคลิปบอร์ด — ไปกด Ctrl+V วางใน Excel ได้เลย สำหรับคนที่อยากวางมือเร็ว ๆ ไม่ใช้ไฟล์">คัดลอกทั้งตาราง (วางใน Excel)</button>
-            <button class="btn gold" id="dPrint2" title="พิมพ์เอกสารชุดเดียวกับหน้าเปรียบเทียบ">🖨 พิมพ์ / PDF</button>
+            <button class="btn gold" id="dPrint2" title="พิมพ์เฉพาะตารางระยะทางนี้ตารางเดียว">🖨 พิมพ์ตารางนี้</button>
           </div>
           <div style="margin-top:9px"><table id="tblDist"><thead><tr>
             <th style="width:48px">ลำดับ</th><th style="text-align:left">แหล่งวัสดุ</th><th style="width:130px">ชนิด</th>
@@ -736,7 +748,7 @@ canvas{max-width:100%}
               <option value="10p">รถบรรทุก 10 ล้อ และรถลากพ่วง (ไม่เกิน 47 ตัน)</option></select></div>
             <div style="flex:1.2"><label class="f">ช่วงราคาน้ำมันดีเซล ที่ อ.เมือง</label><select id="fBand"></select></div>
             <div style="flex:0 0 130px"><label class="f">ค้นระยะ (กม.)</label><input type="number" id="fFind" min="1" max="200" placeholder="เช่น 47"></div>
-            <div style="flex:0 0 130px"><button class="btn ghost" onclick="window.print()" style="width:100%">พิมพ์ตารางนี้</button></div>
+            <div style="flex:0 0 130px"><button class="btn ghost" onclick="printScope(this.closest('.card'))" style="width:100%">พิมพ์ตารางนี้</button></div>
           </div>
           <div class="hint" id="fHit" style="margin-top:8px"></div>
           <div class="tw" style="max-height:560px;margin-top:10px"><table id="tblFull" class="ratetbl"></table></div>
@@ -1100,6 +1112,7 @@ canvas{max-width:100%}
     <div id="emBody">—</div>
   </div>
 </div>
+<div id="prBox"></div>
 <div id="toastBox"></div>
 <div class="modal" id="mapModal">
   <div class="modal-in">
@@ -1138,7 +1151,7 @@ const EMPTY = () => P.series.length===0;
 let LIVE = {on:false, added:0};
 const fmt = n => n==null?'—':Number(n).toLocaleString('th-TH',{minimumFractionDigits:2,maximumFractionDigits:2});
 const $ = id => document.getElementById(id);
-const APPVER='6.9';        /* เลขรุ่นที่เดียว — ที่อื่นดึงจากตัวนี้ */
+const APPVER='7.0';        /* เลขรุ่นที่เดียว — ที่อื่นดึงจากตัวนี้ */
 const APPDATE='19 ส.ค. 2569';   /* วันที่ของรุ่นนี้ ที่เดียวเหมือนกัน */
 /* ⚠ ป้ายรุ่นบนแถบข้างเคยเป็นข้อความตายตัวใน HTML (v6.2) พอขึ้นรุ่นใหม่แล้วลืมแก้
    ผู้ใช้เลยเห็นเลขรุ่นเก่าทั้งที่โค้ดใหม่หมดแล้ว — ต่อไปนี้เขียนจาก APPVER เสมอ */
@@ -2888,9 +2901,23 @@ $('dDist').onclick=()=>{
   saveBlob(blob,'ระยะขนส่ง.xlsx');
   toast('ได้ระยะทาง '+out.length+' แหล่ง — วางไฟล์ไว้โฟลเดอร์เดียวกับไฟล์ Estimate แล้วกด รีเฟรชทั้งหมด');
 };
-const _doPrint=()=>{buildCalcSheet(); if(map){map.invalidateSize(); setTimeout(()=>window.print(),350);} else window.print();};
-$('dPrint').onclick=_doPrint;
-if($('dPrint2')) $('dPrint2').onclick=_doPrint;
+/* พิมพ์แบบระบุขอบเขต — 'doc' = เอกสารเปรียบเทียบทั้งชุด · ส่ง element มา = พิมพ์เฉพาะชิ้นนั้น
+   วิธีทำ: ย้ายชิ้นเข้า #prBox ชั่วคราว (จอปกติซ่อน ตอนพิมพ์โชว์เฉพาะกล่องนี้) พิมพ์เสร็จย้ายกลับที่เดิม */
+function printScope(mode){
+  const node = mode==='doc' ? (buildCalcSheet(), $('calcSheet')) : mode;
+  const ph=document.createComment('pr'); node.parentNode.insertBefore(ph,node);
+  $('prBox').appendChild(node);
+  document.body.classList.add('pr-one');
+  let done=false;
+  const back=()=>{ if(done) return; done=true;
+    ph.parentNode.insertBefore(node,ph); ph.remove();
+    document.body.classList.remove('pr-one'); };
+  window.addEventListener('afterprint',back,{once:true});
+  setTimeout(()=>{ window.print(); setTimeout(back,300); },80);
+}
+$('dPrint').onclick=()=>printScope('doc');
+if($('dPrint2')) $('dPrint2').onclick=()=>printScope($('dPrint2').closest('.card'));
+if($('dPrintPage')) $('dPrintPage').onclick=()=>{ if(map) map.invalidateSize(); setTimeout(()=>window.print(),150); };
 
 /* ============ สถิติราคา ============ */
 let sChart=null, sSel={type:'-1', mat:-1, srcs:new Set()};
