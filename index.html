@@ -1162,8 +1162,14 @@ let NM = P.months.length, LAST = NM-1;
 const EMPTY = () => P.series.length===0;
 let LIVE = {on:false, added:0};
 const fmt = n => n==null?'—':Number(n).toLocaleString('th-TH',{minimumFractionDigits:2,maximumFractionDigits:2});
-const $ = id => document.getElementById(id);
-const APPVER='7.2';        /* เลขรุ่นที่เดียว — ที่อื่นดึงจากตัวนี้ */
+/* ─ ด่านตรวจโครงสร้าง (มาตรฐานร่วมกับ BIG DATA Dashboard ธรรมนูญ v25) ─
+   $() จดชื่อกล่องทุกตัวที่โค้ดขอแล้วหาไม่เจอ — พิมพ์ชื่อผิดจะโดนจับตั้งแต่เปิดไฟล์
+   ไม่ใช่ไปเงียบรอสามเดือนเหมือนบั๊ก equipBody ของฝั่ง BIG DATA */
+const SELFCHK={missing:new Set(),ok:false};
+const $ = id => { const el=document.getElementById(id);
+  if(!el) SELFCHK.missing.add(id);
+  return el; };
+const APPVER='7.4';        /* เลขรุ่นที่เดียว — ที่อื่นดึงจากตัวนี้ */
 const APPDATE='20 ส.ค. 2569';   /* วันที่ของรุ่นนี้ ที่เดียวเหมือนกัน */
 /* ⚠ ป้ายรุ่นบนแถบข้างเคยเป็นข้อความตายตัวใน HTML (v6.2) พอขึ้นรุ่นใหม่แล้วลืมแก้
    ผู้ใช้เลยเห็นเลขรุ่นเก่าทั้งที่โค้ดใหม่หมดแล้ว — ต่อไปนี้เขียนจาก APPVER เสมอ */
@@ -1519,13 +1525,45 @@ async function loadLive(){
     if(st) st.textContent='อ่านคลังไม่ได้ ('+e.message+') — เช็ก 2 อย่าง: ①แชร์ชีท 01.0 เป็น "ทุกคนที่มีลิงก์ = ดูได้" ②เครื่องต่ออินเทอร์เน็ต';
   }
 }
+/* ─ ทะเบียนหน้า — ความจริงชุดเดียวของ "หน้า" ทั้งระบบ (ธรรมนูญ R13) ─
+   1 หน้า = 1 แถว: ปุ่มเมนู(data-p) · section(pg-X) · ฟังก์ชันวาดใหม่ตอนคลังเปลี่ยน
+   เพิ่มหน้าใหม่ = เพิ่มแถวเดียวที่นี่ + ปุ่ม + section แล้วด่านตรวจจะฟ้องเองถ้าไม่ครบ */
+const PAGES=[
+  {p:'sum',  ชื่อ:'หน้าสรุป',        rerender:['buildSummary','buildMovers','drawMatChips']},
+  {p:'dist', ชื่อ:'คำนวณระยะขนส่ง',  rerender:['matInit','_cmpRe']},
+  {p:'stat', ชื่อ:'สถิติราคา',       rerender:['statInit','covInit']},
+  {p:'imp',  ชื่อ:'นำเข้าข้อมูล',    rerender:['impInit','drawNoGeo']},
+  {p:'exp',  ชื่อ:'ส่งออกข้อมูล',    rerender:['expInit']},
+  {p:'sys',  ชื่อ:'ระบบ',           rerender:['sysInit']},
+];
+function _cmpRe(){ if(matSel.length){ renderCmp(); buildCalcSheet(); } }
 function rerender(){
   try{ refreshCmpState(); }catch(e){}      /* ปรับราคา/เดือนในตารางเปรียบเทียบให้ตรงคลังใหม่ก่อนวาดอย่างอื่น */
-  [buildSummary, matInit, statInit, buildMovers, covInit, impInit, drawNoGeo, expInit, sysInit, drawMatChips,
-   ()=>{ if(matSel.length){ renderCmp(); buildCalcSheet(); } }]
-    .forEach(f=>{ try{ f(); }catch(e){ console.error('rerender:', f.name, e); } });
+  PAGES.flatMap(pg=>pg.rerender).forEach(fn=>{
+    try{ (window[fn]||self[fn]||eval(fn))(); }catch(e){ console.error('rerender:', fn, e); } });
   kddAll(); kfreeAll(); paintIcons(); drawConn();
   try{ sortableAll(); countUpAll(); }catch(e){}
+}
+/* ─ ด่านตรวจโครงสร้าง — รันท้าย boot ─
+   ตรวจสองทาง: ทะเบียน→ของจริง (ปุ่ม/section/ฟังก์ชัน มีครบไหม)
+   และ ของจริง→ทะเบียน (มีปุ่มเมนูที่ไม่ได้ลงทะเบียนไหม) + รายชื่อกล่องที่โค้ดหาไม่เจอ */
+function selfCheck(){
+  const bad=[];
+  PAGES.forEach(pg=>{
+    if(!document.querySelector(`#nav button[data-p="${pg.p}"]`)) bad.push(`หน้า "${pg.ชื่อ}" ไม่มีปุ่มเมนู data-p="${pg.p}"`);
+    if(!document.getElementById('pg-'+pg.p)) bad.push(`หน้า "${pg.ชื่อ}" ไม่มี <section id="pg-${pg.p}">`);
+    pg.rerender.forEach(fn=>{ let f; try{ f=eval(fn); }catch(e){}
+      if(typeof f!=='function') bad.push(`หน้า "${pg.ชื่อ}" อ้างฟังก์ชัน ${fn} ที่ไม่มีอยู่จริง`); });
+  });
+  document.querySelectorAll('#nav button[data-p]').forEach(b=>{
+    if(!PAGES.some(pg=>pg.p===b.dataset.p)) bad.push(`ปุ่มเมนู "${b.textContent.trim()}" (${b.dataset.p}) ยังไม่ได้ลงทะเบียนใน PAGES`); });
+  SELFCHK.missing.forEach(id=>bad.push(`โค้ดขอกล่อง id="${id}" แต่ไม่มีอยู่ในหน้า (พิมพ์ชื่อผิด?)`));
+  SELFCHK.ok=bad.length===0; SELFCHK.bad=bad;
+  if(SELFCHK.ok) console.log(`✓ ด่านตรวจโครงสร้างผ่าน — ${PAGES.length} หน้า ครบทุกช่อง (CostBase v${APPVER})`);
+  else { console.error(`⛔ ด่านตรวจโครงสร้างไม่ผ่าน ${bad.length} ข้อ`); bad.forEach(x=>console.error('   • '+x)); }
+  /* ด่านตรวจรายงานทาง Console เท่านั้น — ผู้ใช้ทั่วไปไม่ต้องเห็น
+     คนที่ต้องเห็นคือคนแก้โค้ด (เปิด Console อยู่แล้ว) กับชุดทดสอบ t_arch */
+  return SELFCHK.ok;
 }
 
 /* ============ ไอคอน (SVG เส้นบาง ชุดเดียวกันทั้งระบบ) ============ */
@@ -4272,6 +4310,7 @@ kddAll(); kfreeAll(); paintIcons();
 try{ fetchOil(true); }catch(e){}
 try{ snapLoad(); }catch(e){}
 try{ loadLive(); }catch(e){}
+try{ selfCheck(); }catch(e){ console.error('selfCheck:',e); }
 </script>
 <script>
 /* ── ติดตั้งลงหน้าจอโฮมได้ (PWA) ────────────────────────────────
