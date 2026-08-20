@@ -675,9 +675,7 @@ canvas{max-width:100%}
       <div class="ph-chips" id="hcDist"></div>
     </div>
     <div class="ph-act">
-      <button class="btn ghost" id="dCsv">⬇ CSV</button>
-      <button class="btn ghost" id="dXlsx">⬇ Excel เปรียบเทียบ</button>
-      <button class="btn ghost" id="dDist" title="ได้ไฟล์ ระยะขนส่ง.xlsx — วางไว้โฟลเดอร์เดียวกับไฟล์ Estimate แล้วกด ข้อมูล → รีเฟรชทั้งหมด ช่องระยะใน Table4 จะเติมเอง">⬇ ระยะขนส่ง.xlsx → Estimate</button>
+      <!-- คอนเซป: หัวเพจมีเฉพาะปุ่มระดับ "ทั้งหน้า" — ปุ่มของตารางไหน อยู่เหนือตารางนั้น -->
       <button class="btn gold" id="dPrintPage" title="พิมพ์ทั้งหน้าตามที่เห็นอยู่ตอนนี้ (มุมมองไหนเปิดอยู่ ก็พิมพ์มุมมองนั้น)">🖨 พิมพ์ทั้งหน้า</button>
     </div>
   </div>
@@ -732,6 +730,8 @@ canvas{max-width:100%}
         <div class="statusline no-print" style="margin-bottom:10px">
           <button class="btn gold" id="dPrint"
             title="พิมพ์ 1 ชุด: บันทึกตรวจสอบระยะทาง+ค่าขนส่ง · ตารางเปรียบเทียบทุกวัสดุที่เลือก · ช่องลงชื่อ — ใช้แนบเรื่องราคากลาง">🖨 พิมพ์เอกสารเปรียบเทียบ / PDF</button>
+          <button class="btn ghost" id="dXlsx" title="ไฟล์ Excel เปรียบเทียบราคา+ค่าขนส่งทุกแหล่งของวัสดุที่เลือก พร้อมชีตสรุปแหล่งถูกสุด">⬇ Excel เปรียบเทียบ</button>
+          <button class="btn ghost" id="dCsv" title="ข้อมูลตารางเปรียบเทียบแบบ CSV — ใช้แทนได้ตอนออก Excel ไม่ได้">⬇ CSV</button>
           <span class="hint">พิมพ์: บันทึกตรวจระยะ+ค่าขนส่ง · ตารางเปรียบเทียบ<b>ทุกวัสดุที่เลือก</b> · ช่องลงชื่อ (สำหรับแนบเรื่องราคากลาง)</span>
         </div>
         <div id="cmpCards"><div class="card"><div class="hint" style="padding:8px">เลือกหมวด → เลือกวัสดุ → กด คำนวณ · ระบบจะแสดงทุกแหล่งที่มีวัสดุนั้น (ทั้งโรงโม่และพาณิชย์) เรียงราคารวมถูกสุดขึ้นก่อน</div></div></div>
@@ -740,6 +740,7 @@ canvas{max-width:100%}
         <div class="card">
           <h2>ระยะทางจากทุกแหล่งถึงจุดกึ่งกลางโครงการ</h2>
           <div class="statusline no-print">
+            <button class="btn ghost" id="dDist" title="ได้ไฟล์ ระยะขนส่ง.xlsx — วางไว้โฟลเดอร์เดียวกับไฟล์ Estimate แล้วกด ข้อมูล → รีเฟรชทั้งหมด ช่องระยะใน Table4 จะเติมเอง">⬇ ระยะขนส่ง.xlsx → Estimate</button>
             <button class="btn ghost" id="dCopy"
               title="คัดลอกตารางนี้ (แหล่ง | รถ 6 ล้อ | รถ 10 ล้อ | รถพ่วง) เข้าคลิปบอร์ด — ไปกด Ctrl+V วางใน Excel ได้เลย สำหรับคนที่อยากวางมือเร็ว ๆ ไม่ใช้ไฟล์">คัดลอกทั้งตาราง (วางใน Excel)</button>
             <button class="btn gold" id="dPrint2" title="พิมพ์เฉพาะตารางระยะทางนี้ตารางเดียว">🖨 พิมพ์ตารางนี้</button>
@@ -1169,7 +1170,7 @@ const SELFCHK={missing:new Set(),ok:false};
 const $ = id => { const el=document.getElementById(id);
   if(!el) SELFCHK.missing.add(id);
   return el; };
-const APPVER='7.4';        /* เลขรุ่นที่เดียว — ที่อื่นดึงจากตัวนี้ */
+const APPVER='7.5';        /* เลขรุ่นที่เดียว — ที่อื่นดึงจากตัวนี้ */
 const APPDATE='20 ส.ค. 2569';   /* วันที่ของรุ่นนี้ ที่เดียวเหมือนกัน */
 /* ⚠ ป้ายรุ่นบนแถบข้างเคยเป็นข้อความตายตัวใน HTML (v6.2) พอขึ้นรุ่นใหม่แล้วลืมแก้
    ผู้ใช้เลยเห็นเลขรุ่นเก่าทั้งที่โค้ดใหม่หมดแล้ว — ต่อไปนี้เขียนจาก APPVER เสมอ */
