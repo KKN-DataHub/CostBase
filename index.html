@@ -742,9 +742,7 @@ canvas{max-width:100%}
           <div class="statusline no-print">
             <button class="btn ghost" id="dDist" title="ได้ไฟล์ ระยะขนส่ง.xlsx — วางไว้โฟลเดอร์เดียวกับไฟล์ Estimate แล้วกด ข้อมูล → รีเฟรชทั้งหมด ช่องระยะใน Table4 จะเติมเอง">⬇ ระยะขนส่ง.xlsx → Estimate</button>
             <button class="btn ghost" id="dCopy"
-              title="คัดลอกเฉพาะระยะ 3 ช่องรถ (6 ล้อ | 10 ล้อ | 10 ล้อ พ่วง) เรียงตามชื่อแหล่ง ไม่พาชื่อแหล่งไปด้วย — ไปกด Ctrl+V วางทับช่องระยะใน Excel ได้เลย">คัดลอกระยะทุกแหล่ง</button>
-            <button class="btn ghost" id="dCopyN"
-              title="คัดลอกพร้อมชื่อแหล่ง 4 คอลัมน์ (แหล่ง | 6 ล้อ | 10 ล้อ | 10 ล้อ พ่วง) — วางในชีตว่าง แล้วใช้ VLOOKUP/XLOOKUP ดึงตามชื่อ ไม่ต้องพึ่งลำดับแถวเลย">คัดลอกพร้อมชื่อ (กันเหลื่อม)</button>
+              title="คัดลอก 4 คอลัมน์: ลำดับ | รถ 6 ล้อ | รถ 10 ล้อ | รถ 10 ล้อ พ่วง — ไม่มีชื่อแหล่ง จะได้ไม่วางทับคอลัมน์แหล่งของคุณ · ช่องลำดับมีไว้เทียบว่าแถวไม่เหลื่อม">คัดลอกระยะทุกแหล่ง</button>
             <button class="btn gold" id="dPrint2" title="พิมพ์เฉพาะตารางระยะทางนี้ตารางเดียว">🖨 พิมพ์ตารางนี้</button>
           </div>
           <div class="statusline" style="margin-top:8px">
@@ -1190,7 +1188,7 @@ const SELFCHK={missing:new Set(),ok:false};
 const $ = id => { const el=document.getElementById(id);
   if(!el) SELFCHK.missing.add(id);
   return el; };
-const APPVER='8.2';        /* เลขรุ่นที่เดียว — ที่อื่นดึงจากตัวนี้ */
+const APPVER='8.3';        /* เลขรุ่นที่เดียว — ที่อื่นดึงจากตัวนี้ */
 const APPDATE='21 ส.ค. 2569';   /* วันที่ของรุ่นนี้ ที่เดียวเหมือนกัน */
 /* ⚠ ป้ายรุ่นบนแถบข้างเคยเป็นข้อความตายตัวใน HTML (v6.2) พอขึ้นรุ่นใหม่แล้วลืมแก้
    ผู้ใช้เลยเห็นเลขรุ่นเก่าทั้งที่โค้ดใหม่หมดแล้ว — ต่อไปนี้เขียนจาก APPVER เสมอ */
@@ -2996,24 +2994,15 @@ $('dCopy').onclick=()=>{
      ถ้าคัดลอกชื่อไปด้วย เวลาวางทับจะไปเขียนทับคอลัมน์แหล่งของเขา */
   const rows=distRows();
   if(!rows.length){ toast('ยังไม่มีระยะทาง — กด "หาระยะทางทุกแหล่ง" ก่อน'); return; }
-  const body=rows.map(o=>distCells(o).join('\t')).join('\n');
+  /* ⚠ ลำดับต้องเป็น "ตัวเลขล้วน" ไม่ใส่จุด ไม่ใส่ศูนย์นำหน้า ไม่ครอบด้วยอะไรทั้งสิ้น
+     Excel จะอ่านเป็นตัวเลขจริง เรียงได้ 1,2,3,…,10,11 ถูกต้อง
+     ถ้าส่งเป็นข้อความ (เช่น "01" หรือ "1.") Excel จะเรียงแบบตัวอักษรได้ 1,10,2 */
+  const body=rows.map((o,i)=>[i+1,...distCells(o)].join('\t')).join('\n');
   const back=$('dCopy').textContent;
   navigator.clipboard.writeText(body).then(()=>{
     $('dCopy').textContent='คัดลอกแล้ว ✓ ('+rows.length+' แหล่ง)';
-    toast('คัดลอกแล้ว '+rows.length+' แหล่ง — เรียงตาม "'+DIST_SORT_TH[distSort]+'" เหมือนที่เห็นบนตาราง วางให้ตรงลำดับเดียวกัน');
+    toast('คัดลอกแล้ว '+rows.length+' แหล่ง (ลำดับ + ระยะ 3 ช่องรถ) — เรียงตาม "'+DIST_SORT_TH[distSort]+'" เหมือนบนตาราง · เอาช่องลำดับไปเทียบกับลำดับในชีตก่อน ถ้าตรงแปลว่าไม่เหลื่อม');
     setTimeout(()=>$('dCopy').textContent=back,2200);});
-};
-/* ทางเลือกที่ปลอดภัยกว่า: คัดลอกพร้อมชื่อแหล่ง แล้วให้ Excel จับคู่ด้วยชื่อ ไม่พึ่งลำดับแถว
-   ลำดับแถวจะเหลื่อมได้เสมอ (เพิ่มแหล่ง · แก้ชื่อ · Excel เรียงเอง) ตัวนี้ปิดความเสี่ยงนั้นทั้งหมด */
-$('dCopyN').onclick=()=>{
-  const rows=distRows();
-  if(!rows.length){ toast('ยังไม่มีระยะทาง — กด "หาระยะทางทุกแหล่ง" ก่อน'); return; }
-  const body=[DIST_HEAD.join('\t'),...rows.map(o=>[o.nm,...distCells(o)].join('\t'))].join('\n');
-  const back=$('dCopyN').textContent;
-  navigator.clipboard.writeText(body).then(()=>{
-    $('dCopyN').textContent='คัดลอกแล้ว ✓ '+rows.length+' แหล่ง';
-    toast('คัดลอกพร้อมชื่อแล้ว '+rows.length+' แหล่ง — วางในชีตว่าง แล้วใช้ XLOOKUP ดึงตามชื่อแหล่ง ไม่ต้องสนลำดับแถว');
-    setTimeout(()=>$('dCopyN').textContent=back,2400);});
 };
 $('dCsv').onclick=()=>{
   const di=dieselIdx(); const out=[['วัสดุ','แหล่ง','ราคาวัสดุ','เดือนราคา','ระยะL_กม','รถ','ค่าขนส่ง','ขนขึ้นลง','ดัดแปรรูป','ราคารวม','หน่วย','วิธีวัด']];
