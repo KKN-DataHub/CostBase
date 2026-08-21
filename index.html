@@ -742,12 +742,12 @@ canvas{max-width:100%}
           <div class="statusline no-print">
             <button class="btn ghost" id="dDist" title="ได้ไฟล์ ระยะขนส่ง.xlsx — วางไว้โฟลเดอร์เดียวกับไฟล์ Estimate แล้วกด ข้อมูล → รีเฟรชทั้งหมด ช่องระยะใน Table4 จะเติมเอง">⬇ ระยะขนส่ง.xlsx → Estimate</button>
             <button class="btn ghost" id="dCopy"
-              title="คัดลอกตารางนี้ (แหล่ง | รถ 6 ล้อ | รถ 10 ล้อ | รถพ่วง) เข้าคลิปบอร์ด — ไปกด Ctrl+V วางใน Excel ได้เลย สำหรับคนที่อยากวางมือเร็ว ๆ ไม่ใช้ไฟล์">คัดลอกทั้งตาราง (วางใน Excel)</button>
+              title="คัดลอกเฉพาะระยะ 3 ช่องรถ (6 ล้อ | 10 ล้อ | 10 ล้อ พ่วง) เรียงตามชื่อแหล่ง ไม่พาชื่อแหล่งไปด้วย — ไปกด Ctrl+V วางทับช่องระยะใน Excel ได้เลย">คัดลอกระยะทุกแหล่ง</button>
             <button class="btn gold" id="dPrint2" title="พิมพ์เฉพาะตารางระยะทางนี้ตารางเดียว">🖨 พิมพ์ตารางนี้</button>
           </div>
           <div style="margin-top:9px"><table id="tblDist"><thead><tr>
             <th class="num" style="width:48px">ลำดับ</th><th style="text-align:left">แหล่งวัสดุ</th><th style="width:130px;text-align:center">ชนิด</th>
-            <th class="num" style="width:120px">ระยะ L (กม.)</th><th style="width:150px;text-align:center">วิธีวัด</th><th style="width:110px;text-align:center">แผนที่</th>
+            <th class="num" style="width:120px">ระยะขนส่ง (กม.)</th><th class="no-print" style="width:150px;text-align:center">วิธีวัด</th><th class="no-print" style="width:110px;text-align:center">แผนที่</th>
           </tr></thead><tbody id="dRows"><tr><td colspan="6" style="color:var(--muted);padding:16px">ยังไม่ได้คำนวณ</td></tr></tbody></table></div>
         </div>
       </div>
@@ -756,8 +756,9 @@ canvas{max-width:100%}
           <h2 data-ic="truck">ตารางค่าขนส่งวัสดุก่อสร้าง ตาม ว 477</h2>
           <div class="fullbar no-print">
             <div style="flex:1.4"><label class="f">ชนิดรถ</label><select id="fTruck">
+              <option value="">— เลือก —</option>
               <option value="6">รถบรรทุก 6 ล้อ (น้ำหนักรวมไม่เกิน 15 ตัน)</option>
-              <option value="10" selected>รถบรรทุก 10 ล้อ (น้ำหนักรวมไม่เกิน 25 ตัน)</option>
+              <option value="10">รถบรรทุก 10 ล้อ (น้ำหนักรวมไม่เกิน 25 ตัน)</option>
               <option value="10p">รถบรรทุก 10 ล้อ และรถลากพ่วง (ไม่เกิน 47 ตัน)</option></select></div>
             <div style="flex:1.2"><label class="f">ช่วงราคาน้ำมันดีเซล ที่ อ.เมือง</label><select id="fBand"></select></div>
             <div style="flex:0 0 130px"><label class="f">ค้นระยะ (กม.)</label><input type="number" id="fFind" min="1" max="200" placeholder="เช่น 47"></div>
@@ -848,9 +849,9 @@ canvas{max-width:100%}
         <div><label class="f">หมวด</label><select id="covCat"></select></div>
         <div><label class="f">ค้นชื่อรายการ</label><input type="text" id="covQ" placeholder="พิมพ์บางส่วนของชื่อ เช่น หินคลุก"></div>
         <div><label class="f">แสดง</label><select id="covMode">
-          <option value="miss" selected>เฉพาะที่ยังไม่ครบ (ขาดอย่างน้อย 1 เดือน)</option>
-          <option value="missLast">เฉพาะที่ยังไม่มีราคาเดือนล่าสุด</option>
-          <option value="all">ทั้งหมด</option></select></div>
+          <option value="all" selected>ทั้งหมด</option>
+          <option value="miss">เฉพาะที่ยังไม่ครบ (ขาดอย่างน้อย 1 เดือน)</option>
+          <option value="missLast">เฉพาะที่ยังไม่มีราคาเดือนล่าสุด</option></select></div>
       </div>
       <div class="cap" style="margin-top:8px">ตัวเลขในช่อง = จำนวนแหล่งที่มีราคาในเดือนนั้น (จากทั้งหมดที่เคยมีราคาของรายการนั้น)
         · <span class="covc full">เขียว</span> ครบทุกแหล่ง · <span class="covc part">เหลือง</span> มีบางแหล่ง · <span class="covc none">เทา</span> เดือนนั้นไม่มีเลย
@@ -1090,6 +1091,7 @@ canvas{max-width:100%}
     <h2 data-ic="trash">ล้างข้อมูลในคลัง</h2>
     <div class="frow cl">
       <div><label class="f">ขอบเขตที่จะล้าง</label><select id="clScope">
+        <option value="">— เลือก —</option>
         <option value="prices_month">ราคา — เฉพาะเดือนที่ระบุ</option>
         <option value="prices_channel">ราคา — เฉพาะช่องทางที่ระบุ</option>
         <option value="prices">ราคา — ทั้งแท็บ PRICES (เริ่มนับหนึ่งใหม่)</option>
@@ -1181,7 +1183,7 @@ const SELFCHK={missing:new Set(),ok:false};
 const $ = id => { const el=document.getElementById(id);
   if(!el) SELFCHK.missing.add(id);
   return el; };
-const APPVER='7.9';        /* เลขรุ่นที่เดียว — ที่อื่นดึงจากตัวนี้ */
+const APPVER='8.0';        /* เลขรุ่นที่เดียว — ที่อื่นดึงจากตัวนี้ */
 const APPDATE='21 ส.ค. 2569';   /* วันที่ของรุ่นนี้ ที่เดียวเหมือนกัน */
 /* ⚠ ป้ายรุ่นบนแถบข้างเคยเป็นข้อความตายตัวใน HTML (v6.2) พอขึ้นรุ่นใหม่แล้วลืมแก้
    ผู้ใช้เลยเห็นเลขรุ่นเก่าทั้งที่โค้ดใหม่หมดแล้ว — ต่อไปนี้เขียนจาก APPVER เสมอ */
@@ -2149,7 +2151,9 @@ function addBaseSwitch(m){
 }
 
 function provInit(){
-  $('dProv').innerHTML=PROVS.map(p=>`<option ${p==='ขอนแก่น'?'selected':''}>${p}</option>`).join('');
+  /* ⚠ จังหวัดไปโผล่ในเอกสารราคากลาง + กำหนดราคาน้ำมันที่ใช้คิด — ห้ามเลือกให้ (กฎ R2)
+     ของเดิม selected ขอนแก่นไว้ ใครทำโครงการต่างจังหวัดแล้วไม่ทันสังเกต = ใช้ราคาน้ำมันผิดจังหวัดทั้งใบ */
+  $('dProv').innerHTML='<option value="">— เลือกจังหวัด —</option>'+PROVS.map(p=>`<option>${p}</option>`).join('');
   $('dProv').onchange=()=>{oilMeta=null;dieselIdx();buildCalcSheet();fetchOil(true);};
 }
 function matInit(){
@@ -2163,15 +2167,21 @@ function matInit(){
   const cats=Object.keys(groups).sort((a,b)=>a.localeCompare(b,'th'));
   const allSet=new Set(); P.series.forEach(sr=>allSet.add(sr[0]));
   groups['__all__']=allSet;
-  $('dCat').innerHTML=`<option value="__all__" ${prev==='__all__'||!prev?'selected':''}>ทุกหมวด — พิมพ์ค้นหาได้ (${allSet.size.toLocaleString()})</option>`
+  $('dCat').innerHTML=`<option value="" ${prev?'':'selected'}>— เลือกหมวด —</option>`
+    +`<option value="__all__" ${prev==='__all__'?'selected':''}>ทุกหมวด — พิมพ์ค้นหาได้ (${allSet.size.toLocaleString()})</option>`
     +cats.map(c=>`<option value="${esc(c)}" ${c===prev?'selected':''}>${esc(c)} (${groups[c].size})</option>`).join('');
   const fill=()=>{
+    /* ยังไม่เลือกหมวด = ยังไม่มีรายการให้เลือก ห้ามเดาให้ว่าเอาทุกหมวด (กฎ R2) */
+    if(!$('dCat').value){ $('dMatPick').innerHTML='<option value="">— เลือกหมวดก่อน —</option>'; return; }
     const mats=[...(groups[$('dCat').value]||[])].sort((a,b)=>P.mats[a].localeCompare(P.mats[b],'th'));
-    $('dMatPick').innerHTML=mats.map(i=>`<option value="${i}">${esc(P.mats[i])}</option>`).join('');
+    $('dMatPick').innerHTML='<option value="">— เลือกรายการ —</option>'
+      +mats.map(i=>`<option value="${i}">${esc(P.mats[i])}</option>`).join('');
   };
   $('dCat').onchange=fill; fill();
   $('dMatAdd').onclick=()=>{
-    const i=+$('dMatPick').value;
+    const v=$('dMatPick').value;
+    if(v===''){ toast('เลือกหมวดและรายการวัสดุก่อน'); return; }
+    const i=+v;
     if(!isNaN(i)&&!matSel.includes(i)) matSel.push(i);
     if(!isNaN(i)) matActive=i;
     drawMatChips(); if(dest) renderAll();
@@ -2582,8 +2592,8 @@ function renderDist(){
       <td class="num">${i+1}</td><td>${esc(r.src.name)}</td>
       <td style="text-align:center"><span class="chip" style="padding:1px 8px">${TYPE_TH[r.src.t]||r.src.t}</span></td>
       <td class="num"><b>${r.L.toFixed(2)}</b></td>
-      <td style="text-align:center">${r.mode==='road'?'<span class="pill ok">ถนนจริง</span>':'<span class="pill warn">ประมาณ — ต้องตรวจ</span>'}</td>
-      <td style="text-align:center"><button class="btn ghost" style="padding:2px 10px;font-size:11.5px" data-md="${i}">🗺 แผนที่</button></td></tr>`).join('')
+      <td class="no-print" style="text-align:center">${r.mode==='road'?'<span class="pill ok">ถนนจริง</span>':'<span class="pill warn">ประมาณ — ต้องตรวจ</span>'}</td>
+      <td class="no-print" style="text-align:center"><button class="btn ghost" style="padding:2px 10px;font-size:11.5px" data-md="${i}">🗺 แผนที่</button></td></tr>`).join('')
     ||'<tr><td colspan="6" style="color:var(--muted);padding:16px">ยังไม่ได้คำนวณ</td></tr>';
   document.querySelectorAll('[data-md]').forEach(e=>e.onclick=()=>{const r=dres[+e.dataset.md]; openRouteModal(r.src,{type:'dist',r});});
   document.querySelectorAll('tr.trow').forEach(tr=>tr.onclick=ev=>{
@@ -2704,7 +2714,7 @@ function buildCalcSheet(){
       const calc=sortedCalc(mi,di);
       const ex=exOf(mi);
       h+=`<h3 style="font-size:13.5px;color:var(--navy);margin:14px 0 6px">${esc(P.mats[mi])} (หน่วย: ${esc(calc[0]?calc[0].r.unit:'-')})${(ex.up||ex.bend)?` — ค่าขนขึ้น-ลง ${fmt(ex.up||0)} · ค่าดัด/แปรรูป ${fmt(ex.bend||0)} บาท/หน่วย รวมในราคารวมแล้ว`:''}</h3>
-        <table><thead><tr><th>แหล่งวัสดุ</th><th>พิกัดแหล่ง</th><th class="num">ระยะ L (กม.)</th><th>วิธีวัด</th><th>รถ / ช่วง</th>
+        <table><thead><tr><th>แหล่งวัสดุ</th><th>พิกัดแหล่ง</th><th class="num">ระยะขนส่ง (กม.)</th><th>วิธีวัด</th><th>รถ / ช่วง</th>
         <th class="num">ค่าขนส่ง</th><th class="num">ราคาวัสดุ</th><th>เดือนราคา</th><th class="num">ราคารวม</th></tr></thead><tbody>`;
       calc.forEach(({r,t},i)=>{
         const legTxt=r.legs.filter(l=>l.L>0).map(l=>`${truckFull(l.truck).split(' · ')[0]} ${l.L.toFixed(1)} กม.`).join(' + ')||'—';
@@ -2724,12 +2734,22 @@ function buildCalcSheet(){
       h+='</tbody></table>';
     });
   }
-  if(dres.length){
-    h+=`<h3 style="font-size:13.5px;color:var(--navy);margin:14px 0 6px">ระยะทางจากแหล่งวัสดุถึงจุดกึ่งกลางโครงการ (ทุกแหล่งที่สำรวจ)</h3>
-      <table><thead><tr><th>แหล่งวัสดุ</th><th>ชนิด</th><th>พิกัดแหล่ง</th><th class="num">ระยะ L (กม.)</th><th>วิธีวัด</th></tr></thead><tbody>`;
-    dres.forEach(r=>{h+=`<tr><td>${esc(r.src.name)}</td><td>${TYPE_TH[r.src.t]||r.src.t}</td>
-      <td>${r.src.lat.toFixed(5)}, ${r.src.lon.toFixed(5)}</td><td class="num">${r.L.toFixed(2)}</td>
-      <td>${r.mode==='road'?'เส้นทางถนนจริง':'ประมาณ (ต้องตรวจ)'}</td></tr>`;});
+  /* ⚠ เอกสารนี้เป็น "เอกสารเปรียบเทียบราคา" — มีเฉพาะวัสดุที่เลือกเทียบ + สรุปว่าใช้แหล่งไหน
+     ห้ามแนบตารางระยะทุกแหล่งมาด้วย (ของเดิมแนบมา กินกระดาษเพิ่มหลายหน้าโดยไม่เกี่ยวกับเรื่อง)
+     ตารางระยะทุกแหล่งมีปุ่มพิมพ์ของตัวเองอยู่แล้วที่แท็บ "ระยะทางทุกแหล่ง" */
+  if(matSel.length){
+    h+=`<h3 style="font-size:13.5px;color:var(--navy);margin:16px 0 6px">สรุป — แหล่งที่ใช้ (ราคารวมถึงหน้างานต่ำสุด)</h3>
+      <table><thead><tr><th>รายการวัสดุ</th><th>แหล่งที่ใช้</th><th class="num">ระยะขนส่ง (กม.)</th>
+      <th class="num">ราคาวัสดุ</th><th class="num">ค่าขนส่ง</th><th class="num">ราคารวมถึงหน้างาน</th><th>หน่วย</th></tr></thead><tbody>`;
+    matSel.forEach(mi=>{
+      const best=sortedCalc(mi,di).find(x=>x.t.total!=null);
+      if(!best){ h+=`<tr><td>${esc(P.mats[mi])}</td><td colspan="6">— คำนวณไม่ได้ (ยังไม่มีระยะหรือหน่วยไม่มีในตาราง ว 477) —</td></tr>`; return; }
+      const r=best.r, t=best.t;
+      h+=`<tr class="cheap"><td>${esc(P.mats[mi])}</td><td><b>${esc(r.nm)}</b></td>
+        <td class="num">${r.L?r.L.toFixed(2):'—'}</td>
+        <td class="num">${fmt(r.price)}</td><td class="num">${t.cost!=null?fmt(t.cost):'—'}</td>
+        <td class="num"><b>${fmt(t.total)}</b></td><td>${esc(r.unit)}</td></tr>`;
+    });
     h+='</tbody></table>';
   }
   h+=`<div class="cap" style="margin-top:10px">วิธีวัดระยะ: เส้นทางถนนจริงจากระบบแผนที่ (OSRM/OpenStreetMap) ตรวจทานกับ Google Maps · หากระยะที่ตรวจได้ต่างกัน ใช้ค่าที่น้อยกว่า · กรณีระยะน้อยกว่า 1 กม. ใช้อัตราของ 1 กม. · เกิน 200 กม. คิดอัตราต่อ กม. · ตัวแปรสภาพผิวทางตามตาราง ว 477</div>
@@ -2758,6 +2778,7 @@ function findKm(){
   document.querySelectorAll('#tblFull tr.hit').forEach(t=>t.classList.remove('hit'));
   if(!(km>=1&&km<=200)){ $('fHit').textContent=''; return; }
   const tk=$('fTruck').value, di=+$('fBand').value;
+  if(!tk||!RATES['t'+tk]){ $('fHit').innerHTML='<span class="up">เลือกชนิดรถก่อน</span>'; return; }
   const t=RATES['t'+tk][km-1][di], v=RATES['v'+tk][km-1][di];
   const TK={'6':'รถ 6 ล้อ','10':'รถ 10 ล้อ','10p':'รถ 10 ล้อ + พ่วง'}[tk];
   $('fHit').innerHTML=`<span class="pill ok">${TK} · ระยะ ${km} กม. · ดีเซล ${25+di}.00–${25+di}.99</span>
@@ -2859,6 +2880,10 @@ function lawInit(){
 }
 function drawFull(){
   const tk=$('fTruck').value, di=+$('fBand').value;
+  /* ยังไม่เลือกชนิดรถ = ยังไม่วาดตาราง ห้ามเดาให้ว่าเป็นรถ 10 ล้อ (กฎ R2) */
+  if(!tk||!RATES['t'+tk]){
+    $('tblFull').innerHTML='<tbody><tr><td class="hint" style="padding:18px">เลือก "ชนิดรถ" ก่อน แล้วตารางอัตราจะขึ้นให้</td></tr></tbody>';
+    if($('fHit')) $('fHit').textContent=''; return; }
   const Mt=RATES['t'+tk], Mv=RATES['v'+tk];
   const TK={'6':'รถบรรทุก 6 ล้อ','10':'รถบรรทุก 10 ล้อ','10p':'รถบรรทุก 10 ล้อ + พ่วง'}[tk];
   const COLS=4, PER=Math.ceil(200/COLS);
@@ -2940,7 +2965,7 @@ $('dCopy').onclick=()=>{
   const body=rows.map(o=>distCells(o).join('\t')).join('\n');
   const back=$('dCopy').textContent;
   navigator.clipboard.writeText(body).then(()=>{
-    $('dCopy').textContent='คัดลอกแล้ว ✓ ('+rows.length+' แถว เรียงตามชื่อแหล่ง)';
+    $('dCopy').textContent='คัดลอกแล้ว ✓ ('+rows.length+' แหล่ง เรียงตามชื่อ)';
     setTimeout(()=>$('dCopy').textContent=back,2200);});
 };
 $('dCsv').onclick=()=>{
