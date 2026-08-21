@@ -690,7 +690,7 @@ canvas{max-width:100%}
       <div class="card">
         <h2 data-ic="pin">1 · โครงการ</h2>
         <label class="f">พิกัดกึ่งกลางโครงการ</label>
-        <input type="text" id="dDest" value="16.4419, 102.8360">
+        <input type="text" id="dDest" placeholder="เช่น 16.4419, 102.8360">
         <label class="f">ชื่อโครงการ</label>
         <input type="text" id="dProj" placeholder="เช่น ขก.3021 แยก ทล.2 – บ้าน...">
         <label class="f">วันที่กำหนดราคากลาง</label>
@@ -746,8 +746,8 @@ canvas{max-width:100%}
             <button class="btn gold" id="dPrint2" title="พิมพ์เฉพาะตารางระยะทางนี้ตารางเดียว">🖨 พิมพ์ตารางนี้</button>
           </div>
           <div style="margin-top:9px"><table id="tblDist"><thead><tr>
-            <th style="width:48px">ลำดับ</th><th style="text-align:left">แหล่งวัสดุ</th><th style="width:130px">ชนิด</th>
-            <th class="num" style="width:120px">ระยะ L (กม.)</th><th style="width:150px">วิธีวัด</th><th style="width:110px">แผนที่</th>
+            <th class="num" style="width:48px">ลำดับ</th><th style="text-align:left">แหล่งวัสดุ</th><th style="width:130px;text-align:center">ชนิด</th>
+            <th class="num" style="width:120px">ระยะ L (กม.)</th><th style="width:150px;text-align:center">วิธีวัด</th><th style="width:110px;text-align:center">แผนที่</th>
           </tr></thead><tbody id="dRows"><tr><td colspan="6" style="color:var(--muted);padding:16px">ยังไม่ได้คำนวณ</td></tr></tbody></table></div>
         </div>
       </div>
@@ -1170,8 +1170,8 @@ const SELFCHK={missing:new Set(),ok:false};
 const $ = id => { const el=document.getElementById(id);
   if(!el) SELFCHK.missing.add(id);
   return el; };
-const APPVER='7.5';        /* เลขรุ่นที่เดียว — ที่อื่นดึงจากตัวนี้ */
-const APPDATE='20 ส.ค. 2569';   /* วันที่ของรุ่นนี้ ที่เดียวเหมือนกัน */
+const APPVER='7.7';        /* เลขรุ่นที่เดียว — ที่อื่นดึงจากตัวนี้ */
+const APPDATE='21 ส.ค. 2569';   /* วันที่ของรุ่นนี้ ที่เดียวเหมือนกัน */
 /* ⚠ ป้ายรุ่นบนแถบข้างเคยเป็นข้อความตายตัวใน HTML (v6.2) พอขึ้นรุ่นใหม่แล้วลืมแก้
    ผู้ใช้เลยเห็นเลขรุ่นเก่าทั้งที่โค้ดใหม่หมดแล้ว — ต่อไปนี้เขียนจาก APPVER เสมอ */
 try{ const _bv=document.getElementById('bVer'); if(_bv) _bv.textContent='v'+APPVER;
@@ -1265,10 +1265,13 @@ function mergeLive(rows){
           chRaw=String(r[7]||'').trim();
     if(!y||y<2500||!m||m<1||m>12||!name||!(price>0)) return;
     const mi=ensureMonth(y,m);
-    { const parts=chRaw.split('·').map(x=>x.trim()).filter(Boolean);
-      chanBump(chanHead(chRaw), y*100+m, parts.slice(1).join(' · '), name); }
     /* ถ้าอ่านบัญชีคุมแล้ว ใช้ชื่อมาตรฐานตั้งแต่ตอนรวมข้อมูล */
     const std=REG.on?regStd(name):null;
+    /* ⚠ ต้องนับช่องทางด้วย "ชื่อมาตรฐาน" เท่านั้น ห้ามใช้ชื่อดิบจากชีท
+       ชื่อดิบตัวเดียวกันสะกดต่างกันได้หลายแบบ (TPSO แก้ตรา/มอก./สี) นับแล้วบวมเกิน
+       จำนวนรายการจริงในบัญชีคุม → คอลัมน์ "รายการ" เคยขึ้น 6,992 ทั้งที่ทั้งคลังมี 4,933 */
+    { const parts=chRaw.split('·').map(x=>x.trim()).filter(Boolean);
+      chanBump(chanHead(chRaw), y*100+m, parts.slice(1).join(' · '), std||name); }
     const a=idxOf(P.mats,std||name), b=idxOf(P.srcs,src), u=idxOf(P.units,unit);
     /* คีย์ต้องมีหน่วยด้วย — วัสดุ+แหล่งเดียวกันแต่คนละหน่วย (ถุง/ตัน) ต้องเป็นคนละเส้น
        ไม่งั้นราคาต่อถุงกับต่อตันจะถูกยุบรวมเป็นเส้นเดียว แล้วโชว์ % เปลี่ยนแปลงมั่ว */
@@ -1376,6 +1379,13 @@ function applyRegistry(rows){
   });
   P.series=out;
   P.matCat={}; P.mats.forEach((m,i)=>{ const c=regCat(m); if(c) P.matCat[i]=c; });
+  /* ⚠ CHAN.mats ก็เป็นผู้บริโภคของ "ชื่อวัสดุ" เหมือนกัน ต้องยุบตามด้วย
+     mergeLive วิ่งก่อนบัญชีคุมมาถึงเสมอ (อ่าน 4 แท็บพร้อมกัน แล้วรวมราคาก่อน)
+     ตอนนั้น REG.on ยังเป็น false ชื่อที่เก็บเข้า CHAN จึงเป็นชื่อดิบจากชีท
+     ถ้าไม่ยุบที่นี่ คอลัมน์ "รายการ" จะนับชื่อดิบที่สะกดต่างกันเป็นคนละตัว
+     แล้วโชว์เลขบวมเกินจำนวนรายการทั้งคลังบนหน้าเดียวกัน (6,992 vs 4,933) */
+  Object.values(CHAN).forEach(o=>{
+    const s=new Set(); o.mats.forEach(m=>s.add(regStd(m)||m)); o.mats=s; });
   /* ปรับตัวชี้ที่ผู้ใช้เลือกไว้ให้ตามดัชนีใหม่ */
   matSel=matSel.map(i=>remap[i]??i);
   if(matActive!=null) matActive=remap[matActive]??matActive;
@@ -1420,7 +1430,9 @@ async function fetchTab(id,tab){
    เก็บผลที่จัดเรียงแล้วไว้ใน localStorage พอเปิดครั้งหน้าวาดจากตัวนี้ก่อนเลย
    แล้วค่อยยิงอ่านคลังจริงเบื้องหลัง ได้ของใหม่เมื่อไรก็วาดทับ
    ⚠ ตัวนี้เป็นแค่ภาพชั่วคราวเพื่อความเร็ว ไม่ใช่แหล่งข้อมูลจริง — ของจริงอยู่บนชีทเสมอ */
-const SNAP_KEY='costbase_snap_v1';
+/* ⚠ ขึ้นเลขคีย์ทุกครั้งที่ "ความหมายของข้อมูลในภาพถ่าย" เปลี่ยน ไม่ใช่แค่ตอนเพิ่มฟิลด์
+   v2: CHAN.mats เปลี่ยนจากชื่อดิบ → ชื่อมาตรฐาน · ภาพเก่าที่ค้างในเครื่องจะโชว์เลขบวมต่อ */
+const SNAP_KEY='costbase_snap_v2';
 function snapSave(){
   try{
     const o={t:Date.now(), id:($('cfgSheet').value||'').trim(),
@@ -1703,10 +1715,13 @@ function kfree(inp){
     document.querySelectorAll('.kdd.open').forEach(w=>{ if(w!==wrap&&w._close) w._close(); });
     render(); wrap.classList.add('open');
   };
-  inp.onfocus=open;
-  inp.oninput=()=>{ if(!wrap.classList.contains('open')) wrap.classList.add('open'); render(); };
-  inp.onblur=()=>setTimeout(()=>{ if(KDD_HOLD) return; if(wrap.classList.contains('open')) shut(); },120);
-  inp.onkeydown=e=>{ if(e.key==='Escape'){ e.preventDefault(); shut(); inp.blur(); } };
+  /* ⚠ ต้องใช้ addEventListener ห้ามใช้ inp.onfocus= / inp.oninput=
+     เพราะโค้ดหน้าอื่น (impInit ตั้ง $('mMat').oninput=…) เขียนทับช่องเดียวกันทีหลัง
+     ตัวกรองรายการเลยตายเงียบ ๆ — พิมพ์อะไรลงไปก็ขึ้นรายการชุดเดิมไม่กรองตาม */
+  inp.addEventListener('focus',open);
+  inp.addEventListener('input',()=>{ if(!wrap.classList.contains('open')) wrap.classList.add('open'); render(); });
+  inp.addEventListener('blur',()=>setTimeout(()=>{ if(KDD_HOLD) return; if(wrap.classList.contains('open')) shut(); },120));
+  inp.addEventListener('keydown',e=>{ if(e.key==='Escape'){ e.preventDefault(); shut(); inp.blur(); } });
 }
 function kfreeAll(){ document.querySelectorAll('input[list]').forEach(kfree); }
 /* ปิดดรอปดาวน์เมื่อคลิกที่อื่น — แต่ต้องไม่ปิดถ้าคลิกอยู่ในตัวมันเอง
@@ -2265,6 +2280,10 @@ function calcLeg(leg,unit,di){
   const F=D/L, rate=rateOf(leg.truck,unit,L,di);
   return {L,pr,D,F,rate,cost:blocked?null:F*rate,blocked};
 }
+/* ผลรวมระยะทุกช่วง — ต้องคิดได้แม้หน่วยไม่มีในตาราง ว 477 (tU=null)
+   ห้ามอ่าน sumL จาก calcLegs มาเป็น "ระยะที่ใช้คิด" เพราะกรณี tU=null มันคืน 0 เสมอ
+   แล้วช่องระยะในตารางสรุปจะถูกล้างเป็นว่างทั้งแถว */
+const legSum=r=>Math.round((r.legs||[]).reduce((a,l)=>a+(+l.L||0),0)*100)/100;
 function calcLegs(r,di){ /* r:{legs,tU} → per-leg + totals */
   if(!r.tU||!r.legs.some(l=>l.L>0)) return {legs:[],cost:null,blocked:false,sumL:0};
   const out=[]; let cost=0, blocked=false, sumL=0;
@@ -2273,7 +2292,10 @@ function calcLegs(r,di){ /* r:{legs,tU} → per-leg + totals */
     if(c.blocked) blocked=true; else cost+=c.cost; });
   return {legs:out,cost:blocked?null:Math.round(cost*100)/100,blocked,sumL:Math.round(sumL*100)/100};
 }
-function newLeg(L,truck){ return {truck:truck||'10',L:L||0,seg:{pl:0,pm:0,lr:0,ll:0,lm:0}}; }
+/* ⚠ รถตั้งต้น = 10 ล้อพ่วง (DEF_TRUCK) — ที่เดียว ห้ามพิมพ์ '10' ทิ้งไว้ตามโค้ด
+   ของเดิมตั้งต้น 10 ล้อ ทำให้ทุกแถวถูกคิดค่าขนส่งด้วยรถที่ผู้ใช้ไม่ได้เลือกเอง */
+const DEF_TRUCK='10p';
+function newLeg(L,truck){ return {truck:truck||DEF_TRUCK,L:L||0,seg:{pl:0,pm:0,lr:0,ll:0,lm:0}}; }
 function initMap(){
   if(typeof L==='undefined'){ $('map').innerHTML='<div class="hint" style="padding:24px">แผนที่และเส้นทางต้องต่ออินเทอร์เน็ต · ส่วนคำนวณยังใช้ได้ (กรอกระยะเอง)</div>'; return; }
   map=L.map('map',{layers:[]}).setView([16.44,102.83],8);
@@ -2283,7 +2305,11 @@ function initMap(){
 }
 let lastMeasured=null;
 async function measure(stEl){
-  dest=parseCoord($('dDest').value);
+  /* ⚠ ช่องพิกัดเริ่มว่างเสมอ (กฎ R2) ห้ามใส่พิกัดตัวอย่างเป็นค่าตั้งต้น
+     ของเดิมใส่พิกัดขอนแก่นไว้ ใครไม่ทันสังเกตจะได้ระยะของโครงการอื่นไปทั้งใบ */
+  const _dtxt=($('dDest').value||'').trim();
+  if(!_dtxt){ stEl.innerHTML='<span class="up">ยังไม่ได้กรอกพิกัดกึ่งกลางโครงการ</span>'; $('dDest').focus(); return false; }
+  dest=parseCoord(_dtxt);
   if(!dest){ stEl.innerHTML='<span class="up">อ่านพิกัดไม่ออก ตรวจรูปแบบอีกครั้ง</span>'; return false; }
   if(!SRC.length){ stEl.innerHTML='<span class="up">ยังไม่มีบัญชีแหล่งวัสดุ — อัปโหลดบัญชีคุม (ชีต แหล่งวัสดุ) ที่หน้า ระบบ ก่อน</span>'; return false; }
   stEl.textContent='กำลังวัดระยะ '+SRC.length+' แหล่ง…';
@@ -2324,7 +2350,7 @@ function cmpRowsFor(mi){
     const L0=dc?dc.L:0;
     rows.push({nm,sc,si:s,price:lv.p,pm:lv.m,py:P.ylist[lv.m],pmo:P.months[lv.m],unit,tU,
       L:L0, Lmax:dc?dc.L:null, mode:dc?dc.mode:(sc?null:'manual'),
-      legs:[newLeg(L0,'10')]});
+      legs:[newLeg(L0,DEF_TRUCK)]});
   });
   cmpState[mi]=rows; return rows;
 }
@@ -2456,13 +2482,12 @@ function renderLegModal(){
   const ex=exOf(mi);
   const k=calcLegs(r,di); const t=cmpTotal(r,di,ex);
   const mism=Math.abs(k.sumL-r.L)>0.05 && r.L>0;
+  /* หัวโมดัลบอกเลขเดียว = ระยะที่ใช้คิดเงินจริง (ผลรวมทุกช่วง) แล้วอ้างระยะที่วัดได้ไว้ข้าง ๆ
+     ของเดิมโชว์ "L" กับ "ระยะที่คำนวณ" เป็นคนละเลข ทำให้ไม่รู้ว่าตกลงคิดจากเลขไหน */
   let h=`<div style="font-size:12.5px;line-height:1.8;margin-bottom:10px">
     ราคาวัสดุ ${fmt(r.price)} บาท/${esc(r.unit)} (${mLabI(r.pm)})
-    · ระยะทางรวม L <span class="autocell">${(r.Lmax!=null?r.L:k.sumL).toFixed(2)}</span> กม.
-    ${r.L>0?(()=>{const d=Math.round((k.sumL-r.L)*100)/100;
-      if(d>0.05) return ` <span class="pill bad" style="margin-left:8px">ระยะที่คำนวณ ${k.sumL.toFixed(2)} กม. — เกิน L อยู่ ${d.toFixed(2)} กม.</span>`;
-      if(d<-0.05) return ` <span class="pill ok" style="margin-left:8px">ระยะที่คำนวณ ${k.sumL.toFixed(2)} กม. — น้อยกว่า L อยู่ ${Math.abs(d).toFixed(2)} กม.</span>`;
-      return ` <span class="pill ok" style="margin-left:8px">ระยะที่คำนวณ ${k.sumL.toFixed(2)} กม. — ตรงกับ L</span>`;})():''}
+    · ระยะที่ใช้คิด <span class="autocell">${legSum(r).toFixed(2)}</span> กม.
+    ${r.Lmax!=null?` <span class="pill ${Math.abs(legSum(r)-r.Lmax)<0.05?'ok':'warn'}" style="margin-left:8px">วัดจากแผนที่ได้ ${r.Lmax.toFixed(2)} กม.${Math.abs(legSum(r)-r.Lmax)<0.05?'':' — ใช้น้อยกว่าที่วัดได้ '+Math.abs(r.Lmax-legSum(r)).toFixed(2)+' กม.'}</span>`:''}
   </div>`;
   r.legs.forEach((leg,li)=>{
     const c=calcLeg(leg,r.tU||'v',di);
@@ -2497,15 +2522,23 @@ function renderLegModal(){
 }
 function bindLegModal(){
   const {mi,r}=curEdit;
-  const rr=()=>{ if(r.Lmax==null){ r.L=calcLegs(r,dieselIdx()).sumL; } renderLegModal();renderCmp();buildCalcSheet(); };
+  /* ⚠ ระยะที่โชว์ในตารางสรุป ต้องเป็นระยะที่ "ใช้คิดเงินจริง" = ผลรวมทุกช่วงเสมอ
+     ของเดิมอัปเดต r.L เฉพาะตอนไม่มีระยะที่วัดได้ (Lmax) แหล่งที่วัดจากแผนที่ได้
+     พอแก้ระยะช่วงในหน้ารายละเอียด ค่าขนส่งเปลี่ยนแต่ช่องระยะในตารางสรุปค้างเลขเดิม
+     → ผู้ใช้เห็นระยะ 446.70 คู่กับค่าขนส่งของ 200 กม. บนแถวเดียวกัน */
+  const rr=()=>{ r.L=legSum(r);
+    renderLegModal();renderCmp();buildCalcSheet(); };
   const em=document.getElementById('emBody');
   em.querySelectorAll('.ts').forEach(e=>e.onclick=()=>{ r.legs[+e.dataset.li].truck=e.dataset.v; rr(); });
   em.querySelectorAll('.llinp').forEach(e=>e.onchange=()=>{
     const li=+e.dataset.li; let v=parseFloat(e.value)||0;
+    /* เพดานต้องอิง Lmax (ระยะที่วัดได้จริงจากแผนที่) ไม่ใช่ r.L
+       เพราะ r.L ไหลตามผลรวมช่วงแล้ว ถ้าเอา r.L เป็นเพดาน พอลดระยะลงครั้งหนึ่ง
+       จะเพิ่มกลับขึ้นไปหาค่าเดิมไม่ได้อีกเลย (เพดานหดตามทุกครั้ง) */
     if(r.Lmax!=null){
       const others=r.legs.reduce((a,l,i)=>a+(i===li?0:(l.L||0)),0);
-      const mx=Math.max(0,Math.round((r.L-others)*100)/100);
-      if(v>mx+1e-9){ v=mx; toast(`รวมทุกช่วงต้องไม่เกินระยะ L ${r.L.toFixed(2)} กม. — ช่วงนี้ใส่ได้ไม่เกิน ${mx.toFixed(2)} กม.`); }
+      const mx=Math.max(0,Math.round((r.Lmax-others)*100)/100);
+      if(v>mx+1e-9){ v=mx; toast(`รวมทุกช่วงต้องไม่เกินระยะที่วัดได้ ${r.Lmax.toFixed(2)} กม. — ช่วงนี้ใส่ได้ไม่เกิน ${mx.toFixed(2)} กม.`); }
     }
     r.legs[li].L=Math.round(v*100)/100; rr(); });
   em.querySelectorAll('.csinp').forEach(e=>e.onchange=()=>{
@@ -2854,14 +2887,42 @@ $('dOilSave').onclick=async()=>{
 $('dDiesel').onchange=()=>{oilMeta=null;dieselIdx();renderAll();};
 $('dDate').onchange=()=>buildCalcSheet();
 $('dProj').onchange=()=>buildCalcSheet();
+/* ══════ ตารางระยะขนส่งชุดเดียว — ทั้งปุ่มคัดลอกและไฟล์ .xlsx ต้องใช้ตัวนี้ตัวเดียว ══════
+   กฎ R11: เลขที่ออกไปสองทางต้องมาจากที่เดียว ไม่งั้นคัดลอกได้เลขหนึ่ง ไฟล์ได้อีกเลขหนึ่ง
+   คืนค่า [{nm, km:{'6','10','10p'}}] เรียงตามชื่อแหล่ง (ตรงกับที่ Power Query จับคู่) */
+function distRows(){
+  const legOf={};   /* ถ้าผู้ใช้แก้ช่วงเดินทาง/ชนิดรถในตารางเปรียบเทียบ ให้ใช้ค่าที่แก้แทน */
+  Object.keys(cmpState).forEach(k=>{ (cmpState[k]||[]).forEach(r=>{ if(!legOf[r.nm]) legOf[r.nm]=r; }); });
+  const seen={}, out=[];
+  const push=(nm,tot,legs)=>{
+    if(!nm||seen[nm]) return; seen[nm]=1;
+    const km={'6':0,'10':0,'10p':0};
+    (legs||[]).forEach(l=>{ km[l.truck]=(km[l.truck]||0)+(+l.L||0); });
+    /* ยังไม่เคยแตะช่วงเดินทาง → ระยะทั้งก้อนไปอยู่ช่องรถตั้งต้น ไม่ใช่ช่อง 6 ล้อ */
+    if(!km['6']&&!km['10']&&!km['10p']) km[DEF_TRUCK]=+tot||0;
+    if(!km['6']&&!km['10']&&!km['10p']) return;
+    out.push({nm, km});
+  };
+  (typeof dres!=='undefined'?dres:[]).forEach(d=>{
+    const nm=d.src?d.src.name:d.nm, ov=legOf[nm];
+    push(nm, ov?ov.L:d.L, ov?ov.legs:null);
+  });
+  Object.keys(legOf).forEach(nm=>{ const r=legOf[nm]; push(nm,r.L,r.legs); });
+  out.sort((a,b)=>String(a.nm).localeCompare(String(b.nm),'th'));
+  return out;
+}
+const DIST_HEAD=['แหล่งวัสดุ','รถบรรทุก 6 ล้อ','รถบรรทุก 10 ล้อ','รถบรรทุก 10 ล้อ พ่วง'];
+const distCells=o=>{ const r2=v=>v?Math.round(v*100)/100:''; return [r2(o.km['6']),r2(o.km['10']),r2(o.km['10p'])]; };
 $('dCopy').onclick=()=>{
-  if(!dres.length) return;
-  /* ต้องเป็น 4 คอลัมน์ให้ตรง Table4 (แหล่ง | 6 ล้อ | 10 ล้อ | 10 ล้อ พ่วง)
-     ของเดิมคัดลอกแค่ 2 คอลัมน์ พอวางลง Table4 ระยะรวมไปตกในช่อง "รถบรรทุก 6 ล้อ"
-     ทั้งที่ค่าตั้งต้นของระบบคือรถ 10 ล้อ */
-  const head='แหล่งวัสดุ\tรถบรรทุก 6 ล้อ\tรถบรรทุก 10 ล้อ\tรถบรรทุก 10 ล้อ พ่วง';
-  const body=dres.map(r=>r.src.name+'\t\t'+r.L.toFixed(2)+'\t').join('\n');
-  navigator.clipboard.writeText(head+'\n'+body).then(()=>{$('dCopy').textContent='คัดลอกแล้ว ✓';setTimeout(()=>$('dCopy').textContent='คัดลอกลง Table4',1600);});
+  /* คัดลอกเฉพาะ 3 ช่องระยะ ไม่พาชื่อแหล่งไปด้วย — ชื่อแหล่งใน Table4 ดึงจากคลังอยู่แล้ว
+     ถ้าคัดลอกชื่อไปด้วย เวลาวางทับจะไปเขียนทับคอลัมน์แหล่งของเขา */
+  const rows=distRows();
+  if(!rows.length){ toast('ยังไม่มีระยะทาง — กด "หาระยะทางทุกแหล่ง" ก่อน'); return; }
+  const body=rows.map(o=>distCells(o).join('\t')).join('\n');
+  const back=$('dCopy').textContent;
+  navigator.clipboard.writeText(body).then(()=>{
+    $('dCopy').textContent='คัดลอกแล้ว ✓ ('+rows.length+' แถว เรียงตามชื่อแหล่ง)';
+    setTimeout(()=>$('dCopy').textContent=back,2200);});
 };
 $('dCsv').onclick=()=>{
   const di=dieselIdx(); const out=[['วัสดุ','แหล่ง','ราคาวัสดุ','เดือนราคา','ระยะL_กม','รถ','ค่าขนส่ง','ขนขึ้นลง','ดัดแปรรูป','ราคารวม','หน่วย','วิธีวัด']];
@@ -2907,34 +2968,16 @@ $('dXlsx').onclick=()=>{
    ระยะที่ได้เป็นระยะถนนจริงจากระบบนำทาง (OSRM) ที่วัดจากจุดกึ่งกลางโครงการที่ตั้งไว้
    งานที่เดิมต้องเปิด Google Maps ไล่ทีละแหล่งแล้วพิมพ์ใส่ Excel เอง */
 $('dDist').onclick=()=>{
-  /* ต้องไล่จาก dres (ทุกแหล่งที่วัดระยะได้) ไม่ใช่ cmpState (เฉพาะแหล่งที่มีราคาของวัสดุที่เลือก)
-     ของเดิมแหล่งที่วัดระยะแล้วแต่ยังไม่มีราคาในคลัง จะหายไปจากไฟล์เงียบ ๆ */
-  const legOf={};   /* ถ้าผู้ใช้แก้ช่วงเดินทาง/ชนิดรถในตารางเปรียบเทียบ ให้ใช้ค่าที่แก้แทน */
-  Object.keys(cmpState).forEach(k=>{ (cmpState[k]||[]).forEach(r=>{ if(!legOf[r.nm]) legOf[r.nm]=r; }); });
-  const seen={}, out=[];
-  const push=(nm,tot,mode,sc,legs)=>{
-    if(seen[nm]) return; seen[nm]=1;
-    const km={'6':0,'10':0,'10p':0};
-    (legs||[]).forEach(l=>{ km[l.truck]=(km[l.truck]||0)+(+l.L||0); });
-    const T=Math.round((+tot||0)*100)/100;
-    if(!T && !km['6'] && !km['10'] && !km['10p']) return;
-    const r2=v=>v?Math.round(v*100)/100:'';
-    out.push([nm, r2(km['6']), km['10']?r2(km['10']):((km['6']||km['10p'])?'':T), r2(km['10p']), T,
-      mode==='road'?'ถนนจริง (OSRM)':mode==='est'?'ประมาณจากเส้นตรง':'กรอกเอง',
-      sc?(sc.lat.toFixed(6)+', '+sc.lon.toFixed(6)):'ไม่มีพิกัดในคลัง']);
-  };
-  (typeof dres!=='undefined'?dres:[]).forEach(d=>{
-    const nm=d.src?d.src.name:d.nm, ov=legOf[nm];
-    push(nm, ov?ov.L:d.L, ov?ov.mode:d.mode, d.src||(ov?ov.sc:null), ov?ov.legs:null);
-  });
-  Object.keys(legOf).forEach(nm=>{ const r=legOf[nm]; push(nm,r.L,r.mode,r.sc,r.legs); });
-  if(!out.length){ toast('ยังไม่มีระยะทาง — กด "หาระยะทางทุกแหล่ง" หรือเลือกวัสดุแล้วกดคำนวณก่อน'); return; }
-  out.sort((a,b)=>String(a[0]).localeCompare(String(b[0]),'th'));
+  /* ไฟล์นี้มีแค่ "ชื่อแหล่ง + ระยะ 3 ช่องรถ" เท่านั้น ให้ตรงกับ Table4 เป๊ะ ๆ
+     คอลัมน์อื่น (รวมระยะ · วิธีวัด · พิกัด) ตัดออกแล้ว — ฝั่ง Estimate ดึงของพวกนี้
+     จากคลังเองอยู่แล้ว และ "รวมระยะ" เคยไม่ตรงกับผลบวก 3 ช่องจนคนอ่านสับสน */
+  const rows=distRows();
+  if(!rows.length){ toast('ยังไม่มีระยะทาง — กด "หาระยะทางทุกแหล่ง" หรือเลือกวัสดุแล้วกดคำนวณก่อน'); return; }
+  const out=rows.map(o=>[o.nm,...distCells(o)]);
   const dest=($('dDest').value||'').trim();
   /* ชีตข้อมูลต้องสะอาด ห้ามมีแถวหมายเหตุปน ไม่งั้น Power Query จะดูดแถวขยะเข้าไปด้วย
      หมายเหตุแยกไปไว้อีกชีตหนึ่ง */
-  const aoa=[['แหล่งวัสดุ','รถบรรทุก 6 ล้อ','รถบรรทุก 10 ล้อ','รถบรรทุก 10 ล้อ พ่วง',
-              'รวมระยะขนส่ง','วิธีวัด','พิกัดแหล่ง'],...out];
+  const aoa=[DIST_HEAD.slice(),...out];
   const note=[['ที่มาของไฟล์นี้'],
     ['สร้างจาก CostBase v'+APPVER+' หน้า คำนวณระยะขนส่ง'],
     ['จุดกึ่งกลางโครงการที่ใช้วัด: '+(dest||'—')],
@@ -2948,7 +2991,7 @@ $('dDist').onclick=()=>{
     ['3. ช่อง รถบรรทุก 6/10/10 พ่วง ใน Table4 จะเติมเองจากชื่อแหล่งที่ตรงกัน'],
     ['(ตั้งคิวรีครั้งแรกครั้งเดียว ดูขั้นตอนในคู่มือระบบ หัวข้อ "ระยะขนส่งอัตโนมัติ")']];
   const blob=xlsxBuild([
-    {n:'ระยะขนส่ง',aoa,w:[34,15,15,19,15,20,26],table:1},
+    {n:'ระยะขนส่ง',aoa,w:[34,15,15,19],table:1},
     {n:'อ่านก่อนใช้',aoa:note,w:[96]}
   ]);
   saveBlob(blob,'ระยะขนส่ง.xlsx');
@@ -2977,6 +3020,7 @@ if($('dPrintPage')) $('dPrintPage').onclick=()=>{ if(map) map.invalidateSize(); 
 
 /* ============ สถิติราคา ============ */
 let sChart=null, sSel={type:'-1', mat:-1, srcs:new Set()};
+let sPicked=false;   /* ผู้ใช้เลือกวัสดุเองแล้วหรือยัง — ถ้าเลือกแล้ว ห้ามเด้งกลับไปตัวตั้งต้น */
 function statInit(){
   const useReg = REG.on;
   const cats = useReg ? [...new Set(Object.values(P.matCat||{}))].sort((a,b)=>a.localeCompare(b,'th'))
@@ -2984,15 +3028,18 @@ function statInit(){
   const prev = $('sType').value;
   $('sType').innerHTML = '<option value="-1">ทุกประเภท</option>'
     + cats.map(c=>`<option value="${esc(c)}" ${c===prev?'selected':''}>${esc(c)}</option>`).join('');
-  $('sType').onchange=()=>{ sSel.type=$('sType').value; buildMatList(true); };
+  $('sType').onchange=()=>{ sPicked=true; sSel.type=$('sType').value; buildMatList(true); };
   $('sMat').onchange=()=>{
     const i=+$('sMat').value;
-    if(!isNaN(i)&&i>=0){ sSel.mat=i; sSel.srcs=new Set(); buildSrcChips(); drawStat(); }
+    if(!isNaN(i)&&i>=0){ sPicked=true; sSel.mat=i; sSel.srcs=new Set(); buildSrcChips(); drawStat(); }
   };
   buildMatList(false); buildMovers();
-  if(sSel.mat<0){
-    const d=P.mats.findIndex(m=>/หินคลุก/.test(m));
-    if(d>=0){ sSel.mat=d; $('sMat').value=String(d); }
+  /* ค่าตั้งต้น = วัสดุที่ราคาขยับแรงที่สุดในเดือนล่าสุด (ไม่ใช่ชื่อวัสดุที่ hardcode ไว้)
+     ⚠ ต้องเช็คด้วยธง sPicked ไม่ใช่ sSel.mat<0 — buildMatList() ข้างบนตั้ง sSel.mat
+     เป็นวัสดุตัวแรกตามตัวอักษรไปแล้วเสมอ เงื่อนไข <0 จึงไม่เคยเป็นจริง (โค้ดตาย) */
+  if(!sPicked){
+    const d=topMoverMat();
+    if(d>=0){ sSel.mat=d; $('sMat').value=String(d); sSel.srcs=new Set(); }
   }
   buildSrcChips(); drawStat();
 }
@@ -3314,6 +3361,7 @@ function countUpAll(root){
    ใช้ร่วมกันระหว่างการ์ด KPI หน้าสรุป กับตารางรายการที่ราคาขยับ */
 function gotoStat(mi, si){
   if(!(mi>=0)) return;
+  sPicked=true;                       /* คลิกมาจากตารางอื่น = ผู้ใช้เลือกเอง ห้ามเด้งกลับตัวตั้งต้น */
   sSel.type='-1'; sSel.mat=mi;
   sSel.srcs = (si>=0)? new Set([si]) : new Set();
   const b=document.querySelector('#nav button[data-p=stat]'); if(b) b.click();
@@ -3325,7 +3373,9 @@ function gotoStat(mi, si){
     const el=$('sTitle'); if(el&&el.scrollIntoView) el.scrollIntoView({behavior:'smooth',block:'center'});
   },70);
 }
-function buildMovers(){
+/* วัสดุที่ราคาขยับแรงที่สุดในเดือนล่าสุด — ใช้เป็นค่าตั้งต้นของหน้าสถิติ
+   ต้องอยู่ในตัวแปรเดียวกับตาราง "ราคาที่ขยับมากที่สุด" (กฎ R11) ไม่งั้นสองที่ชี้คนละตัว */
+function moversList(){
   const mv=[];
   P.series.forEach(s=>{
     const a=s[4][LAST]; if(a==null) return;
@@ -3334,6 +3384,17 @@ function buildMovers(){
     const pct=(a-b)/b*100; if(Math.abs(pct)>0.01) mv.push({s,a,b,pct});
   });
   mv.sort((x,y)=>Math.abs(y.pct)-Math.abs(x.pct));
+  return mv;
+}
+function topMoverMat(){
+  const mv=moversList();
+  if(mv.length) return mv[0].s[0];
+  /* เดือนล่าสุดยังไม่มีใครขยับเลย — เอาวัสดุตัวแรกที่มีราคาจริง ไม่ปล่อยหน้าว่าง */
+  const s=P.series.find(x=>x[4].some(v=>v!=null));
+  return s?s[0]:-1;
+}
+function buildMovers(){
+  const mv=moversList();
   let h='<thead><tr><th>รายการ</th><th>แหล่ง</th><th class="num">เดิม</th><th class="num">ล่าสุด</th><th class="num">Δ%</th></tr></thead><tbody>';
   mv.slice(0,40).forEach(m=>{
     h+=`<tr style="cursor:pointer" data-m="${m.s[0]}"><td>${esc(P.mats[m.s[0]])}</td><td>${esc(P.srcs[m.s[1]]||'-')}</td>
@@ -3724,7 +3785,11 @@ function impInit(){
       st.innerHTML='<span class="pill ok">ส่งขออนุมัติแล้ว</span> ชุด <b>'+esc(res.batch)+'</b> · '+res.added+' รายการ'
         +(res.mailed?' · แจ้งอีเมลผู้อนุมัติแล้ว':' · <span class="up">ส่งอีเมลไม่ผ่าน (ดูสิทธิ์ใน Apps Script)</span>')
         +'<br>ราคายังไม่เข้าคลัง รอผู้ดูแลกดอนุมัติที่การ์ด "รายการรออนุมัติ"';
-      queue.length=0; renderQueue(); loadPending();
+      /* ส่งจบแล้วต้องล้างชื่อผู้กรอกด้วย — เครื่องนี้หลายคนใช้ร่วมกัน
+         ถ้าค้างชื่อคนเดิมไว้ คนถัดไปจะส่งงานในนามคนก่อนโดยไม่รู้ตัว */
+      queue.length=0; $('mBy').value='';
+      try{ localStorage.removeItem('kkmat_by'); }catch(e){}
+      renderQueue(); loadPending();
     }catch(e){ st.textContent='ส่งไม่สำเร็จ: '+e.message; }
     $('mPush').disabled=false;
   };
