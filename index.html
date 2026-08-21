@@ -743,6 +743,8 @@ canvas{max-width:100%}
             <button class="btn ghost" id="dDist" title="ได้ไฟล์ ระยะขนส่ง.xlsx — วางไว้โฟลเดอร์เดียวกับไฟล์ Estimate แล้วกด ข้อมูล → รีเฟรชทั้งหมด ช่องระยะใน Table4 จะเติมเอง">⬇ ระยะขนส่ง.xlsx → Estimate</button>
             <button class="btn ghost" id="dCopy"
               title="คัดลอกเฉพาะระยะ 3 ช่องรถ (6 ล้อ | 10 ล้อ | 10 ล้อ พ่วง) เรียงตามชื่อแหล่ง ไม่พาชื่อแหล่งไปด้วย — ไปกด Ctrl+V วางทับช่องระยะใน Excel ได้เลย">คัดลอกระยะทุกแหล่ง</button>
+            <button class="btn ghost" id="dCopyN"
+              title="คัดลอกพร้อมชื่อแหล่ง 4 คอลัมน์ (แหล่ง | 6 ล้อ | 10 ล้อ | 10 ล้อ พ่วง) — วางในชีตว่าง แล้วใช้ VLOOKUP/XLOOKUP ดึงตามชื่อ ไม่ต้องพึ่งลำดับแถวเลย">คัดลอกพร้อมชื่อ (กันเหลื่อม)</button>
             <button class="btn gold" id="dPrint2" title="พิมพ์เฉพาะตารางระยะทางนี้ตารางเดียว">🖨 พิมพ์ตารางนี้</button>
           </div>
           <div class="statusline" style="margin-top:8px">
@@ -1188,7 +1190,7 @@ const SELFCHK={missing:new Set(),ok:false};
 const $ = id => { const el=document.getElementById(id);
   if(!el) SELFCHK.missing.add(id);
   return el; };
-const APPVER='8.1';        /* เลขรุ่นที่เดียว — ที่อื่นดึงจากตัวนี้ */
+const APPVER='8.2';        /* เลขรุ่นที่เดียว — ที่อื่นดึงจากตัวนี้ */
 const APPDATE='21 ส.ค. 2569';   /* วันที่ของรุ่นนี้ ที่เดียวเหมือนกัน */
 /* ⚠ ป้ายรุ่นบนแถบข้างเคยเป็นข้อความตายตัวใน HTML (v6.2) พอขึ้นรุ่นใหม่แล้วลืมแก้
    ผู้ใช้เลยเห็นเลขรุ่นเก่าทั้งที่โค้ดใหม่หมดแล้ว — ต่อไปนี้เขียนจาก APPVER เสมอ */
@@ -2596,10 +2598,21 @@ function bindLegModal(){
    ⚠ บั๊กจริง v8.0: จอเรียงตามระยะใกล้→ไกล แต่ปุ่มคัดลอกกับไฟล์เรียงตามชื่อแหล่ง
    คัดลอกคอลัมน์ระยะไปวางใน Excel ที่เรียงอีกแบบ = ระยะไปตกผิดแหล่งทั้งชุด แบบเงียบ ๆ
    กติกาใหม่: เห็นบนจอเรียงยังไง คัดลอกและไฟล์ต้องเรียงแบบนั้นเป๊ะ (WYSIWYG) */
+/* ⚠ ตัวเทียบชื่อแหล่งกลาง — ต้องเรียง "เหมือน Excel ภาษาไทย" ไม่ใช่เหมือน JavaScript
+   บั๊กจริง v8.1: localeCompare(...,'th') ของเบราว์เซอร์เอาชื่ออังกฤษ (HomePro · OneStockHome)
+   ไว้ท้ายสุด แต่ Excel เอาไว้บนสุด → รายชื่อในไฟล์เหลื่อมกับใน Excel 2 แถว
+   คัดลอกคอลัมน์ระยะไปวาง = เพี้ยนทั้งชุด (ส่วนลำดับตัวอักษรไทยตรงกันอยู่แล้ว)
+   กติกา Excel: ตัวเลข → อังกฤษ A-Z → ไทย (ไทยเรียงแบบพจนานุกรม สระหน้าอ่านตามพยัญชนะ) */
+const srcRank=s=>{ const c=String(s||'').trim().charAt(0);
+  if(/[0-9]/.test(c)) return 0;
+  if(/[A-Za-z]/.test(c)) return 1;
+  if(/[฀-๿]/.test(c)) return 2;
+  return 1; };
+const cmpSrcName=(a,b)=>(srcRank(a)-srcRank(b))||String(a).localeCompare(String(b),'th');
 let distSort='name';       /* 'name' = ตามชื่อแหล่ง (ตรงกับ Table4) · 'dist' = ใกล้→ไกล */
 function sortDres(){
-  if(distSort==='dist') dres.sort((a,b)=>(a.L-b.L)||String(a.src.name).localeCompare(String(b.src.name),'th'));
-  else dres.sort((a,b)=>String(a.src.name).localeCompare(String(b.src.name),'th'));
+  if(distSort==='dist') dres.sort((a,b)=>(a.L-b.L)||cmpSrcName(a.src.name,b.src.name));
+  else dres.sort((a,b)=>cmpSrcName(a.src.name,b.src.name));
 }
 const DIST_SORT_TH={name:'ชื่อแหล่ง ก→ฮ',dist:'ระยะใกล้→ไกล'};
 /* ---------- distance-only mode ---------- */
@@ -2989,6 +3002,18 @@ $('dCopy').onclick=()=>{
     $('dCopy').textContent='คัดลอกแล้ว ✓ ('+rows.length+' แหล่ง)';
     toast('คัดลอกแล้ว '+rows.length+' แหล่ง — เรียงตาม "'+DIST_SORT_TH[distSort]+'" เหมือนที่เห็นบนตาราง วางให้ตรงลำดับเดียวกัน');
     setTimeout(()=>$('dCopy').textContent=back,2200);});
+};
+/* ทางเลือกที่ปลอดภัยกว่า: คัดลอกพร้อมชื่อแหล่ง แล้วให้ Excel จับคู่ด้วยชื่อ ไม่พึ่งลำดับแถว
+   ลำดับแถวจะเหลื่อมได้เสมอ (เพิ่มแหล่ง · แก้ชื่อ · Excel เรียงเอง) ตัวนี้ปิดความเสี่ยงนั้นทั้งหมด */
+$('dCopyN').onclick=()=>{
+  const rows=distRows();
+  if(!rows.length){ toast('ยังไม่มีระยะทาง — กด "หาระยะทางทุกแหล่ง" ก่อน'); return; }
+  const body=[DIST_HEAD.join('\t'),...rows.map(o=>[o.nm,...distCells(o)].join('\t'))].join('\n');
+  const back=$('dCopyN').textContent;
+  navigator.clipboard.writeText(body).then(()=>{
+    $('dCopyN').textContent='คัดลอกแล้ว ✓ '+rows.length+' แหล่ง';
+    toast('คัดลอกพร้อมชื่อแล้ว '+rows.length+' แหล่ง — วางในชีตว่าง แล้วใช้ XLOOKUP ดึงตามชื่อแหล่ง ไม่ต้องสนลำดับแถว');
+    setTimeout(()=>$('dCopyN').textContent=back,2400);});
 };
 $('dCsv').onclick=()=>{
   const di=dieselIdx(); const out=[['วัสดุ','แหล่ง','ราคาวัสดุ','เดือนราคา','ระยะL_กม','รถ','ค่าขนส่ง','ขนขึ้นลง','ดัดแปรรูป','ราคารวม','หน่วย','วิธีวัด']];
@@ -3929,7 +3954,7 @@ function noGeoList(){
   names.forEach(n=>{ if(!n||n==='(ไม่ระบุ)') return; if(findSrc(n)) return;
     const g=GEOQ.find(x=>x.name===n);
     out.push({name:n, lat:g?g.lat:null, lon:g?g.lon:null, note:g?g.note:''}); });
-  out.sort((a,b)=>a.name.localeCompare(b.name,'th'));
+  out.sort((a,b)=>cmpSrcName(a.name,b.name));
   return out;
 }
 function drawNoGeo(){
@@ -4299,7 +4324,7 @@ function expInit(){
   if($('eSrcX')) $('eSrcX').onclick=()=>{
     if(!SRC.length){ toast('ยังไม่มีบัญชีแหล่งวัสดุ — อัปโหลดบัญชีคุม (ชีต แหล่งวัสดุ) ที่หน้า ระบบ ก่อน'); return; }
     const aoa=[['แหล่งวัสดุ','ชนิด','ละติจูด','ลองจิจูด','พิกัด'],
-      ...SRC.slice().sort((a,b)=>a.name.localeCompare(b.name,'th'))
+      ...SRC.slice().sort((a,b)=>cmpSrcName(a.name,b.name))
         .map(x=>[x.name, x.t||'', x.lat, x.lon, x.lat.toFixed(6)+', '+x.lon.toFixed(6)])];
     const note=[['ที่มาของไฟล์นี้'],
       ['บัญชีแหล่งวัสดุจากบัญชีคุม (แท็บ SOURCES) · CostBase v'+APPVER],
