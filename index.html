@@ -742,7 +742,7 @@ canvas{max-width:100%}
           <div class="statusline no-print">
             <button class="btn ghost" id="dDist" title="ได้ไฟล์ ระยะขนส่ง.xlsx — วางไว้โฟลเดอร์เดียวกับไฟล์ Estimate แล้วกด ข้อมูล → รีเฟรชทั้งหมด ช่องระยะใน Table4 จะเติมเอง">⬇ ระยะขนส่ง.xlsx → Estimate</button>
             <button class="btn ghost" id="dCopy"
-              title="คัดลอก 4 คอลัมน์: ลำดับ | รถ 6 ล้อ | รถ 10 ล้อ | รถ 10 ล้อ พ่วง — ไม่มีชื่อแหล่ง จะได้ไม่วางทับคอลัมน์แหล่งของคุณ · ช่องลำดับมีไว้เทียบว่าแถวไม่เหลื่อม">คัดลอกระยะทุกแหล่ง</button>
+              title="คัดลอก 4 คอลัมน์: ลำดับ | รถ 6 ล้อ | รถ 10 ล้อ | รถ 10 ล้อ พ่วง — ลำดับคือเลขประจำตัวแหล่งชุดเดียวกับไฟล์ แหล่งวัสดุ.xlsx เอาไปเทียบได้ว่าแถวไม่เหลื่อม">คัดลอกระยะทุกแหล่ง</button>
             <button class="btn gold" id="dPrint2" title="พิมพ์เฉพาะตารางระยะทางนี้ตารางเดียว">🖨 พิมพ์ตารางนี้</button>
           </div>
           <div class="statusline" style="margin-top:8px">
@@ -1188,7 +1188,7 @@ const SELFCHK={missing:new Set(),ok:false};
 const $ = id => { const el=document.getElementById(id);
   if(!el) SELFCHK.missing.add(id);
   return el; };
-const APPVER='8.3';        /* เลขรุ่นที่เดียว — ที่อื่นดึงจากตัวนี้ */
+const APPVER='8.4';        /* เลขรุ่นที่เดียว — ที่อื่นดึงจากตัวนี้ */
 const APPDATE='21 ส.ค. 2569';   /* วันที่ของรุ่นนี้ ที่เดียวเหมือนกัน */
 /* ⚠ ป้ายรุ่นบนแถบข้างเคยเป็นข้อความตายตัวใน HTML (v6.2) พอขึ้นรุ่นใหม่แล้วลืมแก้
    ผู้ใช้เลยเห็นเลขรุ่นเก่าทั้งที่โค้ดใหม่หมดแล้ว — ต่อไปนี้เขียนจาก APPVER เสมอ */
@@ -2109,7 +2109,18 @@ let map=null, layerSrc=null, destMarker=null;
 let dres=[], dest=null, distCache={}, matSel=[], cmpState={}, oilMeta=null, routeCache={};
 let mmMap=null, mmLayer=null;
 let SRCBYNAME=Object.fromEntries(SRC.map(s=>[s.name,s]));
-function rebuildSrcIndex(){ SRCBYNAME=Object.fromEntries(SRC.map(s=>[s.name,s])); }
+/* ══ ทะเบียนลำดับแหล่ง — "ตัวคุม" ══
+   ลำดับของแหล่งต้องเป็นเลขประจำตัวที่มาจากบัญชีแหล่งวัสดุที่เดียว
+   ไม่ใช่เลขแถวที่นับใหม่ตามหน้าจอ — ไม่งั้นสลับวิธีเรียงทีเดียว เลขก็เปลี่ยนตาม
+   ใช้เลขเดียวกันหมดทั้ง: ตารางบนจอ · ปุ่มคัดลอก · ระยะขนส่ง.xlsx · แหล่งวัสดุ.xlsx
+   → เอาเลขนี้ไปเทียบข้ามไฟล์ได้เลย ตรงกันเมื่อไร = ไม่เหลื่อมแน่นอน */
+let SRCSEQ={};
+function rebuildSrcIndex(){
+  SRCBYNAME=Object.fromEntries(SRC.map(s=>[s.name,s]));
+  SRCSEQ={}; SRC.slice().sort((a,b)=>cmpSrcName(a.name,b.name))
+    .forEach((s,i)=>{ SRCSEQ[s.name]=i+1; });
+}
+const srcSeq=nm=>SRCSEQ[nm]||'';
 /* จับคู่ชื่อแหล่งแบบยืดหยุ่น — ตอนกรอกราคามักใช้ชื่อเต็ม (บจก.ซีโก้แอสฟัลท์)
    แต่บัญชีแหล่งวัสดุใช้ชื่อสั้น (ซีโก้) — ตัดคำนำหน้านิติบุคคล/คำสามัญ แล้วเทียบแบบมีกันเอง
    ถ้าเข้าได้หลายแหล่ง (เช่น โซล่า มี 2 สาขา) ถือว่ากำกวม ไม่จับให้ ปล่อยกรอกระยะเอง */
@@ -2616,7 +2627,7 @@ const DIST_SORT_TH={name:'ชื่อแหล่ง ก→ฮ',dist:'ระย
 /* ---------- distance-only mode ---------- */
 function renderDist(){
   $('dRows').innerHTML=dres.map((r,i)=>`<tr class="trow ${r.selRoute?'sel':''}" data-i="${i}">
-      <td class="num">${i+1}</td><td>${esc(r.src.name)}</td>
+      <td class="num">${srcSeq(r.src.name)}</td><td>${esc(r.src.name)}</td>
       <td style="text-align:center"><span class="chip" style="padding:1px 8px">${TYPE_TH[r.src.t]||r.src.t}</span></td>
       <td class="num"><b>${r.L.toFixed(2)}</b></td>
       <td class="no-print" style="text-align:center">${r.mode==='road'?'<span class="pill ok">ถนนจริง</span>':'<span class="pill warn">ประมาณ — ต้องตรวจ</span>'}</td>
@@ -2976,7 +2987,7 @@ function distRows(){
     /* ยังไม่เคยแตะช่วงเดินทาง → ระยะทั้งก้อนไปอยู่ช่องรถตั้งต้น ไม่ใช่ช่อง 6 ล้อ */
     if(!km['6']&&!km['10']&&!km['10p']) km[DEF_TRUCK]=+tot||0;
     if(!km['6']&&!km['10']&&!km['10p']) return;
-    out.push({nm, km});
+    out.push({nm, seq:srcSeq(nm), km});
   };
   (typeof dres!=='undefined'?dres:[]).forEach(d=>{
     const nm=d.src?d.src.name:d.nm, ov=legOf[nm];
@@ -2987,7 +2998,7 @@ function distRows(){
      แหล่งที่มาจาก cmpState อย่างเดียว (ไม่มีใน dres) ต่อท้ายตามชื่อ */
   return out;
 }
-const DIST_HEAD=['แหล่งวัสดุ','รถบรรทุก 6 ล้อ','รถบรรทุก 10 ล้อ','รถบรรทุก 10 ล้อ พ่วง'];
+const DIST_HEAD=['ลำดับ','แหล่งวัสดุ','รถบรรทุก 6 ล้อ','รถบรรทุก 10 ล้อ','รถบรรทุก 10 ล้อ พ่วง'];
 const distCells=o=>{ const r2=v=>v?Math.round(v*100)/100:''; return [r2(o.km['6']),r2(o.km['10']),r2(o.km['10p'])]; };
 $('dCopy').onclick=()=>{
   /* คัดลอกเฉพาะ 3 ช่องระยะ ไม่พาชื่อแหล่งไปด้วย — ชื่อแหล่งใน Table4 ดึงจากคลังอยู่แล้ว
@@ -2997,7 +3008,7 @@ $('dCopy').onclick=()=>{
   /* ⚠ ลำดับต้องเป็น "ตัวเลขล้วน" ไม่ใส่จุด ไม่ใส่ศูนย์นำหน้า ไม่ครอบด้วยอะไรทั้งสิ้น
      Excel จะอ่านเป็นตัวเลขจริง เรียงได้ 1,2,3,…,10,11 ถูกต้อง
      ถ้าส่งเป็นข้อความ (เช่น "01" หรือ "1.") Excel จะเรียงแบบตัวอักษรได้ 1,10,2 */
-  const body=rows.map((o,i)=>[i+1,...distCells(o)].join('\t')).join('\n');
+  const body=rows.map(o=>[o.seq,...distCells(o)].join('\t')).join('\n');
   const back=$('dCopy').textContent;
   navigator.clipboard.writeText(body).then(()=>{
     $('dCopy').textContent='คัดลอกแล้ว ✓ ('+rows.length+' แหล่ง)';
@@ -3053,7 +3064,7 @@ $('dDist').onclick=()=>{
      จากคลังเองอยู่แล้ว และ "รวมระยะ" เคยไม่ตรงกับผลบวก 3 ช่องจนคนอ่านสับสน */
   const rows=distRows();
   if(!rows.length){ toast('ยังไม่มีระยะทาง — กด "หาระยะทางทุกแหล่ง" หรือเลือกวัสดุแล้วกดคำนวณก่อน'); return; }
-  const out=rows.map(o=>[o.nm,...distCells(o)]);
+  const out=rows.map(o=>[o.seq,o.nm,...distCells(o)]);
   const dest=($('dDest').value||'').trim();
   /* ชีตข้อมูลต้องสะอาด ห้ามมีแถวหมายเหตุปน ไม่งั้น Power Query จะดูดแถวขยะเข้าไปด้วย
      หมายเหตุแยกไปไว้อีกชีตหนึ่ง */
@@ -3086,7 +3097,7 @@ $('dDist').onclick=()=>{
         t.cost??'', ex.up||0, ex.bend||0, t.total??'', i===0?'ถูกสุด':'']);
     });
   });
-  const sheets=[{n:'ระยะขนส่ง',aoa,w:[34,15,15,19],table:1}];
+  const sheets=[{n:'ระยะขนส่ง',aoa,w:[8,34,15,15,19],table:1}];
   if(per.length>1) sheets.push({n:'ค่าขนส่งรายวัสดุ',aoa:per,
     w:[42,28,9,12,11,15,20,12,11,11,17,9],table:1});
   sheets.push({n:'อ่านก่อนใช้',aoa:note.concat(
@@ -4312,9 +4323,11 @@ function expInit(){
      Table4 ดึงพิกัด + เช็คชื่อแหล่งจากไฟล์นี้ อัปเดตเฉพาะตอนบัญชีแหล่งเปลี่ยน (นาน ๆ ที) */
   if($('eSrcX')) $('eSrcX').onclick=()=>{
     if(!SRC.length){ toast('ยังไม่มีบัญชีแหล่งวัสดุ — อัปโหลดบัญชีคุม (ชีต แหล่งวัสดุ) ที่หน้า ระบบ ก่อน'); return; }
-    const aoa=[['แหล่งวัสดุ','ชนิด','ละติจูด','ลองจิจูด','พิกัด'],
+    /* ไฟล์นี้คือ "ตัวคุม" — ลำดับในนี้เป็นเลขประจำตัวของแหล่ง
+       ไฟล์ระยะขนส่งกับปุ่มคัดลอกใช้เลขชุดเดียวกันนี้ เอาไปเทียบข้ามไฟล์ได้ */
+    const aoa=[['ลำดับ','แหล่งวัสดุ','ชนิด','ละติจูด','ลองจิจูด','พิกัด'],
       ...SRC.slice().sort((a,b)=>cmpSrcName(a.name,b.name))
-        .map(x=>[x.name, x.t||'', x.lat, x.lon, x.lat.toFixed(6)+', '+x.lon.toFixed(6)])];
+        .map(x=>[srcSeq(x.name), x.name, x.t||'', x.lat, x.lon, x.lat.toFixed(6)+', '+x.lon.toFixed(6)])];
     const note=[['ที่มาของไฟล์นี้'],
       ['บัญชีแหล่งวัสดุจากบัญชีคุม (แท็บ SOURCES) · CostBase v'+APPVER],
       ['จำนวนแหล่ง', SRC.length],
@@ -4323,7 +4336,7 @@ function expInit(){
       ['ทุกไฟล์ Estimate ชี้มาที่นี่ — อัปเดตเฉพาะตอนเพิ่ม/แก้แหล่งในบัญชีคุม'],
       ['ห้ามแก้หัวตารางชีต "แหล่งวัสดุ" — Power Query อ่านตามชื่อคอลัมน์']];
     const blob=xlsxBuild([
-      {n:'แหล่งวัสดุ',aoa,w:[40,14,13,13,26],table:1},
+      {n:'แหล่งวัสดุ',aoa,w:[8,40,14,13,13,26],table:1},
       {n:'อ่านก่อนใช้',aoa:note,w:[70]}]);
     saveBlob(blob,'แหล่งวัสดุ.xlsx');
     toast('ได้บัญชีแหล่ง '+SRC.length+' แหล่ง — วางที่เดียวกับไฟล์ราคา แล้วทุก Estimate กดรีเฟรช');
