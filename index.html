@@ -745,13 +745,9 @@ canvas{max-width:100%}
               title="คัดลอก 4 คอลัมน์: ลำดับ | รถ 6 ล้อ | รถ 10 ล้อ | รถ 10 ล้อ พ่วง — ลำดับคือเลขประจำตัวแหล่งชุดเดียวกับไฟล์ แหล่งวัสดุ.xlsx เอาไปเทียบได้ว่าแถวไม่เหลื่อม">คัดลอกระยะทุกแหล่ง</button>
             <button class="btn gold" id="dPrint2" title="พิมพ์เฉพาะตารางระยะทางนี้ตารางเดียว">🖨 พิมพ์ตารางนี้</button>
           </div>
-          <div class="statusline" style="margin-top:8px">
-            <span style="font-size:12px">เรียงลำดับ</span>
-            <span class="tseg"><button class="ts on" data-ds="name" title="ลำดับเดียวกับไฟล์ .xlsx และช่องแหล่งใน Table4 — ใช้ตอนจะคัดลอกไปวาง">ชื่อแหล่ง ก→ฮ</button><button class="ts" data-ds="dist" title="ดูว่าแหล่งไหนใกล้ที่สุด">ระยะใกล้→ไกล</button></span>
-            <span class="pill" id="dSortNote">ปุ่มคัดลอกและไฟล์ .xlsx ใช้ลำดับเดียวกับที่เห็นบนตารางนี้เสมอ</span>
-          </div>
+          <div class="cap no-print" style="margin-top:7px">เรียงตามบัญชีแหล่งวัสดุ · คอลัมน์ "ลำดับ" คือเลขประจำตัวแหล่ง ชุดเดียวกับไฟล์ แหล่งวัสดุ.xlsx และไฟล์ ระยะขนส่ง.xlsx</div>
           <div style="margin-top:9px"><table id="tblDist"><thead><tr>
-            <th class="num" style="width:48px">ลำดับ</th><th style="text-align:left">แหล่งวัสดุ</th><th style="width:130px;text-align:center">ชนิด</th>
+            <th class="num" style="width:64px">ลำดับ</th><th style="text-align:left">แหล่งวัสดุ</th><th style="width:130px;text-align:center">ชนิด</th>
             <th class="num" style="width:120px">ระยะขนส่ง (กม.)</th><th class="no-print" style="width:150px;text-align:center">วิธีวัด</th><th class="no-print" style="width:110px;text-align:center">แผนที่</th>
           </tr></thead><tbody id="dRows"><tr><td colspan="6" style="color:var(--muted);padding:16px">ยังไม่ได้คำนวณ</td></tr></tbody></table></div>
         </div>
@@ -1188,7 +1184,7 @@ const SELFCHK={missing:new Set(),ok:false};
 const $ = id => { const el=document.getElementById(id);
   if(!el) SELFCHK.missing.add(id);
   return el; };
-const APPVER='8.4';        /* เลขรุ่นที่เดียว — ที่อื่นดึงจากตัวนี้ */
+const APPVER='8.5';        /* เลขรุ่นที่เดียว — ที่อื่นดึงจากตัวนี้ */
 const APPDATE='21 ส.ค. 2569';   /* วันที่ของรุ่นนี้ ที่เดียวเหมือนกัน */
 /* ⚠ ป้ายรุ่นบนแถบข้างเคยเป็นข้อความตายตัวใน HTML (v6.2) พอขึ้นรุ่นใหม่แล้วลืมแก้
    ผู้ใช้เลยเห็นเลขรุ่นเก่าทั้งที่โค้ดใหม่หมดแล้ว — ต่อไปนี้เขียนจาก APPVER เสมอ */
@@ -2618,12 +2614,10 @@ const srcRank=s=>{ const c=String(s||'').trim().charAt(0);
   if(/[฀-๿]/.test(c)) return 2;
   return 1; };
 const cmpSrcName=(a,b)=>(srcRank(a)-srcRank(b))||String(a).localeCompare(String(b),'th');
-let distSort='name';       /* 'name' = ตามชื่อแหล่ง (ตรงกับ Table4) · 'dist' = ใกล้→ไกล */
-function sortDres(){
-  if(distSort==='dist') dres.sort((a,b)=>(a.L-b.L)||cmpSrcName(a.src.name,b.src.name));
-  else dres.sort((a,b)=>cmpSrcName(a.src.name,b.src.name));
-}
-const DIST_SORT_TH={name:'ชื่อแหล่ง ก→ฮ',dist:'ระยะใกล้→ไกล'};
+/* ลำดับแถวมีแบบเดียว = เรียงตามชื่อแหล่งแบบเดียวกับบัญชีแหล่งวัสดุ (ตัวคุม)
+   เคยมีปุ่มสลับเป็น "ระยะใกล้→ไกล" แต่พอทุกแถวมีเลขลำดับประจำตัวติดไปด้วยแล้ว
+   ปุ่มนั้นไม่จำเป็น — เอาออกเพื่อไม่ให้มีสองลำดับให้สับสน (v8.5) */
+function sortDres(){ dres.sort((a,b)=>cmpSrcName(a.src.name,b.src.name)); }
 /* ---------- distance-only mode ---------- */
 function renderDist(){
   $('dRows').innerHTML=dres.map((r,i)=>`<tr class="trow ${r.selRoute?'sel':''}" data-i="${i}">
@@ -2633,10 +2627,6 @@ function renderDist(){
       <td class="no-print" style="text-align:center">${r.mode==='road'?'<span class="pill ok">ถนนจริง</span>':'<span class="pill warn">ประมาณ — ต้องตรวจ</span>'}</td>
       <td class="no-print" style="text-align:center"><button class="btn ghost" style="padding:2px 10px;font-size:11.5px" data-md="${i}">🗺 แผนที่</button></td></tr>`).join('')
     ||'<tr><td colspan="6" style="color:var(--muted);padding:16px">ยังไม่ได้คำนวณ</td></tr>';
-  document.querySelectorAll('[data-ds]').forEach(b=>{
-    b.classList.toggle('on', b.dataset.ds===distSort);
-    b.onclick=()=>{ distSort=b.dataset.ds; sortDres(); renderDist(); };
-  });
   document.querySelectorAll('[data-md]').forEach(e=>e.onclick=()=>{const r=dres[+e.dataset.md]; openRouteModal(r.src,{type:'dist',r});});
   document.querySelectorAll('tr.trow').forEach(tr=>tr.onclick=ev=>{
     if(['A','BUTTON'].includes(ev.target.tagName)) return;
@@ -3012,7 +3002,7 @@ $('dCopy').onclick=()=>{
   const back=$('dCopy').textContent;
   navigator.clipboard.writeText(body).then(()=>{
     $('dCopy').textContent='คัดลอกแล้ว ✓ ('+rows.length+' แหล่ง)';
-    toast('คัดลอกแล้ว '+rows.length+' แหล่ง (ลำดับ + ระยะ 3 ช่องรถ) — เรียงตาม "'+DIST_SORT_TH[distSort]+'" เหมือนบนตาราง · เอาช่องลำดับไปเทียบกับลำดับในชีตก่อน ถ้าตรงแปลว่าไม่เหลื่อม');
+    toast('คัดลอกแล้ว '+rows.length+' แหล่ง (ลำดับ + ระยะ 3 ช่องรถ) — เอาช่องลำดับไปเทียบกับลำดับในชีตก่อน ถ้าตรงแปลว่าไม่เหลื่อม');
     setTimeout(()=>$('dCopy').textContent=back,2200);});
 };
 $('dCsv').onclick=()=>{
