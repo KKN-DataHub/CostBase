@@ -818,6 +818,7 @@ canvas{max-width:100%}
       <b>รายการ</b> = ชื่อวัสดุ 1 ชื่อ (ตามบัญชีคุม) ·
       <b>คู่ราคา</b> = วัสดุ 1 รายการ คู่กับแหล่ง 1 แหล่ง
       วัสดุตัวเดียวที่ซื้อได้ 3 แหล่ง = 3 คู่ราคา ตัวเลขคู่ราคาจึงมากกว่าจำนวนรายการเสมอ</div>
+    <div id="covChain" class="cap" style="margin:0 0 10px"></div>
     <div id="covKpi" class="kcards" style="margin-bottom:12px"></div>
     <div class="tabbar no-print" id="covTabs">
       <button class="tabbtn on" data-cv="chan">ตามช่องทางที่มา</button>
@@ -826,7 +827,13 @@ canvas{max-width:100%}
     </div>
 
     <div id="covPaneChan">
-      <div class="cap" style="margin:10px 0 6px">แต่ละช่องทางเอาราคาเข้าคลังเดือนไหนไปแล้วบ้าง — ตัวเลขในช่อง = จำนวนแถวราคาที่บันทึกในเดือนนั้น
+      <div class="cap" style="margin:10px 0 6px"><b>ตารางนี้มี 3 หน่วยนับปนกัน อ่านให้ตรง:</b>
+        ช่องรายเดือน = <b>จำนวนแถวราคา</b>ที่บันทึกในเดือนนั้น ·
+        รวมแถวทุกเดือน = เอาช่องรายเดือนมาบวกกัน (จึงเป็นเลขหลักหมื่นได้) ·
+        รายการวัสดุ (ไม่ซ้ำ) = <b>จำนวนชื่อวัสดุ</b>ที่ช่องทางนี้เคยส่งเข้ามา นับชื่อเดียวครั้งเดียว<br>
+        ⚠ คอลัมน์ "รายการวัสดุ" ของทุกช่องทางบวกกันแล้ว<b>มากกว่า</b>จำนวนรายการทั้งคลังได้
+        เพราะวัสดุตัวเดียวกันเข้ามาได้หลายช่องทาง (ตัวที่ซ้ำถูกนับทั้งสองฝั่ง)<br>
+        แต่ละช่องทางเอาราคาเข้าคลังเดือนไหนไปแล้วบ้าง
         · ช่องเทา = เดือนนั้นยังไม่ได้เอาข้อมูลของช่องทางนี้เข้า · เอาเมาส์ชี้ที่ตัวเลขเพื่อดูเลขที่หนังสือ/ใบเสนอราคาที่ใช้</div>
       <div class="tw"><table id="tblCovChan"></table></div>
     </div>
@@ -1174,7 +1181,7 @@ const SELFCHK={missing:new Set(),ok:false};
 const $ = id => { const el=document.getElementById(id);
   if(!el) SELFCHK.missing.add(id);
   return el; };
-const APPVER='7.8';        /* เลขรุ่นที่เดียว — ที่อื่นดึงจากตัวนี้ */
+const APPVER='7.9';        /* เลขรุ่นที่เดียว — ที่อื่นดึงจากตัวนี้ */
 const APPDATE='21 ส.ค. 2569';   /* วันที่ของรุ่นนี้ ที่เดียวเหมือนกัน */
 /* ⚠ ป้ายรุ่นบนแถบข้างเคยเป็นข้อความตายตัวใน HTML (v6.2) พอขึ้นรุ่นใหม่แล้วลืมแก้
    ผู้ใช้เลยเห็นเลขรุ่นเก่าทั้งที่โค้ดใหม่หมดแล้ว — ต่อไปนี้เขียนจาก APPVER เสมอ */
@@ -3192,6 +3199,19 @@ function drawCov(){
    + card('รายการที่ยังไม่มีราคาเดือนนี้', matsNoLast, 'รายการ',
           matsNoLast?'ต้องตามเก็บ หรือใช้ราคายกยอด':'ครบทุกรายการแล้ว', matsNoLast?'up':'dn');
   countUpAll($('covKpi'));
+  /* ── โซ่ตัวเลข: บอกว่าเลขแต่ละใบต่อกันยังไง (กฎ R11)
+     KORN ถามตรง ๆ ว่า 4,933 / 6,673 / 4,910 คืออะไร ทำไมไม่ตรงกันสักตัว
+     คำตอบคือมันคนละหน่วยนับ ต่อกันเป็นทอด ๆ — เลยพิมพ์ทอดให้ดูไปเลย */
+  if($('covChain')){
+    const byType={}; P.series.forEach(s2=>{ const t=P.types[s2[3]]||'(ไม่ระบุ)'; byType[t]=(byType[t]||0)+1; });
+    const tTxt=Object.keys(byType).sort((a,b)=>byType[b]-byType[a])
+      .map(t=>esc(t)+' '+fmtInt(byType[t])).join(' + ');
+    $('covChain').innerHTML='<b>ตัวเลขต่อกันแบบนี้:</b> '
+      +(REG.on?'บัญชีคุม <b>'+fmtInt(REG.n)+'</b> ชื่อ → ':'')
+      +'มีราคาจริง <b>'+fmtInt(matsTot)+'</b> รายการ → กระจายไปตามแหล่งที่ขาย เป็น <b>'+fmtInt(pairs)
+      +'</b> คู่ราคา → แยกตามประเภทได้ '+tTxt+' = '+fmtInt(pairs)
+      +'<br>ทุกใบบนหน้านี้ใช้สามหน่วยนี้เท่านั้น — <b>ชื่อ</b> (บัญชีคุม) · <b>รายการ</b> (วัสดุที่มีราคา) · <b>คู่ราคา</b> (วัสดุ×แหล่ง)';
+  }
   /* ── ตาราง ── */
   const rows=covRows();
   const shown=rows.slice(0,COV_CAP);
@@ -3223,7 +3243,7 @@ function drawCovChan(){
   }
   let h='<thead><tr><th>ช่องทางที่มา</th>'
       + P.months.map((_,i)=>`<th class="num">${mLabI(i)}</th>`).join('')
-      + '<th class="num">รวม</th><th class="num">รายการ</th><th>ล่าสุด</th></tr></thead><tbody>';
+      + '<th class="num">รวมแถวทุกเดือน</th><th class="num">รายการวัสดุ (ไม่ซ้ำ)</th><th>ล่าสุด</th></tr></thead><tbody>';
   names.forEach(n=>{
     const o=CHAN[n], per=chanPer(o);
     const tot=sumOf(o);
