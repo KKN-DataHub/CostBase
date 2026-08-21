@@ -814,6 +814,10 @@ canvas{max-width:100%}
 
   <h2 class="sec" data-ic="check" id="secCov">ความครบถ้วนของข้อมูล — รายการไหน เดือนไหน ยังไม่ได้เอาเข้า</h2>
   <div class="card">
+    <div class="cap" style="margin:-2px 0 10px">คำนิยามที่ใช้ทั้งหน้านี้ —
+      <b>รายการ</b> = ชื่อวัสดุ 1 ชื่อ (ตามบัญชีคุม) ·
+      <b>คู่ราคา</b> = วัสดุ 1 รายการ คู่กับแหล่ง 1 แหล่ง
+      วัสดุตัวเดียวที่ซื้อได้ 3 แหล่ง = 3 คู่ราคา ตัวเลขคู่ราคาจึงมากกว่าจำนวนรายการเสมอ</div>
     <div id="covKpi" class="kcards" style="margin-bottom:12px"></div>
     <div class="tabbar no-print" id="covTabs">
       <button class="tabbtn on" data-cv="chan">ตามช่องทางที่มา</button>
@@ -1170,7 +1174,7 @@ const SELFCHK={missing:new Set(),ok:false};
 const $ = id => { const el=document.getElementById(id);
   if(!el) SELFCHK.missing.add(id);
   return el; };
-const APPVER='7.7';        /* เลขรุ่นที่เดียว — ที่อื่นดึงจากตัวนี้ */
+const APPVER='7.8';        /* เลขรุ่นที่เดียว — ที่อื่นดึงจากตัวนี้ */
 const APPDATE='21 ส.ค. 2569';   /* วันที่ของรุ่นนี้ ที่เดียวเหมือนกัน */
 /* ⚠ ป้ายรุ่นบนแถบข้างเคยเป็นข้อความตายตัวใน HTML (v6.2) พอขึ้นรุ่นใหม่แล้วลืมแก้
    ผู้ใช้เลยเห็นเลขรุ่นเก่าทั้งที่โค้ดใหม่หมดแล้ว — ต่อไปนี้เขียนจาก APPVER เสมอ */
@@ -1855,12 +1859,20 @@ function buildSummary(){
   $('bLatest').textContent = 'อัปเดตล่าสุด '+latestLabel; $('fLatest').textContent = latestLabel;
   const hc=(id,html)=>{const e=document.getElementById(id); if(e) e.innerHTML=html;};
   const rangeTxt=mLabI(0)+' – '+latestLabel;
+  /* ⚠ สามเลขนี้เป็นคนละอย่าง ห้ามเขียนป้ายกำกวมให้คนอ่านเดาเอง (กฎ R11 · R15)
+     nMatsUsed = รายการวัสดุที่ "มีราคาในคลัง" จริง
+     REG.n     = จำนวนชื่อในบัญชีคุม (ชื่อเดิมทุกแบบ รวมชื่อที่ยังไม่เคยมีราคา)
+     P.series  = คู่ราคา = วัสดุ×แหล่ง (1 รายการมีได้หลายแหล่ง เลขจึงมากกว่าเสมอ)
+     ของเดิมป้ายเขียนว่า "ชื่อตามบัญชีคุม (4,933 ชื่อมาตรฐาน)" แต่ยิงเลขวัสดุที่มีราคามาโชว์
+     คนอ่านเลยนึกว่าบัญชีคุมมี 4,933 ชื่อ ทั้งที่เป็นคนละตัวเลขกัน */
+  const nMats0=new Set(P.series.map(s=>s[0])).size;
   hc('hcSum',`<span class="ph-chip">● อัปเดตล่าสุด <b>${latestLabel}</b></span>
-    <span class="ph-chip">▤ ${new Set(P.series.map(s=>s[0])).size.toLocaleString()} รายการ</span>
+    <span class="ph-chip" title="รายการวัสดุที่มีราคาอยู่ในคลังจริง (นับชื่อมาตรฐาน ไม่ซ้ำ)">▤ ${nMats0.toLocaleString()} รายการที่มีราคา</span>
+    <span class="ph-chip" title="วัสดุ × แหล่ง — วัสดุ 1 รายการที่ซื้อได้ 3 แหล่ง นับเป็น 3 คู่ราคา">🔗 ${P.series.length.toLocaleString()} คู่ราคา (วัสดุ×แหล่ง)</span>
     <span class="ph-chip">⚑ ${P.srcs.filter(s=>s).length} แหล่ง</span>
     <span class="ph-chip">🗂 ข้อมูล ${rangeTxt}</span>
     <span class="ph-chip">${LIVE.on?'☁ เชื่อมคลังข้อมูลสด':'⚠ ยังไม่ได้เชื่อมคลัง'}</span>
-    <span class="ph-chip">${REG.on?'📖 ชื่อตามบัญชีคุม ('+P.mats.length.toLocaleString()+' ชื่อมาตรฐาน)':'📖 รออัปโหลดบัญชีคุม'}</span>`);
+    <span class="ph-chip" title="จำนวนชื่อในบัญชีคุม — รวมชื่อที่ยังไม่เคยมีราคาเข้าคลัง จึงไม่เท่ากับจำนวนรายการที่มีราคา">${REG.on?'📖 บัญชีคุม '+REG.n.toLocaleString()+' ชื่อ → ใช้จริง '+nMats0.toLocaleString():'📖 รออัปโหลดบัญชีคุม'}</span>`);
   hc('hcStat',`<span class="ph-chip">🗂 ช่วงข้อมูล <b>${rangeTxt}</b></span>
     <span class="ph-chip">▤ ${P.series.length.toLocaleString()} คู่ราคา</span>`);
   hc('hcImp',impChips());
@@ -1877,7 +1889,7 @@ function buildSummary(){
   const nMatsUsed = new Set(P.series.map(s=>s[0])).size;
   const pct = Math.round(nReady/Math.max(1,P.series.length)*100);
   $('sumKpis').innerHTML = [
-    ['▤', nMatsUsed.toLocaleString(), 'รายการวัสดุทั้งหมด'],
+    ['▤', nMatsUsed.toLocaleString(), 'รายการวัสดุที่มีราคาในคลัง'],
     ['⚑', nSrc, 'แหล่งที่มาของราคา'],
     ['🗓', latestLabel, 'อัปเดตล่าสุด'],
     ['✓', pct+'%', `ราคาพร้อมใช้ ${nReady.toLocaleString()} จาก ${P.series.length.toLocaleString()} คู่ราคา · เป็นราคาใหม่ของ ${latestLabel} จำนวน ${nRowsLast.toLocaleString()} · ที่เหลือยกยอดเดือนก่อนตามหลักเกณฑ์`],
@@ -2990,10 +3002,33 @@ $('dDist').onclick=()=>{
     ['2. ในไฟล์ Estimate กด ข้อมูล → รีเฟรชทั้งหมด'],
     ['3. ช่อง รถบรรทุก 6/10/10 พ่วง ใน Table4 จะเติมเองจากชื่อแหล่งที่ตรงกัน'],
     ['(ตั้งคิวรีครั้งแรกครั้งเดียว ดูขั้นตอนในคู่มือระบบ หัวข้อ "ระยะขนส่งอัตโนมัติ")']];
-  const blob=xlsxBuild([
-    {n:'ระยะขนส่ง',aoa,w:[34,15,15,19],table:1},
-    {n:'อ่านก่อนใช้',aoa:note,w:[96]}
-  ]);
+  /* ══ ชีตที่ 2 — ค่าขนส่งรายวัสดุ (คีย์ วัสดุ+แหล่ง) ══
+     ชีตแรกเป็นราย "แหล่ง" อย่างเดียว ใช้เติมช่องระยะใน Table4 ได้ก็จริง
+     แต่ค่าขนส่งจริงขึ้นกับ "วัสดุ+แหล่ง" เพราะหน่วยต่างกัน (สายไฟ=เมตร ไม่มีในตาราง ว 477 ·
+     คอนกรีต=ลบ.ม. · ยาง=ตัน) แถมชนิดรถกับช่วงผิวทางก็ตั้งแยกรายวัสดุได้
+     ชีตนี้จึงหอบผลคำนวณจากหน้าเปรียบเทียบราคาออกมาให้ Estimate join ต่อได้ทั้งแถว
+     ⚠ ชีตแรกยังชื่อเดิม คอลัมน์เดิม — คิวรีเดิมในไฟล์ Estimate ไม่ต้องแก้อะไรเลย */
+  const di=dieselIdx();
+  const per=[['รายการวัสดุ','แหล่งวัสดุ','หน่วย','ราคาวัสดุ','เดือนราคา',
+              'ระยะที่ใช้คิด (กม.)','ชนิดรถ','ค่าขนส่ง','ขนขึ้น-ลง','ดัด/แปรรูป','ราคารวมถึงหน้างาน','ถูกสุด']];
+  matSel.forEach(mi=>{ const ex=exOf(mi);
+    sortedCalc(mi,di).forEach(({r,t},i)=>{
+      per.push([P.mats[mi], r.nm, r.unit, r.price, mLabI(r.pm),
+        legSum(r)||'', r.legs.filter(l=>l.L>0).map(l=>truckFull(l.truck).split(' · ')[0]).join(' + ')||'',
+        t.cost??'', ex.up||0, ex.bend||0, t.total??'', i===0?'ถูกสุด':'']);
+    });
+  });
+  const sheets=[{n:'ระยะขนส่ง',aoa,w:[34,15,15,19],table:1}];
+  if(per.length>1) sheets.push({n:'ค่าขนส่งรายวัสดุ',aoa:per,
+    w:[42,28,9,12,11,15,20,12,11,11,17,9],table:1});
+  sheets.push({n:'อ่านก่อนใช้',aoa:note.concat(
+    per.length>1?[[''],['ชีต "ค่าขนส่งรายวัสดุ" (ชีตที่ 2)'],
+      ['คีย์ = รายการวัสดุ + แหล่งวัสดุ — ใช้ join กับ Table4 ได้ทั้งแถว'],
+      ['มีค่าขนส่งที่คิดตามหน่วยของวัสดุนั้นจริง (สายไฟ/คอนกรีต/ยาง คนละหน่วยกัน)'],
+      ['ชีตนี้เป็นของแถม คิวรีเดิมที่อ่านชีต "ระยะขนส่ง" ทำงานเหมือนเดิมทุกอย่าง'],
+      ['จำนวนแถว', per.length-1]]:
+      [[''],['ยังไม่มีชีต "ค่าขนส่งรายวัสดุ" — เลือกวัสดุแล้วกดคำนวณที่ช่อง 3 ก่อนส่งออก']])});
+  const blob=xlsxBuild(sheets);
   saveBlob(blob,'ระยะขนส่ง.xlsx');
   toast('ได้ระยะทาง '+out.length+' แหล่ง — วางไฟล์ไว้โฟลเดอร์เดียวกับไฟล์ Estimate แล้วกด รีเฟรชทั้งหมด');
 };
@@ -3152,7 +3187,7 @@ function drawCov(){
     <div class="v ${cls||''}"><span data-cu="${n}">0</span>${unit?' <span class="u">'+unit+'</span>':''}</div>
     <div class="s">${s}</div></div>`;
   $('covKpi').innerHTML =
-     card('คู่ราคาในคลัง (วัสดุ×แหล่ง)', pairs, '', fmtInt(matsTot)+' รายการ')
+     card('คู่ราคาในคลัง = วัสดุ × แหล่ง', pairs, '', 'มาจาก '+fmtInt(matsTot)+' รายการ — 1 รายการซื้อได้หลายแหล่ง')
    + card('มีราคาเดือน '+mLabI(LAST), havLast, 'คู่', pct+'% ของทั้งคลัง', pct>=80?'':'up')
    + card('รายการที่ยังไม่มีราคาเดือนนี้', matsNoLast, 'รายการ',
           matsNoLast?'ต้องตามเก็บ หรือใช้ราคายกยอด':'ครบทุกรายการแล้ว', matsNoLast?'up':'dn');
@@ -4042,10 +4077,12 @@ function _sheetXml(aoa,opt){
 /* ตัวสร้างสมุดงาน: รับหลายชีต ชีตไหนตั้ง table:1 จะได้ "ตาราง (ListObject)" ชื่อ Table1
    Power Query ในไฟล์ Estimate อ่าน Source{[Item="Table1",Kind="Table"]} จึงต้องเป็นตารางจริง
    หนึ่งไฟล์มีตารางได้ 1 ตาราง (พอสำหรับงานนี้) */
+/* รองรับ "ตารางจริง (ListObject)" ได้หลายชีตในไฟล์เดียว — Table1, Table2, …
+   ⚠ ของเดิมรับได้ชีตเดียว (findIndex เอาตัวแรกที่ table:1) ชีตที่สองจะกลายเป็นชีตเปล่า ๆ
+   ที่ Power Query แบบ Kind="Table" มองไม่เห็น */
 function xlsxBuild(sheets){
-  const ti=sheets.findIndex(s=>s.table);
-  const tSheet=ti>=0?sheets[ti]:null;
-  const ref=tSheet?('A1:'+_colName(tSheet.aoa[0].length-1)+tSheet.aoa.length):'';
+  const tIdx=sheets.map((s,i)=>s.table?i:-1).filter(i=>i>=0);
+  const refOf=sh=>'A1:'+_colName(sh.aoa[0].length-1)+sh.aoa.length;
   const files=[
     {name:'[Content_Types].xml',data:`<?xml version="1.0" encoding="UTF-8" standalone="yes"?>`
       +`<Types xmlns="http://schemas.openxmlformats.org/package/2006/content-types">`
@@ -4054,7 +4091,7 @@ function xlsxBuild(sheets){
       +`<Override PartName="/xl/workbook.xml" ContentType="application/vnd.openxmlformats-officedocument.spreadsheetml.sheet.main+xml"/>`
       +sheets.map((s,i)=>`<Override PartName="/xl/worksheets/sheet${i+1}.xml" ContentType="application/vnd.openxmlformats-officedocument.spreadsheetml.worksheet+xml"/>`).join('')
       +`<Override PartName="/xl/styles.xml" ContentType="application/vnd.openxmlformats-officedocument.spreadsheetml.styles+xml"/>`
-      +(tSheet?`<Override PartName="/xl/tables/table1.xml" ContentType="application/vnd.openxmlformats-officedocument.spreadsheetml.table+xml"/>`:'')
+      +tIdx.map((_,k)=>`<Override PartName="/xl/tables/table${k+1}.xml" ContentType="application/vnd.openxmlformats-officedocument.spreadsheetml.table+xml"/>`).join('')
       +`</Types>`},
     {name:'_rels/.rels',data:`<?xml version="1.0" encoding="UTF-8" standalone="yes"?>`
       +`<Relationships xmlns="http://schemas.openxmlformats.org/package/2006/relationships">`
@@ -4082,19 +4119,20 @@ function xlsxBuild(sheets){
       +`<xf numFmtId="0" fontId="1" fillId="0" borderId="0" xfId="0" applyFont="1"/></cellXfs>`
       +`</styleSheet>`},
   ];
-  if(tSheet){
-    files.push({name:'xl/tables/table1.xml',data:`<?xml version="1.0" encoding="UTF-8" standalone="yes"?>`
-      +`<table xmlns="http://schemas.openxmlformats.org/spreadsheetml/2006/main" id="1"`
-      +` name="Table1" displayName="Table1" ref="${ref}" totalsRowShown="0">`
-      +`<autoFilter ref="${ref}"/><tableColumns count="${tSheet.aoa[0].length}">`
-      +tSheet.aoa[0].map((h,i)=>`<tableColumn id="${i+1}" name="${_xe(h)}"/>`).join('')
+  tIdx.forEach((si,k)=>{
+    const sh=sheets[si], ref=refOf(sh), nm='Table'+(k+1);
+    files.push({name:`xl/tables/table${k+1}.xml`,data:`<?xml version="1.0" encoding="UTF-8" standalone="yes"?>`
+      +`<table xmlns="http://schemas.openxmlformats.org/spreadsheetml/2006/main" id="${k+1}"`
+      +` name="${nm}" displayName="${nm}" ref="${ref}" totalsRowShown="0">`
+      +`<autoFilter ref="${ref}"/><tableColumns count="${sh.aoa[0].length}">`
+      +sh.aoa[0].map((h,i)=>`<tableColumn id="${i+1}" name="${_xe(h)}"/>`).join('')
       +`</tableColumns><tableStyleInfo name="TableStyleMedium2" showFirstColumn="0"`
       +` showLastColumn="0" showRowStripes="1" showColumnStripes="0"/></table>`});
-    files.push({name:`xl/worksheets/_rels/sheet${ti+1}.xml.rels`,data:`<?xml version="1.0" encoding="UTF-8" standalone="yes"?>`
+    files.push({name:`xl/worksheets/_rels/sheet${si+1}.xml.rels`,data:`<?xml version="1.0" encoding="UTF-8" standalone="yes"?>`
       +`<Relationships xmlns="http://schemas.openxmlformats.org/package/2006/relationships">`
-      +`<Relationship Id="rId1" Type="http://schemas.openxmlformats.org/officeDocument/2006/relationships/table" Target="../tables/table1.xml"/>`
+      +`<Relationship Id="rId1" Type="http://schemas.openxmlformats.org/officeDocument/2006/relationships/table" Target="../tables/table${k+1}.xml"/>`
       +`</Relationships>`});
-  }
+  });
   sheets.forEach((s,i)=>files.push({name:`xl/worksheets/sheet${i+1}.xml`,
     data:_sheetXml(s.aoa,{w:s.w,table:s.table?1:0})}));
   return new Blob([zipStore(files)],
