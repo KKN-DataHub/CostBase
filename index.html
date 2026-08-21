@@ -745,6 +745,11 @@ canvas{max-width:100%}
               title="คัดลอกเฉพาะระยะ 3 ช่องรถ (6 ล้อ | 10 ล้อ | 10 ล้อ พ่วง) เรียงตามชื่อแหล่ง ไม่พาชื่อแหล่งไปด้วย — ไปกด Ctrl+V วางทับช่องระยะใน Excel ได้เลย">คัดลอกระยะทุกแหล่ง</button>
             <button class="btn gold" id="dPrint2" title="พิมพ์เฉพาะตารางระยะทางนี้ตารางเดียว">🖨 พิมพ์ตารางนี้</button>
           </div>
+          <div class="statusline" style="margin-top:8px">
+            <span style="font-size:12px">เรียงลำดับ</span>
+            <span class="tseg"><button class="ts on" data-ds="name" title="ลำดับเดียวกับไฟล์ .xlsx และช่องแหล่งใน Table4 — ใช้ตอนจะคัดลอกไปวาง">ชื่อแหล่ง ก→ฮ</button><button class="ts" data-ds="dist" title="ดูว่าแหล่งไหนใกล้ที่สุด">ระยะใกล้→ไกล</button></span>
+            <span class="pill" id="dSortNote">ปุ่มคัดลอกและไฟล์ .xlsx ใช้ลำดับเดียวกับที่เห็นบนตารางนี้เสมอ</span>
+          </div>
           <div style="margin-top:9px"><table id="tblDist"><thead><tr>
             <th class="num" style="width:48px">ลำดับ</th><th style="text-align:left">แหล่งวัสดุ</th><th style="width:130px;text-align:center">ชนิด</th>
             <th class="num" style="width:120px">ระยะขนส่ง (กม.)</th><th class="no-print" style="width:150px;text-align:center">วิธีวัด</th><th class="no-print" style="width:110px;text-align:center">แผนที่</th>
@@ -1183,7 +1188,7 @@ const SELFCHK={missing:new Set(),ok:false};
 const $ = id => { const el=document.getElementById(id);
   if(!el) SELFCHK.missing.add(id);
   return el; };
-const APPVER='8.0';        /* เลขรุ่นที่เดียว — ที่อื่นดึงจากตัวนี้ */
+const APPVER='8.1';        /* เลขรุ่นที่เดียว — ที่อื่นดึงจากตัวนี้ */
 const APPDATE='21 ส.ค. 2569';   /* วันที่ของรุ่นนี้ ที่เดียวเหมือนกัน */
 /* ⚠ ป้ายรุ่นบนแถบข้างเคยเป็นข้อความตายตัวใน HTML (v6.2) พอขึ้นรุ่นใหม่แล้วลืมแก้
    ผู้ใช้เลยเห็นเลขรุ่นเก่าทั้งที่โค้ดใหม่หมดแล้ว — ต่อไปนี้เขียนจาก APPVER เสมอ */
@@ -2354,7 +2359,8 @@ async function measure(stEl){
   SRC.forEach((s,i)=>{ let km=dist[i],md=mode;
     if(km==null){km=hav(dest[0],dest[1],s.lat,s.lon)*1.30;md='est';}
     distCache[s.name]={L:Math.round(km*100)/100,mode:md}; });
-  dres=SRC.map(s=>({src:s,L:distCache[s.name].L,mode:distCache[s.name].mode})).sort((a,b)=>a.L-b.L);
+  dres=SRC.map(s=>({src:s,L:distCache[s.name].L,mode:distCache[s.name].mode}));
+  sortDres();
   cmpState={};
   lastMeasured=$('dDest').value;
   renderAll(); if(map) drawMap();
@@ -2586,6 +2592,16 @@ function bindLegModal(){
   if(mp){ mp.style.display=r.sc?'':'none';
     mp.onclick=()=>{ const ctx={type:'cmp',mi,r}; document.getElementById('editModal').classList.remove('on'); openRouteModal(r.sc,ctx); }; }
 }
+/* ══════ ลำดับแถวของ "ระยะทางทุกแหล่ง" — ตัวเดียวใช้ร่วมกันทั้งจอ · ปุ่มคัดลอก · ไฟล์ .xlsx ══════
+   ⚠ บั๊กจริง v8.0: จอเรียงตามระยะใกล้→ไกล แต่ปุ่มคัดลอกกับไฟล์เรียงตามชื่อแหล่ง
+   คัดลอกคอลัมน์ระยะไปวางใน Excel ที่เรียงอีกแบบ = ระยะไปตกผิดแหล่งทั้งชุด แบบเงียบ ๆ
+   กติกาใหม่: เห็นบนจอเรียงยังไง คัดลอกและไฟล์ต้องเรียงแบบนั้นเป๊ะ (WYSIWYG) */
+let distSort='name';       /* 'name' = ตามชื่อแหล่ง (ตรงกับ Table4) · 'dist' = ใกล้→ไกล */
+function sortDres(){
+  if(distSort==='dist') dres.sort((a,b)=>(a.L-b.L)||String(a.src.name).localeCompare(String(b.src.name),'th'));
+  else dres.sort((a,b)=>String(a.src.name).localeCompare(String(b.src.name),'th'));
+}
+const DIST_SORT_TH={name:'ชื่อแหล่ง ก→ฮ',dist:'ระยะใกล้→ไกล'};
 /* ---------- distance-only mode ---------- */
 function renderDist(){
   $('dRows').innerHTML=dres.map((r,i)=>`<tr class="trow ${r.selRoute?'sel':''}" data-i="${i}">
@@ -2595,6 +2611,10 @@ function renderDist(){
       <td class="no-print" style="text-align:center">${r.mode==='road'?'<span class="pill ok">ถนนจริง</span>':'<span class="pill warn">ประมาณ — ต้องตรวจ</span>'}</td>
       <td class="no-print" style="text-align:center"><button class="btn ghost" style="padding:2px 10px;font-size:11.5px" data-md="${i}">🗺 แผนที่</button></td></tr>`).join('')
     ||'<tr><td colspan="6" style="color:var(--muted);padding:16px">ยังไม่ได้คำนวณ</td></tr>';
+  document.querySelectorAll('[data-ds]').forEach(b=>{
+    b.classList.toggle('on', b.dataset.ds===distSort);
+    b.onclick=()=>{ distSort=b.dataset.ds; sortDres(); renderDist(); };
+  });
   document.querySelectorAll('[data-md]').forEach(e=>e.onclick=()=>{const r=dres[+e.dataset.md]; openRouteModal(r.src,{type:'dist',r});});
   document.querySelectorAll('tr.trow').forEach(tr=>tr.onclick=ev=>{
     if(['A','BUTTON'].includes(ev.target.tagName)) return;
@@ -2952,7 +2972,8 @@ function distRows(){
     push(nm, ov?ov.L:d.L, ov?ov.legs:null);
   });
   Object.keys(legOf).forEach(nm=>{ const r=legOf[nm]; push(nm,r.L,r.legs); });
-  out.sort((a,b)=>String(a.nm).localeCompare(String(b.nm),'th'));
+  /* ห้ามเรียงใหม่ตรงนี้ — dres ถูกเรียงไว้แล้วตามที่ผู้ใช้เลือกบนจอ
+     แหล่งที่มาจาก cmpState อย่างเดียว (ไม่มีใน dres) ต่อท้ายตามชื่อ */
   return out;
 }
 const DIST_HEAD=['แหล่งวัสดุ','รถบรรทุก 6 ล้อ','รถบรรทุก 10 ล้อ','รถบรรทุก 10 ล้อ พ่วง'];
@@ -2965,7 +2986,8 @@ $('dCopy').onclick=()=>{
   const body=rows.map(o=>distCells(o).join('\t')).join('\n');
   const back=$('dCopy').textContent;
   navigator.clipboard.writeText(body).then(()=>{
-    $('dCopy').textContent='คัดลอกแล้ว ✓ ('+rows.length+' แหล่ง เรียงตามชื่อ)';
+    $('dCopy').textContent='คัดลอกแล้ว ✓ ('+rows.length+' แหล่ง)';
+    toast('คัดลอกแล้ว '+rows.length+' แหล่ง — เรียงตาม "'+DIST_SORT_TH[distSort]+'" เหมือนที่เห็นบนตาราง วางให้ตรงลำดับเดียวกัน');
     setTimeout(()=>$('dCopy').textContent=back,2200);});
 };
 $('dCsv').onclick=()=>{
