@@ -934,6 +934,9 @@ canvas{max-width:100%}
           <div><label class="f">หน้าเว็บขายเป็นหน่วยอะไร</label><input type="text" id="mWebUnit" placeholder="เช่น ถุง 50 กก."><div class="hint">ปล่อยว่างถ้าหน่วยตรงกับบัญชีคุมอยู่แล้ว</div></div>
           <div><label class="f">1 <span id="mFacU">หน่วยมาตรฐาน</span> = กี่ <span id="mFacW">หน่วยร้าน</span></label><input type="number" id="mFac" step="0.0001" min="0" placeholder="1"><div class="hint" id="mFacHint">ราคาบนเว็บ × ตัวเลขนี้ = ราคาต่อหน่วยมาตรฐาน</div></div>
         </div>
+        <div style="margin-top:10px"><button class="btn ghost" id="mProbe">🔎 ลองดึงราคาเดี๋ยวนี้</button>
+          <span class="hint">ให้ระบบวิ่งอ่านลิงก์นี้ทันที จะได้เห็นเลยว่าอ่านราคาออกไหม · ชื่อสินค้าตรงกับที่เลือกไหม</span></div>
+        <div id="mProbeOut" style="margin-top:8px"></div>
       </div>
       <label class="f">หมายเหตุ / ที่มา (เลขหนังสือ · ใบเสนอราคา · หน่วยงาน)</label><input type="text" id="mRef" placeholder="เช่น ใบเสนอราคา SQ.690801 ลว. 10 ส.ค. 69 · ไม่รวม VAT">
       <div style="display:flex;gap:8px;margin-top:12px;flex-wrap:wrap">
@@ -961,6 +964,23 @@ canvas{max-width:100%}
         <span class="hint" id="apHint">ราคาที่ส่งมาจะยังไม่เข้าคลังจนกว่าผู้ดูแลจะกดอนุมัติ</span>
       </div>
       <div id="apBox" style="margin-top:10px"></div>
+    </div>
+    <div class="card" style="margin-bottom:12px">
+      <h2 data-ic="link">ลิงก์สินค้าที่ระบบดึงราคาให้ <span class="pill" id="wiStat">—</span></h2>
+      <div class="statusline">
+        <button class="btn ghost" id="wiLoad">🔄 ดูทะเบียนลิงก์</button>
+        <button class="btn ghost" id="wiRun">⬇ ดึงราคาเดี๋ยวนี้</button>
+        <span class="hint">ตั้งไว้ให้วิ่งเองทุกวันที่ 1 เวลา 07:00 · ราคาที่ได้เข้าคิวรออนุมัติ ไม่เข้าคลังเอง</span>
+      </div>
+      <div id="wiBox" style="margin-top:10px"></div>
+    </div>
+    <div class="card" style="margin-bottom:12px">
+      <h2 data-ic="check">ชื่อที่ยังไม่มีในบัญชีคุม <span class="pill warn" id="niStat">—</span></h2>
+      <div class="statusline">
+        <button class="btn ghost" id="niLoad">🔄 ไล่จับคู่ให้ทุกตัว</button>
+        <span class="hint">ระบบเทียบด้วยสเปก (ขนาด · รหัส · เลข) ไม่ใช่แค่ชื่อตรงกันเป๊ะ — กดยืนยันแล้วส่งเข้าบัญชีคุมได้เลย</span>
+      </div>
+      <div id="niBox" style="margin-top:10px"></div>
     </div>
     <div class="card" style="margin-bottom:12px">
       <h2 data-ic="pin">แหล่งที่ยังไม่มีพิกัด <span class="pill warn" id="noGeoStat">—</span></h2>
@@ -1193,7 +1213,7 @@ const SELFCHK={missing:new Set(),ok:false};
 const $ = id => { const el=document.getElementById(id);
   if(!el) SELFCHK.missing.add(id);
   return el; };
-const APPVER='8.8';        /* เลขรุ่นที่เดียว — ที่อื่นดึงจากตัวนี้ */
+const APPVER='8.9';        /* เลขรุ่นที่เดียว — ที่อื่นดึงจากตัวนี้ */
 const APPDATE='22 ส.ค. 2569';   /* วันที่ของรุ่นนี้ ที่เดียวเหมือนกัน */
 /* ⚠ ป้ายรุ่นบนแถบข้างเคยเป็นข้อความตายตัวใน HTML (v6.2) พอขึ้นรุ่นใหม่แล้วลืมแก้
    ผู้ใช้เลยเห็นเลขรุ่นเก่าทั้งที่โค้ดใหม่หมดแล้ว — ต่อไปนี้เขียนจาก APPVER เสมอ */
@@ -1330,6 +1350,130 @@ function rSig(s){
   s=s.replace(/[.\s()\/\-–—ๆฯ]/g,'');
   return s;
 }
+/*<<SPECMATCH>>*/
+/* ═══ ตัวจับคู่ชื่อวัสดุแบบ "โทเคนสเปก" (ชั้นที่ 5) ═══════════════════════════
+   ปัญหาจริง: ชื่อบนหน้าเว็บร้านค้า กับ ชื่อในบัญชีคุม เขียนคนละแบบ แต่เป็นของชิ้นเดียวกัน
+       บัญชีคุม   "สาย CV ขนาด 2 x 25 ตร.มม."
+       หน้าเว็บ   "สายไฟ FD-0.6/1KV-CV 2x25 ยาซากิ YAZAKI"
+   เทียบทั้งสตริงยังไงก็ไม่ตรง (ชั้น 1-4 ตกหมด) แต่คนมองแวบเดียวก็รู้ เพราะเห็น CV กับ 2x25
+   ชั้นนี้จึงดึงเฉพาะ "โทเคนที่ชี้ตัวตนของ" ออกมาเทียบ ไม่สนคำห้อยรอบ ๆ
+       dim  ขนาดคูณ        2x25 · 16x16 · 2x4      ← ตัวชี้ขาดที่สุด
+       code รหัส/รุ่นอังกฤษ CV · NYY · SR24 · MCCB
+       num  เลข+หน่วย       9มม · 50กก · 4.5เมตร
+       word คำไทยที่เหลือ    สาย · ปูนซีเมนต์ · เหล็กเส้น   ← กันข้ามหมวด
+
+   กติกากันจับคู่มั่ว — ห้ามผ่อนข้อไหน เพราะจับผิดแปลว่าราคาไปลงชื่อผิดแบบเงียบ ๆ
+       ① dim  ของบัญชีคุมต้องอยู่ครบในชื่อที่เจอ   (ขาดตัวเดียว = คนละของ)
+       ② code ของบัญชีคุมต้องอยู่ครบ               (CV ≠ NYY แม้ขนาดเท่ากัน)
+       ③ ต้องมีคำไทยร่วมกันอย่างน้อย 1 คำ          (กัน 2x25 ไปแมตช์ไม้กับสายไฟ)
+       ④ ชื่อที่ไม่มีสเปกเลย (ไม่มี dim/code/num) ห้ามจับคู่ด้วยชั้นนี้ — มั่วแน่นอน
+       ⑤ ชื่อที่มีแต่ num (ไม่มี dim/code) → num ต้องครบ เพราะเหลือมันตัวเดียวที่ชี้ตัวตน
+          ถ้ามี dim/code อยู่แล้ว num เป็นแค่ตัวตัดสินคะแนน — ร้านค้ามักไม่เขียนความยาวไว้
+          "SR24 9 มม." กับ "SR24 12 มม." ผ่านประตูทั้งคู่ แต่ตัวที่เลข 9 ตรงจะชนะ
+       ⑥ เข้าเกณฑ์คะแนนสูงสุดเท่ากันหลายชื่อมาตรฐาน = กำกวม ห้ามตัดสินเอง ให้คนเลือก
+
+   ⚠ บล็อกนี้ต้องเหมือนกันเป๊ะทั้งใน index.html และ Code.gs
+     (คนละรันไทม์ แก้ที่เดียวไม่ได้) — t_arch มีข้อทดสอบเทียบทีละตัวอักษรไว้แล้ว        */
+var SPEC_STOP_TH = {'ขนาด':1,'ยาว':1,'กว้าง':1,'หนา':1,'สูง':1,'ตรา':1,'รุ่น':1,'มอก':1,'ชนิด':1,
+  'แบบ':1,'และ':1,'หรือ':1,'ที่':1,'ของ':1,'ราคา':1,'บรรจุ':1,'ต่อ':1,'ประเภท':1,'สำหรับ':1,
+  'มม':1,'ซม':1,'กก':1,'นิ้ว':1,'ตรมม':1,'เมตร':1,'ลบ':1,'ตร':1,'ถุง':1,'ชุด':1,'อัน':1,'ตัว':1,
+  'กล่อง':1,'แผ่น':1,'เส้น':1,'ท่อน':1,'โรงโม':1,'อำเภอ':1,'จำกัด':1,'มหาชน':1,'สาขา':1,'จาก':1,
+  'ทั่วไป':1,'พิเศษ':1,'คุณภาพ':1,'งาน':1};
+var SPEC_STOP_EN = {'the':1,'and':1,'for':1,'with':1,'type':1,'model':1,'brand':1,'size':1,
+  'mm':1,'cm':1,'kg':1,'sqmm':1,'set':1,'pcs':1,'pc':1,'ea':1};
+
+function _spUniq(a) { var o = {}, r = []; for (var i = 0; i < a.length; i++) { if (!o[a[i]]) { o[a[i]] = 1; r.push(a[i]); } } return r; }
+function _spN(x) { var n = parseFloat(x); return isFinite(n) ? String(n) : String(x); }
+
+/** แตกชื่อออกเป็นโทเคน 4 กอง */
+function specTok(s) {
+  var t = String(s == null ? '' : s).toLowerCase();
+  t = t.replace(/[ ​‌‍﻿]/g, ' ').replace(/,/g, '');
+  t = t.replace(/\(?\s*มอก\.?\s*[\d\/\-]+(\s*เล่ม\s*[\d\-]+)?\s*\)?/g, ' ');
+  /* ต้องยุบ "ขนาดคูณ" ก่อนแปลงหน่วย ไม่งั้น 2" x 4" จะโดนคำว่า นิ้ว คั่นจนอ่านไม่ออกว่าเป็น 2x4 */
+  t = t.replace(/(\d+(?:\.\d+)?)\s*(?:นิ้ว|["″]|มม\.?|ซม\.?|\bmm\b|\bcm\b)?\s*[x×*]\s*(?=\d)/g, '$1x');
+  t = t.replace(/ตารางมิลลิเมตร|ตร\.?\s?มม\.?|sq\.?\s?mm\.?|mm2|sqmm/g, ' ตรมม ');
+  t = t.replace(/มิลลิเมตร|มม\.?|\bmm\b/g, ' มม ');
+  t = t.replace(/เซนติเมตร|ซม\.?|\bcm\b/g, ' ซม ');
+  t = t.replace(/กิโลกรัม|กก\.?|\bkgs?\b/g, ' กก ');
+  t = t.replace(/นิ้ว|["″]/g, ' นิ้ว ');
+  t = t.replace(/เมตร|\bm\b/g, ' เมตร ');
+  t = t.replace(/[็-๎]/g, '');
+  t = t.replace(/([a-z])\s*[-–—]\s*(\d)/g, '$1$2');
+  t = t.replace(/(\d)\s*[x×*]\s*(?=\d)/g, '$1x');
+  var dim = [], code = [], num = [], word = [], m;
+  var reDim = /\d+(?:\.\d+)?(?:x\d+(?:\.\d+)?)+/g;
+  while ((m = reDim.exec(t))) dim.push(m[0].split('x').map(_spN).join('x'));
+  t = t.replace(reDim, ' ');
+  var reCode = /[a-z]{2,}\d*/g;
+  while ((m = reCode.exec(t))) if (!SPEC_STOP_EN[m[0]]) code.push(m[0]);
+  t = t.replace(reCode, ' ');
+  var reNum = /(\d+(?:\.\d+)?)\s*(ตรมม|มม|ซม|กก|นิ้ว|เมตร)?/g;
+  while ((m = reNum.exec(t))) if (m[1]) num.push(_spN(m[1]) + (m[2] || ''));
+  var th = t.match(/[฀-๿]+/g) || [];
+  for (var i = 0; i < th.length; i++) if (th[i].length >= 3 && !SPEC_STOP_TH[th[i]]) word.push(th[i]);
+  return { dim: _spUniq(dim), code: _spUniq(code), num: _spUniq(num), word: _spUniq(word) };
+}
+
+function _spHasAll(need, have) {
+  for (var i = 0; i < need.length; i++) if (have.indexOf(need[i]) < 0) return false;
+  return true;
+}
+/** คำไทยถือว่าตรงกันได้ถ้าเป็นคำเดียวกัน หรือคำหนึ่งอยู่ในอีกคำ (สาย ⊂ สายไฟ) */
+function _spWordHit(A, B) {
+  var n = 0;
+  for (var i = 0; i < A.length; i++) {
+    for (var j = 0; j < B.length; j++) {
+      if (A[i] === B[j] || (A[i].length >= 3 && B[j].indexOf(A[i]) >= 0)
+                        || (B[j].length >= 3 && A[i].indexOf(B[j]) >= 0)) { n++; break; }
+    }
+  }
+  return n;
+}
+
+/** ชื่อในบัญชีคุม (regName) ตรงกับชื่อที่เจอ (candName) ไหม — คืน null ถ้าไม่ตรง */
+function specMatch(regName, candName) {
+  var R = specTok(regName), C = specTok(candName);
+  var strong = (R.dim.length + R.code.length) > 0;
+  if (!strong && !R.num.length) return null;                           /* ④ */
+  if (!_spHasAll(R.dim, C.dim)) return null;                           /* ① */
+  if (!_spHasAll(R.code, C.code)) return null;                         /* ② */
+  var hitN = 0;
+  for (var i = 0; i < R.num.length; i++) if (C.num.indexOf(R.num[i]) >= 0) hitN++;
+  if (!strong && hitN < R.num.length) return null;                     /* ⑤ */
+  var wh = _spWordHit(R.word, C.word);
+  if (!wh) return null;                                                /* ③ */
+  var why = [];
+  if (R.dim.length) why.push('ขนาด ' + R.dim.join(' · '));
+  if (R.code.length) why.push('รหัส ' + R.code.join(' · ').toUpperCase());
+  if (hitN) why.push('เลข ' + R.num.filter(function (x) { return C.num.indexOf(x) >= 0; }).join(' · '));
+  var missN = R.num.length - hitN;
+  return { score: Math.round((R.dim.length * 3 + R.code.length * 2 + hitN + wh - missN * 0.5) * 100) / 100,
+           tier: (strong && !missN) ? 'แน่ใจ' : 'น่าจะใช่',
+           why: why.join(' + ') + ' ตรงกัน'
+                + (missN ? ' · ไม่เจอเลข ' + R.num.filter(function (x) { return C.num.indexOf(x) < 0; }).join(' · ') : '') };
+}
+
+/** ไล่หาชื่อในบัญชีคุมที่เข้าเกณฑ์ทั้งหมด
+    list = [{name, std}]  (name = ชื่อเดิมในบัญชีคุม · std = ชื่อมาตรฐาน)
+    คืน {best, hits, ambiguous} — ambiguous = ชนะเท่ากันแต่ชี้ชื่อมาตรฐานคนละตัว */
+function specBest(list, cand) {
+  var hits = [];
+  for (var i = 0; i < list.length; i++) {
+    var r = specMatch(list[i].name, cand);
+    if (r) hits.push({ name: list[i].name, std: list[i].std || list[i].name,
+                       score: r.score, tier: r.tier, why: r.why });
+  }
+  if (!hits.length) return null;
+  hits.sort(function (a, b) { return b.score - a.score; });
+  var top = hits[0], stds = {}, n = 0;
+  for (var j = 0; j < hits.length; j++) {
+    if (hits[j].score < top.score) break;
+    if (!stds[hits[j].std]) { stds[hits[j].std] = 1; n++; }
+  }
+  return { best: top, hits: hits.slice(0, 5), ambiguous: n > 1 };
+}
+/*<</SPECMATCH>>*/
 /* หาชื่อมาตรฐาน/หมวดของชื่อดิบ: ตรงเป๊ะ → ยุบช่องว่าง → ตัดวรรณยุกต์ */
 function regStd(name){
   const raw=String(name==null?'':name).trim();
@@ -3998,8 +4142,66 @@ function impInit(){
     renderQueue(); loadPending();
     $('mPush').disabled=false;
   };
+  /* ═══ ลองดึงราคาเดี๋ยวนี้ ═══
+     วางลิงก์แล้วต้องรู้ผลตอนนั้น ไม่ใช่รอถึงรอบดึงเดือนหน้าถึงจะรู้ว่าอ่านไม่ออก
+     ฝั่งเบราว์เซอร์ยิงหาเว็บร้านค้าเองไม่ได้ (ติด CORS) จึงให้ชีทเป็นคนไปอ่านแทน */
+  $('mProbe').onclick=async()=>{
+    const out=$('mProbeOut'), url=($('mUrl').value||'').trim();
+    const wurl=($('cfgUrl').value||'').trim();
+    const mat=regStd(($('mMat').value||'').trim())||($('mMat').value||'').trim();
+    if(!/^https?:\/\//i.test(url)){ out.innerHTML='<span class="up">วางลิงก์หน้าสินค้าก่อน</span>'; return; }
+    if(!wurl){ out.innerHTML='<span class="up">ยังไม่ตั้ง WebApp URL (ดูหน้า ระบบ)</span>'; return; }
+    $('mProbe').disabled=true; out.innerHTML='<span class="hint">กำลังให้ชีทวิ่งอ่านหน้านี้… (หน้าหมวดอาจใช้เวลาสัก 10–20 วินาที)</span>';
+    try{
+      const r=await (await fetch(wurl,{method:'POST',headers:{'Content-Type':'text/plain;charset=utf-8'},
+        body:JSON.stringify({token:WTOKEN,action:'webprobe',url,mat})})).json();
+      if(!r.ok) throw new Error(r.error||'เรียกไม่สำเร็จ');
+      const d=r.result||{};
+      const fac=Math.max(0,parseFloat($('mFac').value)||1);
+      let h='';
+      if(d.ok){
+        const std=Math.round(d.price*fac*100)/100;
+        h+='<span class="pill ok">อ่านราคาได้</span> <b>'+fmt(d.price)+'</b> บาท ตามที่หน้าเว็บเขียน'
+          +(fac!==1?' · × '+fac+' = <b>'+fmt(std)+'</b> บาท/'+esc(($('mUnit').value||'').trim()):'')
+          +' <span class="hint">('+esc(d.how)+')</span>';
+        $('mPrice').value=std; syncWeb();
+        h+='<div class="hint" style="margin-top:4px">เติมราคาให้ในช่องแล้ว — ตรวจแล้วกด "เพิ่มเข้าคิว" ได้เลย</div>';
+      } else {
+        h+='<span class="pill bad">อ่านราคาไม่ได้</span> '+esc(d.note||'');
+      }
+      if(d.title) h+='<div class="hint" style="margin-top:4px">ชื่อสินค้าที่อ่านได้: <b>'+esc(d.title)+'</b>'
+        +(d.via&&d.via!=='หน้าที่ให้มา'?' <span class="pill">'+esc(d.via)+'</span>':'')+'</div>';
+      /* จุดสำคัญที่ KORN ถาม: ชื่อจับคู่ถูกไหม — ต้องบอกด้วยว่าตรงเพราะอะไร */
+      if(mat){
+        h+='<div class="hint" style="margin-top:4px">เทียบกับ <b>'+esc(mat)+'</b>: '
+          +(d.match?'<span class="pill ok">'+esc(d.match.tier)+'</span> '+esc(d.match.why)
+                   :'<span class="pill warn">สเปกไม่ตรง</span> ชื่อบนหน้าเว็บไม่มีขนาด/รหัสที่ตรงกับรายการที่เลือก — ตรวจว่าวางลิงก์ถูกตัวไหม')+'</div>';
+      }
+      if(d.choices&&d.choices.length) h+='<div class="hint" style="margin-top:4px">สินค้าในหน้านี้ที่สเปกตรง: '
+        +d.choices.map(c=>'<a href="'+esc(c.url)+'" target="_blank" rel="noopener">'+esc(c.text.slice(0,60))+'</a>').join(' · ')+'</div>';
+      out.innerHTML=h;
+    }catch(e){ out.innerHTML='<span class="up">ลองดึงไม่สำเร็จ: '+esc(e.message)+' — ชีทอาจยังใช้ Code.gs ก่อนรุ่น 27</span>'; }
+    $('mProbe').disabled=false;
+  };
   $('apLoad').onclick=()=>loadPending();
-  loadPending(true);
+  $('wiLoad').onclick=()=>loadWebItems();
+  $('niLoad').onclick=()=>loadNewItems();
+  $('wiRun').onclick=async()=>{
+    const wurl=($('cfgUrl').value||'').trim(), box=$('wiBox');
+    if(!wurl){ box.innerHTML='<div class="hint">ยังไม่ตั้ง WebApp URL (ดูหน้า ระบบ)</div>'; return; }
+    if(!confirm('ให้ชีทวิ่งอ่านทุกลิงก์ในทะเบียนเดี๋ยวนี้?\n\nลิงก์เยอะจะใช้เวลาหลายสิบวินาที\nราคาที่ได้จะเข้าคิวรออนุมัติ ไม่เข้าคลังเอง')) return;
+    $('wiRun').disabled=true; box.innerHTML='<div class="hint">กำลังดึง… อย่าปิดหน้านี้</div>';
+    try{
+      const r=await (await fetch(wurl,{method:'POST',headers:{'Content-Type':'text/plain;charset=utf-8'},
+        body:JSON.stringify({token:WTOKEN,action:'webfetch',only:''})})).json();
+      if(!r.ok) throw new Error(r.error||'ดึงไม่สำเร็จ');
+      const d=r.result||{};
+      toast('อ่านลิงก์ '+d.read+' · ได้ราคา '+d.got+' · ไม่สำเร็จ '+d.fail+' · เข้าคิว '+d.queued);
+      loadWebItems(); loadPending();
+    }catch(e){ box.innerHTML='<div class="hint"><span class="up">'+esc(e.message)+'</span></div>'; }
+    $('wiRun').disabled=false;
+  };
+  loadPending(true); loadWebItems(true); loadNewItems(true);
   $('mCopy').onclick=()=>{
     /* คัดลอกเฉพาะแถวราคา — แถวจดลิงก์ไม่มีราคาและไม่ผูกเดือน วางลงตารางราคาไม่ได้ */
     const qp=queue.filter(q=>!q.linkOnly);
@@ -4169,6 +4371,113 @@ async function loadPending(silent){
       decidePend(b.dataset.ok||b.dataset.no, !!b.dataset.ok, b));
   }catch(e){ box.innerHTML='<div class="hint">อ่านคิวรออนุมัติไม่ได้ — ตรวจว่าวาง Code.gs รุ่น 17 และแชร์ชีทแบบอ่านได้แล้ว</div>'; }
 }
+/* ══════ ทะเบียนลิงก์สินค้า (แท็บ WEBITEMS) ══════
+   ตอบคำถามว่า "ลิงก์ที่ใส่ไปอยู่ไหน · จะดึงเมื่อไร · ราคามาหรือยัง · เช็คยังไง"
+   ต้องเห็นได้จากแดชบอร์ด ไม่ใช่ต้องเปิดชีทไปไล่ดูเอง */
+async function gvizRows(tab){
+  const id=($('cfgSheet').value||'').trim(); if(!id) return null;
+  const r=await fetch(`https://docs.google.com/spreadsheets/d/${id}/gviz/tq?tqx=out:csv&sheet=${tab}&nocache=${Date.now()}`);
+  if(!r.ok) throw new Error('อ่านแท็บ '+tab+' ไม่ได้');
+  return csvParse(await r.text()).slice(1).filter(c=>String(c[0]||'').trim());
+}
+async function loadWebItems(silent){
+  const box=$('wiBox'), st=$('wiStat');
+  if(!silent) box.innerHTML='<div class="hint">กำลังอ่านทะเบียนลิงก์…</div>';
+  try{
+    const rows=await gvizRows('WEBITEMS');
+    if(rows===null){ if(!silent) box.innerHTML='<div class="hint">ยังไม่ตั้งค่า Sheet (หน้า ระบบ)</div>'; return; }
+    st.textContent=rows.length?rows.length+' ลิงก์':'ยังไม่มีลิงก์';
+    st.className='pill '+(rows.length?'ok':'warn');
+    if(!rows.length){ box.innerHTML='<div class="hint">ยังไม่มีลิงก์ในทะเบียน — กรอกราคาโดยเลือกช่องทาง "เว็บร้านค้า" แล้ววางลิงก์ ระบบจะจดให้เอง</div>'; return; }
+    box.innerHTML=`<div class="tw" style="max-height:230px"><table><thead><tr>
+      <th>รายการวัสดุ</th><th>หน่วย</th><th class="num">ตัวคูณ</th><th>แหล่ง</th>
+      <th class="num">ราคาบนเว็บ</th><th class="num">ต่อหน่วยมาตรฐาน</th><th>ดึงล่าสุด</th><th>สถานะ</th><th>ลิงก์</th>
+      </tr></thead><tbody>`
+      +rows.map(c=>{
+        const bad=/ไม่ได้|ไม่เจอ/.test(String(c[8]||''));
+        return `<tr><td>${esc(c[0])}</td><td>${esc(c[1])}</td><td class="num">${esc(c[2]||1)}</td><td>${esc(c[3])}</td>
+        <td class="num">${c[5]?fmt(parseFloat(c[5])):'<span class="hint">—</span>'}</td>
+        <td class="num">${c[6]?fmt(parseFloat(c[6])):'<span class="hint">—</span>'}</td>
+        <td>${esc(c[7]||'ยังไม่เคยดึง')}</td>
+        <td><span class="pill ${bad?'bad':(c[6]?'ok':'warn')}">${esc(c[8]||'รอดึง')}</span>
+          ${c[9]?'<div class="hint">'+esc(c[9])+'</div>':''}</td>
+        <td>${/^https?:\/\//i.test(String(c[4]||''))?'<a href="'+esc(c[4])+'" target="_blank" rel="noopener">เปิด ↗</a>':'—'}</td></tr>`;
+      }).join('')+'</tbody></table></div>'
+      +'<div class="hint" style="margin-top:6px">ราคาที่ดึงได้ <b>ไม่เข้าคลังเอง</b> — จะไปโผล่ที่การ์ด "รายการรออนุมัติ" ให้กดอนุมัติก่อนเสมอ</div>';
+  }catch(e){ if(!silent) box.innerHTML='<div class="hint">อ่านทะเบียนลิงก์ไม่ได้ — ต้องวาง Code.gs รุ่น 25 ขึ้นไป แล้วรัน ตั้งค่าแท็บให้ครบ หนึ่งครั้ง</div>'; }
+}
+
+/* ══════ ชื่อที่ยังไม่มีในบัญชีคุม (แท็บ NEW_ITEMS) + ข้อเสนอคู่ ══════
+   เดิมต้องเปิดชีทไล่ดูเอง แล้วไปแก้บัญชีคุมทีละตัว
+   ตอนนี้ไล่เทียบด้วยชั้นโทเคนสเปกให้ทุกแถว บอกเหตุผล แล้วกดยืนยันส่งเข้าบัญชีคุมได้เลย */
+let NIROWS=[];
+async function loadNewItems(silent){
+  const box=$('niBox'), st=$('niStat');
+  if(!silent) box.innerHTML='<div class="hint">กำลังอ่านและไล่จับคู่…</div>';
+  try{
+    const rows=await gvizRows('NEW_ITEMS');
+    if(rows===null){ if(!silent) box.innerHTML='<div class="hint">ยังไม่ตั้งค่า Sheet (หน้า ระบบ)</div>'; return; }
+    /* บัญชีคุมอยู่ในหน่วยความจำอยู่แล้ว — จับคู่ในเบราว์เซอร์ได้เลย ไม่ต้องรบกวนชีท */
+    const list=Object.keys(REG.map).map(n=>({name:n,std:REG.map[n]}));
+    NIROWS=rows.slice(0,400).map((c,i)=>{
+      const nm=String(c[0]).trim();
+      const known=!!regStd(nm);
+      const r=known?null:specBest(list,nm);
+      return {i,nm,unit:String(c[1]||''),chan:String(c[2]||''),known,
+              std:known?regStd(nm):(r?r.best.std:''),
+              tier:known?'มีอยู่แล้ว':(r?r.best.tier:'ไม่พบคู่'),
+              why:known?'ตรงกับบัญชีคุมด้วยชั้นเทียบชื่อปกติ':(r?r.best.why:''),
+              amb:r?r.ambiguous:false, alt:r?r.hits.map(h=>h.std):[]};
+    });
+    const prop=NIROWS.filter(r=>!r.known&&r.std);
+    const none=NIROWS.filter(r=>!r.known&&!r.std);
+    const done=NIROWS.filter(r=>r.known);
+    st.textContent=NIROWS.length+' ชื่อ · เสนอคู่ได้ '+prop.length;
+    st.className='pill '+(prop.length?'ok':(none.length?'warn':'ok'));
+    if(!NIROWS.length){ box.innerHTML='<div class="hint">ไม่มีชื่อค้าง — ทุกชื่อในคลังจับคู่บัญชีคุมได้หมดแล้ว</div>'; return; }
+    box.innerHTML=`<div class="hint" style="margin-bottom:6px">
+        <span class="pill ok">จับคู่ได้แล้ว ${done.length}</span>
+        <span class="pill">เสนอคู่ให้ ${prop.length}</span>
+        <span class="pill warn">ยังหาคู่ไม่ได้ ${none.length}</span>
+        — ติ๊กเฉพาะแถวที่ถูกต้อง แล้วกดส่ง · ระบบจะเพิ่มเป็น "ชื่อเดิม → ชื่อมาตรฐาน" ในบัญชีคุม</div>
+      <div class="tw" style="max-height:300px"><table><thead><tr>
+        <th style="width:34px"></th><th>ชื่อที่พบ</th><th>เสนอให้เป็น</th><th>เพราะอะไร</th><th style="width:90px">ระดับ</th>
+      </tr></thead><tbody>`
+      +NIROWS.map(r=>`<tr${r.amb?' style="background:#FBF0E6"':''}>
+        <td>${r.known||!r.std?'':'<input type="checkbox" class="ni-ck" data-i="'+r.i+'"'+(r.tier==='แน่ใจ'&&!r.amb?' checked':'')+'>'}</td>
+        <td>${esc(r.nm)}${r.unit?'<div class="hint">'+esc(r.unit)+'</div>':''}</td>
+        <td>${r.std?esc(r.std):'<span class="hint">—</span>'}${r.amb?'<div class="hint">อีก '+(r.alt.length-1)+' ตัวคะแนนเท่ากัน — ต้องเลือกเอง</div>':''}</td>
+        <td class="hint">${esc(r.why||'ไม่มีขนาด/รหัสให้ยึด — ต้องใส่ในบัญชีคุมเอง')}</td>
+        <td><span class="pill ${r.known?'ok':(r.tier==='แน่ใจ'&&!r.amb?'ok':(r.std?'warn':'bad'))}">${esc(r.tier)}${r.amb?' ⚠':''}</span></td>
+      </tr>`).join('')+'</tbody></table></div>'
+      +`<div class="ap-act" style="margin-top:8px">
+        <input type="password" class="ni-pass" placeholder="รหัสผู้ดูแล" autocomplete="new-password">
+        <button class="btn" id="niSend">✓ ส่งคู่ที่ติ๊กไว้เข้าบัญชีคุม</button>
+        <span class="hint" id="niSt"></span></div>`;
+    $('niSend').onclick=sendNewItemMatches;
+  }catch(e){ if(!silent) box.innerHTML='<div class="hint">อ่านแท็บ NEW_ITEMS ไม่ได้ — ตรวจว่าแชร์ชีทแบบอ่านได้แล้ว</div>'; }
+}
+async function sendNewItemMatches(){
+  const st=$('niSt'), url=($('cfgUrl').value||'').trim();
+  const pass=(document.querySelector('.ni-pass')||{}).value||'';
+  const pick=[...document.querySelectorAll('.ni-ck:checked')].map(b=>NIROWS[+b.dataset.i]).filter(r=>r&&r.std);
+  if(!pick.length){ st.innerHTML='<span class="up">ยังไม่ได้ติ๊กแถวไหน</span>'; return; }
+  if(!url){ st.innerHTML='<span class="up">ยังไม่ตั้ง WebApp URL</span>'; return; }
+  if(!pass){ st.innerHTML='<span class="up">ใส่รหัสผู้ดูแลก่อน</span>'; return; }
+  if(!confirm('เพิ่มคู่ชื่อ '+pick.length+' รายการเข้าบัญชีคุม?\n\nต่อจากนี้ราคาที่ใช้ชื่อเหล่านี้จะถูกยุบเข้าชื่อมาตรฐานให้เอง')) return;
+  $('niSend').disabled=true; st.textContent='กำลังส่ง…';
+  try{
+    /* mode append — ห้ามใช้ replace เด็ดขาด จะล้างบัญชีคุมทั้งแท็บทิ้ง */
+    const rows=pick.map(r=>['', r.nm, regCat(r.std)||'', r.unit||REG.unit[r.std]||'', r.std]);
+    const res=await (await fetch(url,{method:'POST',headers:{'Content-Type':'text/plain;charset=utf-8'},
+      body:JSON.stringify({token:WTOKEN,action:'registry',mode:'append',pass,rows})})).json();
+    if(!res.ok) throw new Error(res.error||'ส่งไม่สำเร็จ');
+    st.innerHTML='<span class="pill ok">เพิ่มแล้ว '+res.added+' คู่</span> ชีทเก็บกวาดคิวชื่อใหม่ให้เองแล้ว';
+    setTimeout(()=>{ loadLive(); loadNewItems(); },1200);
+  }catch(e){ st.innerHTML='<span class="up">'+esc(e.message)+'</span>'; }
+  $('niSend').disabled=false;
+}
+
 async function decidePend(batch, ok, btn){
   const grp=btn.closest('.apgrp'), pass=grp.querySelector('.ap-pass').value;
   const st=grp.querySelector('[data-st]'); const url=($('cfgUrl').value||'').trim();
