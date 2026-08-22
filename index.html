@@ -1213,7 +1213,7 @@ const SELFCHK={missing:new Set(),ok:false};
 const $ = id => { const el=document.getElementById(id);
   if(!el) SELFCHK.missing.add(id);
   return el; };
-const APPVER='8.9';        /* เลขรุ่นที่เดียว — ที่อื่นดึงจากตัวนี้ */
+const APPVER='8.10';        /* เลขรุ่นที่เดียว — ที่อื่นดึงจากตัวนี้ */
 const APPDATE='22 ส.ค. 2569';   /* วันที่ของรุ่นนี้ ที่เดียวเหมือนกัน */
 /* ⚠ ป้ายรุ่นบนแถบข้างเคยเป็นข้อความตายตัวใน HTML (v6.2) พอขึ้นรุ่นใหม่แล้วลืมแก้
    ผู้ใช้เลยเห็นเลขรุ่นเก่าทั้งที่โค้ดใหม่หมดแล้ว — ต่อไปนี้เขียนจาก APPVER เสมอ */
@@ -1405,6 +1405,11 @@ function specTok(s) {
   var reDim = /\d+(?:\.\d+)?(?:x\d+(?:\.\d+)?)+/g;
   while ((m = reDim.exec(t))) dim.push(m[0].split('x').map(_spN).join('x'));
   t = t.replace(reDim, ' ');
+  /* รหัสที่มีขีดคั่น (VCT-G) เก็บทั้งแบบตัดขีด (vctg) และชิ้นย่อย (vct)
+     VCT-G ต้องเจาะจงกว่า VCT — ถ้าบัญชีคุมระบุ VCT-G แล้วหน้าเว็บมีแต่ VCT ต้องไม่จับ
+     แต่ถ้าบัญชีคุมระบุแค่ VCT แล้วหน้าเว็บเขียน VCT-G ยังถือว่าตระกูลเดียวกัน จับได้ */
+  var reHy = /[a-z]+(?:-[a-z]+)+/g;
+  while ((m = reHy.exec(t))) code.push(m[0].replace(/-/g, ''));
   var reCode = /[a-z]{2,}\d*/g;
   while ((m = reCode.exec(t))) if (!SPEC_STOP_EN[m[0]]) code.push(m[0]);
   t = t.replace(reCode, ' ');
@@ -1433,7 +1438,10 @@ function _spWordHit(A, B) {
 
 /** ชื่อในบัญชีคุม (regName) ตรงกับชื่อที่เจอ (candName) ไหม — คืน null ถ้าไม่ตรง */
 function specMatch(regName, candName) {
-  var R = specTok(regName), C = specTok(candName);
+  return _spMatchTok(specTok(regName), specTok(candName));
+}
+/** ตัวเทียบจริง — รับโทเคนที่แตกไว้แล้ว เพื่อไม่ต้องแตกซ้ำเป็นล้านรอบ */
+function _spMatchTok(R, C) {
   var strong = (R.dim.length + R.code.length) > 0;
   if (!strong && !R.num.length) return null;                           /* ④ */
   if (!_spHasAll(R.dim, C.dim)) return null;                           /* ① */
@@ -1454,15 +1462,41 @@ function specMatch(regName, candName) {
                 + (missN ? ' · ไม่เจอเลข ' + R.num.filter(function (x) { return C.num.indexOf(x) < 0; }).join(' · ') : '') };
 }
 
+/** ทำดัชนีบัญชีคุมไว้ล่วงหน้า — จำเป็นจริง ไม่ใช่การรีดความเร็วเล่น ๆ
+    ของเดิมไล่เทียบทุกชื่อกับทุกชื่อ: 400 ชื่อค้าง × บัญชีคุม 4,933 ชื่อ ≈ 2 ล้านครั้ง
+    และแต่ละครั้งแตกโทเคนใหม่หมด → หน้าเว็บค้างยาวจนเหมือนแฮงก์ (เจอจริงตอนใช้งาน)
+    ดัชนีนี้ถูกต้อง 100% เพราะกติกา ①②⑤ บังคับว่าโทเคนของบัญชีคุมต้องอยู่ในชื่อที่เจอ "ครบ"
+    ตัวที่ไม่มีโทเคนร่วมกันสักตัว จึงไม่มีทางผ่านประตูอยู่แล้ว ตัดทิ้งได้โดยผลลัพธ์ไม่เปลี่ยน */
+function specIndex(list) {
+  var idx = { toks: [], std: [], name: [], by: {} };
+  for (var i = 0; i < list.length; i++) {
+    var nm = list[i].name, T = specTok(nm), keys = [], j;
+    idx.toks.push(T); idx.name.push(nm); idx.std.push(list[i].std || nm);
+    for (j = 0; j < T.dim.length; j++) keys.push('d' + T.dim[j]);
+    for (j = 0; j < T.code.length; j++) keys.push('c' + T.code[j]);
+    if (!keys.length) for (j = 0; j < T.num.length; j++) keys.push('n' + T.num[j]);
+    for (j = 0; j < keys.length; j++) (idx.by[keys[j]] = idx.by[keys[j]] || []).push(i);
+  }
+  return idx;
+}
+
 /** ไล่หาชื่อในบัญชีคุมที่เข้าเกณฑ์ทั้งหมด
     list = [{name, std}]  (name = ชื่อเดิมในบัญชีคุม · std = ชื่อมาตรฐาน)
+    idx  = ดัชนีจาก specIndex(list) — ถ้าจะเรียกหลายรอบ ต้องส่งมาด้วย ไม่งั้นช้ามาก
     คืน {best, hits, ambiguous} — ambiguous = ชนะเท่ากันแต่ชี้ชื่อมาตรฐานคนละตัว */
-function specBest(list, cand) {
-  var hits = [];
-  for (var i = 0; i < list.length; i++) {
-    var r = specMatch(list[i].name, cand);
-    if (r) hits.push({ name: list[i].name, std: list[i].std || list[i].name,
-                       score: r.score, tier: r.tier, why: r.why });
+function specBest(list, cand, idx) {
+  idx = idx || specIndex(list);
+  var C = specTok(cand), keys = [], pool = {}, hits = [], i, j, arr;
+  for (j = 0; j < C.dim.length; j++) keys.push('d' + C.dim[j]);
+  for (j = 0; j < C.code.length; j++) keys.push('c' + C.code[j]);
+  for (j = 0; j < C.num.length; j++) keys.push('n' + C.num[j]);
+  for (i = 0; i < keys.length; i++) {
+    arr = idx.by[keys[i]];
+    if (arr) for (j = 0; j < arr.length; j++) pool[arr[j]] = 1;
+  }
+  for (var p in pool) {
+    var k = +p, r = _spMatchTok(idx.toks[k], C);
+    if (r) hits.push({ name: idx.name[k], std: idx.std[k], score: r.score, tier: r.tier, why: r.why });
   }
   if (!hits.length) return null;
   hits.sort(function (a, b) { return b.score - a.score; });
@@ -1472,6 +1506,107 @@ function specBest(list, cand) {
     if (!stds[hits[j].std]) { stds[hits[j].std] = 1; n++; }
   }
   return { best: top, hits: hits.slice(0, 5), ambiguous: n > 1 };
+}
+/* ═══ ตารางราคาแบบเมทริกซ์ (แถว × คอลัมน์) ═══════════════════════════════
+   ร้านสายไฟชอบทำหน้าเดียวจบเป็นตาราง แล้ววางราคาไว้ที่จุดตัด
+        รายการ                        │ 2 Core │ 3 Core │ 4 Core
+        สายไฟ VCT-G 1/1 Yazaki        │  35.40 │  44.10 │  64.00
+        สายไฟ VCT-G 2.5/2.5 Yazaki    │  79.40 │  88.70 │ 116.00
+   "สาย VCT-G 2 x 2.5 ตร.มม." = แถว 2.5/2.5 ตัดกับ คอลัมน์ 2 Core = 79.40
+   ตัวแกะราคาแบบเดิม (JSON-LD/meta/regex) ใช้กับหน้าแบบนี้ไม่ได้เลย —
+   มันจะคว้าตัวเลขแรกที่เจอ ซึ่งคือ 35.40 = ผิดทั้งขนาดและจำนวนแกน
+
+   วิธี: ทุกช่องราคาสร้าง "ชื่อสมมติ" = ป้ายแถว + หัวคอลัมน์ + ขนาดคูณที่ประกอบจากสองแกน
+   (แถวมีเลข 2.5 · คอลัมน์มีเลข 2 → ประกอบเป็น 2x2.5 และ 2.5x2)
+   แล้วส่งเข้าตัวจับคู่ตัวเดิม กติกากันมั่วชุดเดียวกันทั้งหมด
+   ช่องที่ไม่ใช่จะตกกติกา ① เอง เพราะขนาดคูณที่ประกอบได้ไม่ตรง (2x1 · 3x2.5 · 4x2.5)   */
+function _spText(cell) {
+  return String(cell).replace(/<[^>]*>/g, ' ')
+    .replace(/&nbsp;/g, ' ').replace(/&amp;/g, '&').replace(/&quot;/g, '"')
+    .replace(/&lt;/g, '<').replace(/&gt;/g, '>')
+    .replace(/&#(\d+);/g, function (a, d) { return String.fromCharCode(+d); })
+    .replace(/\s+/g, ' ').trim();
+}
+function _spPrice(s) {
+  var t = String(s).replace(/[,\s฿]/g, '');
+  if (!/^\d+(\.\d+)?$/.test(t)) return null;
+  var n = parseFloat(t);
+  return (isFinite(n) && n > 0 && n < 10000000) ? Math.round(n * 100) / 100 : null;
+}
+function _spNums(s) {
+  var m = String(s).match(/\d+(?:\.\d+)?/g) || [], o = {}, r = [];
+  for (var i = 0; i < m.length; i++) { var v = _spN(m[i]); if (!o[v]) { o[v] = 1; r.push(v); } }
+  return r;
+}
+/** ขนาดคูณที่ประกอบจากเลขของสองแกน — ใส่ทั้งสองทิศ เพราะร้านเขียนสลับกันได้ */
+function _spCross(rowLab, colLab) {
+  var a = _spNums(rowLab), b = _spNums(colLab), out = [];
+  for (var i = 0; i < b.length && i < 4; i++)
+    for (var j = 0; j < a.length && j < 4; j++) { out.push(b[i] + 'x' + a[j]); out.push(a[j] + 'x' + b[i]); }
+  return out.join(' ');
+}
+/** แตกทุก <table> ในหน้าออกเป็นตาราง 2 มิติ (ข้อความล้วน)
+    ⚠ ต้องกาง rowspan/colspan ให้ตรงคอลัมน์จริง ไม่งั้นหัวตารางเลื่อนไม่ตรงกับแถวข้อมูล
+    (ตารางสายไฟจริงมีช่องรูปสินค้า rowspan=4 อยู่หน้าสุด หัวตารางจะเกินมา 1 ช่อง
+     ผลคือหยิบราคาเลื่อนไปหนึ่งคอลัมน์ — ได้ 3 Core ทั้งที่ขอ 2 Core) */
+function specTables(html) {
+  var out = [], tb = String(html == null ? '' : html).match(/<table[\s\S]*?<\/table>/gi) || [];
+  for (var t = 0; t < tb.length && t < 12; t++) {
+    var trs = tb[t].match(/<tr[\s\S]*?<\/tr>/gi) || [], grid = [], carry = {};
+    for (var i = 0; i < trs.length && i < 200; i++) {
+      var cells = trs[i].match(/<t[dh]\b[\s\S]*?<\/t[dh]>/gi) || [];
+      var row = [], ci = 0, cj = 0, guard = 0;
+      while ((cj < cells.length || (carry[ci] && carry[ci].left > 0)) && guard++ < 400) {
+        if (carry[ci] && carry[ci].left > 0) { row[ci] = carry[ci].text; carry[ci].left--; ci++; continue; }
+        var cell = cells[cj++];
+        var cs = parseInt((cell.match(/colspan\s*=\s*["']?(\d+)/i) || [])[1], 10) || 1;
+        var rs = parseInt((cell.match(/rowspan\s*=\s*["']?(\d+)/i) || [])[1], 10) || 1;
+        var txt = _spText(cell);
+        for (var k = 0; k < cs && k < 40; k++) {
+          var v = k === 0 ? txt : '';
+          row[ci] = v;
+          if (rs > 1) carry[ci] = { left: rs - 1, text: v };
+          ci++;
+        }
+      }
+      for (var z = 0; z < row.length; z++) if (row[z] == null) row[z] = '';
+      if (row.length) grid.push(row);
+    }
+    if (grid.length >= 2) out.push(grid);
+  }
+  return out;
+}
+/** หาช่องราคาในตารางที่ตรงกับชื่อวัสดุ — คืน {price,row,col,tier,why,ties} หรือ null */
+function specTablePick(html, mat) {
+  if (!mat) return null;
+  var R = specTok(mat);                       /* แตกโทเคนชื่อวัสดุครั้งเดียว ใช้กับทุกช่อง */
+  var tabs = specTables(html), best = null, ties = 0;
+  for (var t = 0; t < tabs.length; t++) {
+    var g = tabs[t], head = g[0], hi = 0;
+    /* หัวตาราง = แถวแรก (ใน 3 แถวแรก) ที่มีช่องข้อความตั้งแต่ 2 ช่องขึ้นไป */
+    for (var h = 0; h < g.length && h < 3; h++) {
+      var txt = 0;
+      for (var c = 0; c < g[h].length; c++) if (g[h][c] && _spPrice(g[h][c]) == null) txt++;
+      if (txt >= 2) { head = g[h]; hi = h; break; }
+    }
+    for (var r = hi + 1; r < g.length; r++) {
+      var row = g[r], lab = '', li = -1;
+      for (var c2 = 0; c2 < row.length; c2++)
+        if (row[c2] && _spPrice(row[c2]) == null) { lab = row[c2]; li = c2; break; }
+      if (!lab) continue;
+      for (var c3 = li + 1; c3 < row.length; c3++) {
+        var p = _spPrice(row[c3]);
+        if (p == null) continue;
+        var col = head[c3] || '';
+        var m = _spMatchTok(R, specTok(lab + ' ' + col + ' ' + _spCross(lab, col)));
+        if (!m) continue;
+        if (!best || m.score > best.score) { best = { price: p, row: lab, col: col, score: m.score, tier: m.tier, why: m.why }; ties = 0; }
+        else if (m.score === best.score && (best.price !== p || best.row !== lab)) ties++;
+      }
+    }
+  }
+  if (best) { best.ties = ties; if (ties) best.tier = 'น่าจะใช่'; }
+  return best;
 }
 /*<</SPECMATCH>>*/
 /* หาชื่อมาตรฐาน/หมวดของชื่อดิบ: ตรงเป๊ะ → ยุบช่องว่าง → ตัดวรรณยุกต์ */
@@ -4169,6 +4304,10 @@ function impInit(){
       } else {
         h+='<span class="pill bad">อ่านราคาไม่ได้</span> '+esc(d.note||'');
       }
+      /* ราคามาจากตารางแบบแถว×คอลัมน์ ต้องบอกให้ครบว่าหยิบช่องไหน ไม่งั้นตรวจย้อนไม่ได้เลย */
+      if(d.cell) h+='<div class="hint" style="margin-top:4px">หยิบจากตาราง: แถว <b>'+esc(d.cell.row)
+        +'</b> × คอลัมน์ <b>'+esc(String(d.cell.col).replace(/\s+/g,' '))+'</b>'
+        +(d.cell.ties?' <span class="pill warn">มีช่องอื่นคะแนนเท่ากัน '+d.cell.ties+' ช่อง — ตรวจก่อน</span>':'')+'</div>';
       if(d.title) h+='<div class="hint" style="margin-top:4px">ชื่อสินค้าที่อ่านได้: <b>'+esc(d.title)+'</b>'
         +(d.via&&d.via!=='หน้าที่ให้มา'?' <span class="pill">'+esc(d.via)+'</span>':'')+'</div>';
       /* จุดสำคัญที่ KORN ถาม: ชื่อจับคู่ถูกไหม — ต้องบอกด้วยว่าตรงเพราะอะไร */
@@ -4417,18 +4556,29 @@ async function loadNewItems(silent){
   try{
     const rows=await gvizRows('NEW_ITEMS');
     if(rows===null){ if(!silent) box.innerHTML='<div class="hint">ยังไม่ตั้งค่า Sheet (หน้า ระบบ)</div>'; return; }
-    /* บัญชีคุมอยู่ในหน่วยความจำอยู่แล้ว — จับคู่ในเบราว์เซอร์ได้เลย ไม่ต้องรบกวนชีท */
+    /* บัญชีคุมอยู่ในหน่วยความจำอยู่แล้ว — จับคู่ในเบราว์เซอร์ได้เลย ไม่ต้องรบกวนชีท
+       ⚠ ต้องทำดัชนีก่อน แล้วทยอยทำทีละก้อนพร้อมคืนคิวให้หน้าจอวาด
+       ของเดิมไล่ตรง ๆ 400 × 4,933 ครั้งในจังหวะเดียว = หน้าค้างยาวเหมือนแฮงก์ */
     const list=Object.keys(REG.map).map(n=>({name:n,std:REG.map[n]}));
-    NIROWS=rows.slice(0,400).map((c,i)=>{
-      const nm=String(c[0]).trim();
-      const known=!!regStd(nm);
-      const r=known?null:specBest(list,nm);
-      return {i,nm,unit:String(c[1]||''),chan:String(c[2]||''),known,
+    box.innerHTML='<div class="hint">กำลังทำดัชนีบัญชีคุม '+list.length.toLocaleString()+' ชื่อ…</div>';
+    await new Promise(r=>setTimeout(r));
+    const idx=specIndex(list);
+    const src=rows.slice(0,400);
+    NIROWS=[];
+    for(let s=0;s<src.length;s+=25){
+      src.slice(s,s+25).forEach((c,k)=>{
+        const i=s+k, nm=String(c[0]).trim();
+        const known=!!regStd(nm);
+        const r=known?null:specBest(list,nm,idx);
+        NIROWS.push({i,nm,unit:String(c[1]||''),chan:String(c[2]||''),known,
               std:known?regStd(nm):(r?r.best.std:''),
               tier:known?'มีอยู่แล้ว':(r?r.best.tier:'ไม่พบคู่'),
               why:known?'ตรงกับบัญชีคุมด้วยชั้นเทียบชื่อปกติ':(r?r.best.why:''),
-              amb:r?r.ambiguous:false, alt:r?r.hits.map(h=>h.std):[]};
-    });
+              amb:r?r.ambiguous:false, alt:r?r.hits.map(h=>h.std):[]});
+      });
+      st.textContent='กำลังไล่จับคู่ '+NIROWS.length+'/'+src.length;
+      await new Promise(r=>setTimeout(r));      /* คืนคิวให้หน้าจอ ไม่งั้นดูเหมือนค้าง */
+    }
     const prop=NIROWS.filter(r=>!r.known&&r.std);
     const none=NIROWS.filter(r=>!r.known&&!r.std);
     const done=NIROWS.filter(r=>r.known);
