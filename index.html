@@ -876,6 +876,18 @@ canvas{max-width:100%}
       <div class="ph-chips" id="hcImp"></div>
     </div>
   </div>
+  <!-- ═══ แท็บระดับหน้า ═══
+       หน้านี้ทำงานคนละเรื่องกัน 5 อย่าง (กรอกราคา · อนุมัติ · ดึงราคาเว็บ · จับคู่ชื่อ · พิกัด)
+       ถ้ากองรวมกันในหน้าเดียว ข้อมูลเยอะจนสับสนว่ากำลังทำอะไรอยู่
+       แต่ละแท็บโหลดข้อมูลของตัวเองตอนเปิดครั้งแรกเท่านั้น เปิดหน้ามาจึงไม่หน่วง -->
+  <div class="tabbar no-print" id="ipTabs" style="border-bottom:1px solid var(--hairline);gap:0;margin-bottom:12px">
+    <button class="tabbtn on" data-ip="add">✎ กรอกราคา</button>
+    <button class="tabbtn" data-ip="ap">✓ รออนุมัติ <span class="pill warn" id="apStat">—</span></button>
+    <button class="tabbtn" data-ip="wi">🔗 ลิงก์ดึงราคาเว็บ <span class="pill" id="wiStat">—</span></button>
+    <button class="tabbtn" data-ip="ni">🧩 จับคู่ชื่อ <span class="pill warn" id="niStat">—</span></button>
+    <button class="tabbtn" data-ip="geo">📍 พิกัดแหล่ง <span class="pill warn" id="noGeoStat">—</span></button>
+  </div>
+  <div class="ipane" id="ip-add">
   <div class="grid2">
     <div class="card">
       <h2 data-ic="pen">เพิ่มราคาเข้าคิว</h2>
@@ -957,33 +969,51 @@ canvas{max-width:100%}
       <input type="file" id="impFile" accept=".xlsx" style="display:none">
     </div>
     <div>
-    <div class="card" style="margin-bottom:12px">
-      <h2 data-ic="check">รายการรออนุมัติ <span class="pill warn" id="apStat">—</span></h2>
+    <div class="card">
+      <h2 data-ic="clock">คิวรอส่งขึ้นคลังข้อมูล <span class="pill warn" id="qStat">0 รายการ</span></h2>
+      <div class="tw" style="max-height:520px"><table id="tblQueue"><thead><tr><th>เดือน</th><th>รายการ</th><th>หน่วย</th><th class="num">ราคา</th><th>แหล่ง</th><th>ช่องทาง</th><th>อ้างอิง</th><th>สถานะชื่อ</th></tr></thead><tbody id="qRows"></tbody></table></div>
+    </div>
+    </div>
+  </div>
+  </div><!-- /ip-add -->
+
+  <div class="ipane" id="ip-ap" style="display:none">
+    <div class="card">
+      <h2 data-ic="check">รายการรออนุมัติ</h2>
       <div class="statusline">
         <button class="btn ghost" id="apLoad">🔄 ดูรายการรออนุมัติ</button>
         <span class="hint" id="apHint">ราคาที่ส่งมาจะยังไม่เข้าคลังจนกว่าผู้ดูแลจะกดอนุมัติ</span>
       </div>
       <div id="apBox" style="margin-top:10px"></div>
     </div>
-    <div class="card" style="margin-bottom:12px">
-      <h2 data-ic="link">ลิงก์สินค้าที่ระบบดึงราคาให้ <span class="pill" id="wiStat">—</span></h2>
+  </div>
+
+  <div class="ipane" id="ip-wi" style="display:none">
+    <div class="card">
+      <h2 data-ic="link">ลิงก์สินค้าที่ระบบดึงราคาให้</h2>
       <div class="statusline">
         <button class="btn ghost" id="wiLoad">🔄 ดูทะเบียนลิงก์</button>
         <button class="btn ghost" id="wiRun">⬇ ดึงราคาเดี๋ยวนี้</button>
-        <span class="hint">ตั้งไว้ให้วิ่งเองทุกวันที่ 1 เวลา 07:00 · ราคาที่ได้เข้าคิวรออนุมัติ ไม่เข้าคลังเอง</span>
+        <span class="hint">กดได้ทุกเมื่อ ไม่ต้องรอวันที่ 1 · ราคาที่ได้เข้าคิวรออนุมัติ ไม่เข้าคลังเอง</span>
       </div>
       <div id="wiBox" style="margin-top:10px"></div>
     </div>
-    <div class="card" style="margin-bottom:12px">
-      <h2 data-ic="check">ชื่อที่ยังไม่มีในบัญชีคุม <span class="pill warn" id="niStat">—</span></h2>
+  </div>
+
+  <div class="ipane" id="ip-ni" style="display:none">
+    <div class="card">
+      <h2 data-ic="check">ชื่อที่ยังไม่มีในบัญชีคุม</h2>
       <div class="statusline">
         <button class="btn ghost" id="niLoad">🔄 ไล่จับคู่ให้ทุกตัว</button>
         <span class="hint">ระบบเทียบด้วยสเปก (ขนาด · รหัส · เลข) ไม่ใช่แค่ชื่อตรงกันเป๊ะ — กดยืนยันแล้วส่งเข้าบัญชีคุมได้เลย</span>
       </div>
       <div id="niBox" style="margin-top:10px"></div>
     </div>
-    <div class="card" style="margin-bottom:12px">
-      <h2 data-ic="pin">แหล่งที่ยังไม่มีพิกัด <span class="pill warn" id="noGeoStat">—</span></h2>
+  </div>
+
+  <div class="ipane" id="ip-geo" style="display:none">
+    <div class="card">
+      <h2 data-ic="pin">แหล่งที่ยังไม่มีพิกัด</h2>
       <div class="hint" style="margin-bottom:8px">แหล่งที่มีราคาในคลังแต่ยังไม่มีหมุดในแท็บ SOURCES —
         <b>คำนวณระยะขนส่งไม่ได้จนกว่าจะใส่พิกัด</b>
         <br>วิธีเอาพิกัด: เปิด Google Maps → คลิกขวาที่จุดนั้น → คลิกตัวเลขคู่แรก (คัดลอกอัตโนมัติ) → วางลงช่องเดียวได้เลย</div>
@@ -993,11 +1023,6 @@ canvas{max-width:100%}
       </div>
       <div id="noGeoBox" style="margin-top:10px"></div>
       <div class="hint" id="noGeoMsg" style="margin-top:8px"></div>
-    </div>
-    <div class="card">
-      <h2 data-ic="clock">คิวรอส่งขึ้นคลังข้อมูล <span class="pill warn" id="qStat">0 รายการ</span></h2>
-      <div class="tw" style="max-height:340px"><table id="tblQueue"><thead><tr><th>เดือน</th><th>รายการ</th><th>หน่วย</th><th class="num">ราคา</th><th>แหล่ง</th><th>ช่องทาง</th><th>อ้างอิง</th><th>สถานะชื่อ</th></tr></thead><tbody id="qRows"></tbody></table></div>
-    </div>
     </div>
   </div>
 </section>
@@ -1213,7 +1238,7 @@ const SELFCHK={missing:new Set(),ok:false};
 const $ = id => { const el=document.getElementById(id);
   if(!el) SELFCHK.missing.add(id);
   return el; };
-const APPVER='8.10';        /* เลขรุ่นที่เดียว — ที่อื่นดึงจากตัวนี้ */
+const APPVER='8.11';        /* เลขรุ่นที่เดียว — ที่อื่นดึงจากตัวนี้ */
 const APPDATE='22 ส.ค. 2569';   /* วันที่ของรุ่นนี้ ที่เดียวเหมือนกัน */
 /* ⚠ ป้ายรุ่นบนแถบข้างเคยเป็นข้อความตายตัวใน HTML (v6.2) พอขึ้นรุ่นใหม่แล้วลืมแก้
    ผู้ใช้เลยเห็นเลขรุ่นเก่าทั้งที่โค้ดใหม่หมดแล้ว — ต่อไปนี้เขียนจาก APPVER เสมอ */
@@ -1590,9 +1615,16 @@ function specTablePick(html, mat) {
       if (txt >= 2) { head = g[h]; hi = h; break; }
     }
     for (var r = hi + 1; r < g.length; r++) {
-      var row = g[r], lab = '', li = -1;
+      /* ป้ายแถว = "ทุกช่องที่ไม่ใช่ตัวเลข" ในแถวนั้นรวมกัน ไม่ใช่แค่ช่องแรก
+         เพราะตารางจริงมีสองทรง และทรงที่สองชื่อสินค้าไม่ได้อยู่ช่องแรก
+           ทรง ก (เมทริกซ์)  ชื่อ │ 2 Core │ 3 Core │ 4 Core
+           ทรง ข (รายการยาว) ชนิด │ ชื่อ │ ราคา      ← ชื่ออยู่ช่องที่สอง
+         ถ้าเอาแต่ช่องแรก ทรง ข จะเทียบกับหัวกลุ่ม (เช่น "CV YAZAKI 2C") ซึ่งไม่มีขนาด
+         ผลคือทุกแถวหน้าตาเหมือนกันหมด แล้วขึ้นว่าหาราคาไม่เจอ */
+      var row = g[r], parts = [], li = -1;
       for (var c2 = 0; c2 < row.length; c2++)
-        if (row[c2] && _spPrice(row[c2]) == null) { lab = row[c2]; li = c2; break; }
+        if (row[c2] && _spPrice(row[c2]) == null) { parts.push(row[c2]); if (li < 0) li = c2; }
+      var lab = parts.join(' ');
       if (!lab) continue;
       for (var c3 = li + 1; c3 < row.length; c3++) {
         var p = _spPrice(row[c3]);
@@ -2036,12 +2068,16 @@ let KDD_HOLD=0;
 document.addEventListener('mousedown',e=>{ if(e.target&&e.target.closest&&e.target.closest('.kdd-panel')) KDD_HOLD=1; },true);
 document.addEventListener('mouseup',()=>{ if(KDD_HOLD){ KDD_HOLD=0;
   const w=document.querySelector('.kdd.open'); const i=w&&w.querySelector('.kdd-inp'); if(i) i.focus(); } },true);
-setInterval(()=>{ document.querySelectorAll('select[data-kdd]').forEach(sel=>{
-  const w=sel.closest('.kdd'); if(!w||w.classList.contains('open')) return;
-  const i=w.querySelector('.kdd-inp'); const o=sel.options[sel.selectedIndex];
+/* อัปเดตป้ายที่มองเห็นของดรอปดาวน์ให้ตรงกับค่าจริงในทันที
+   ใช้เมื่อโค้ดตั้งค่า sel.value= เอง (การตั้งค่าด้วยโค้ดไม่ยิงเหตุการณ์ใด ๆ)
+   ถ้าไม่เรียก ป้ายจะยังเป็นค่าเก่าจนกว่าตัวจับเวลาข้างล่างจะวิ่งมาถึง = เห็นค่าไม่ตรงชั่วครู่ */
+function kddSync(sel){
+  const w=sel&&sel.closest?sel.closest('.kdd'):null; if(!w||w.classList.contains('open')) return;
+  const i=w.querySelector('.kdd-inp'), o=sel.options[sel.selectedIndex];
   const t=o?o.text:'';
   if(i&&document.activeElement!==i&&i.value!==t) i.value=t;
-});},600);
+}
+setInterval(()=>{ document.querySelectorAll('select[data-kdd]').forEach(kddSync); },600);
 
 /* ── แถบกำลังโหลด + ระลอกปุ่ม + การ์ดไล่เข้า ── */
 (function(){
@@ -3811,6 +3847,9 @@ function buildMovers(){
 
 /* ============ นำเข้าข้อมูล ============ */
 const queue=[];
+/* แท็บไหนโหลดข้อมูลไปแล้วบ้าง — ต้องอยู่นอก impInit เพราะ impInit ถูกเรียกซ้ำทุกครั้งที่คลังโหลดใหม่
+   ถ้าเก็บไว้ข้างใน จะรีเซ็ตแล้วไล่จับคู่ใหม่ทั้งหมดโดยไม่จำเป็น */
+const IPDONE={};
 function impInit(){
   $('mUnitList').innerHTML=P.units.filter(u=>u).map(u=>`<option value="${esc(u)}">`).join('');
   /* แหล่ง: dropdown จากบัญชีแหล่งวัสดุ + แหล่งที่มีในคลัง */
@@ -3884,9 +3923,12 @@ function impInit(){
        ยังแก้เองได้ ถ้าบัญชีคุมยังไม่ได้ระบุหมวดของวัสดุตัวนั้น */
     const c=regCat(std), cSel=$('mCat'), cH=$('mCatHint');
     if(c && [...cSel.options].some(o=>o.value===c)){
-      if(!cSel.value || cSel.dataset.auto==='1'){ cSel.value=c; cSel.dataset.auto='1'; }
+      if(!cSel.value || cSel.dataset.auto==='1'){
+        if(cSel.value!==c){ cSel.value=c; kddSync(cSel); fillMat(); }   /* หมวดเปลี่ยน = กรองรายการตามด้วยเสมอ */
+        cSel.dataset.auto='1';
+      }
       if(cH) cH.innerHTML = cSel.value===c
-        ? 'เติมจากบัญชีคุมให้แล้ว: <b>'+esc(c)+'</b>'
+        ? 'เติมจากบัญชีคุมให้แล้ว: <b>'+esc(c)+'</b> · รายการถูกกรองเหลือเฉพาะหมวดนี้'
         : '<span class="pill warn">ไม่ตรงบัญชีคุม</span> บัญชีคุมระบุ <b>'+esc(c)+'</b>';
     } else if(cH) cH.innerHTML = std ? 'บัญชีคุมยังไม่ได้ระบุหมวดของรายการนี้ — เลือกเอง' : CATHINT;
     syncWeb();
@@ -4340,7 +4382,19 @@ function impInit(){
     }catch(e){ box.innerHTML='<div class="hint"><span class="up">'+esc(e.message)+'</span></div>'; }
     $('wiRun').disabled=false;
   };
-  loadPending(true); loadWebItems(true); loadNewItems(true);
+  /* ═══ สลับแท็บระดับหน้า — โหลดข้อมูลของแท็บตอนเปิดครั้งแรกเท่านั้น ═══
+     ⚠ ห้ามโหลดทุกแท็บตอนเปิดหน้า — การไล่จับคู่ชื่อกินเวลาเป็นวินาที
+     ถ้าเรียกทันทีที่เข้าหน้า จะเหมือนหน้าค้างทั้งที่ผู้ใช้แค่จะมากรอกราคา */
+  const IPLOAD={ap:()=>loadPending(), wi:()=>loadWebItems(), ni:()=>loadNewItems(),
+                geo:()=>{ try{ drawNoGeo(); }catch(e){} }};
+  document.querySelectorAll('#ipTabs .tabbtn').forEach(b=>b.onclick=()=>{
+    document.querySelectorAll('#ipTabs .tabbtn').forEach(x=>x.classList.toggle('on',x===b));
+    document.querySelectorAll('#pg-imp .ipane').forEach(p=>{
+      p.style.display = p.id==='ip-'+b.dataset.ip ? '' : 'none'; });
+    if(!IPDONE[b.dataset.ip] && IPLOAD[b.dataset.ip]){ IPDONE[b.dataset.ip]=1; IPLOAD[b.dataset.ip](); }
+  });
+  /* ป้ายจำนวนบนหัวแท็บ อ่านแบบเงียบ ๆ ได้ เพราะเบา (แค่ขนาดคิว/จำนวนลิงก์) */
+  loadPending(true); loadWebItems(true);
   $('mCopy').onclick=()=>{
     /* คัดลอกเฉพาะแถวราคา — แถวจดลิงก์ไม่มีราคาและไม่ผูกเดือน วางลงตารางราคาไม่ได้ */
     const qp=queue.filter(q=>!q.linkOnly);
