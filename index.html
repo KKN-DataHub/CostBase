@@ -365,17 +365,18 @@ input:focus,select:focus{outline:none;border-color:var(--teal);box-shadow:0 0 0 
 .ic svg{width:100%;height:100%}
 .pghead .ph-ico .ic{width:20px;height:20px;margin:0;color:#fff}
 h2 .ic{color:var(--teal)}
-.frow{display:grid;gap:10px;align-items:end}
+.frow{display:grid;gap:10px;align-items:start}
 /* ความกว้างขั้นต่ำต้องเล็กพอที่จะอยู่ในการ์ดครึ่งจอได้ (การ์ดใน .grid2 กว้างราว 370px)
    ไม่งั้นคอลัมน์สุดท้ายจะโผล่ออกนอกกรอบการ์ด */
 .frow.ymc{grid-template-columns:minmax(70px,96px) minmax(94px,150px) minmax(110px,1fr)}
 .frow.cm{grid-template-columns:minmax(110px,.8fr) minmax(150px,2fr)}
-.frow.upt{grid-template-columns:minmax(78px,110px) minmax(88px,130px) minmax(110px,1fr)}
+.frow.up{grid-template-columns:minmax(78px,120px) minmax(110px,1fr)}
 .frow.src{grid-template-columns:minmax(0,1fr)}
 .frow.src.two{grid-template-columns:minmax(150px,1fr) minmax(140px,1fr)}
 .frow.cl{grid-template-columns:minmax(160px,1.1fr) minmax(130px,1fr)}
+.frow.wu{grid-template-columns:minmax(130px,1fr) minmax(130px,1fr)}
 #mYear{text-align:center}
-@media(max-width:900px){.frow.ymc,.frow.cm,.frow.upt,.frow.src.two,.frow.cl{grid-template-columns:1fr}}
+@media(max-width:900px){.frow.ymc,.frow.cm,.frow.up,.frow.src.two,.frow.cl,.frow.wu{grid-template-columns:1fr}}
 .kdd{position:relative;width:100%}
 .kdd input.kdd-inp{width:100%;background:#fff;border:1.5px solid var(--grid);border-radius:10px;
   padding:9px 34px 9px 12px;font:inherit;font-size:13px;color:var(--ink);cursor:pointer;height:38px;
@@ -913,19 +914,27 @@ canvas{max-width:100%}
         </select></div>
       </div>
       <div class="frow cm">
-        <div><label class="f">หมวด (กรองรายการ)</label><select id="mCat"></select></div>
+        <div><label class="f">หมวด <span class="req">*</span></label><select id="mCat"></select><div class="hint" id="mCatHint">เลือกวัสดุแล้วระบบเติมหมวดให้เอง · เลือกเองก่อนได้ถ้าอยากกรองรายการให้สั้นลง</div></div>
         <div><label class="f">รายการวัสดุ <span class="req">*</span></label><input type="text" id="mMat" list="mMatList" placeholder="พิมพ์ / เลือกจากรายการ"><datalist id="mMatList"></datalist></div>
       </div>
-      <div class="frow upt">
+      <div class="frow up">
         <div><label class="f">หน่วย <span class="req">*</span></label><input type="text" id="mUnit" list="mUnitList"><datalist id="mUnitList"></datalist><div class="hint" id="mUnitHint"></div></div>
-        <div><label class="f">ราคา (ไม่รวมขนส่ง) <span class="req">*</span></label><input type="number" id="mPrice" step="0.01"></div>
-        <div><label class="f">ประเภท <span class="req">*</span></label><select id="mType"></select></div>
+        <div><label class="f">ราคา (ไม่รวมขนส่ง) <span class="req" id="mPriceReq">*</span></label><input type="number" id="mPrice" step="0.01"><div class="hint" id="mPriceHint"></div></div>
       </div>
       <div class="frow src" id="mSrcRow">
         <div><label class="f">แหล่ง / ผู้ให้ราคา <span class="req">*</span></label><select id="mSrcSel"></select></div>
         <div id="mSrcNewBox" style="display:none"><label class="f">ชื่อแหล่งใหม่ <span class="req">*</span></label><input type="text" id="mSrc" placeholder="พิมพ์ชื่อแหล่ง/บริษัท"></div>
       </div>
-      <div id="mUrlBox" style="display:none"><label class="f">ลิงก์หน้าสินค้า (URL เว็บที่สืบราคา)</label><input type="url" id="mUrl" placeholder="วางลิงก์หน้าสินค้า เช่น https://www.globalhouse.co.th/..."></div>
+      <div id="mUrlBox" style="display:none">
+        <label class="f">ลิงก์หน้าสินค้า (URL เว็บที่สืบราคา)</label>
+        <input type="url" id="mUrl" placeholder="วางลิงก์หน้าสินค้า เช่น https://www.globalhouse.co.th/...">
+        <div class="hint">ใส่ลิงก์แล้ว <b>ไม่ต้องกรอกราคา</b> — ระบบจะวิ่งอ่านราคาจากหน้านี้เองทุกเดือน แล้วส่งเข้าคิวรออนุมัติให้
+          <br>(จะกรอกราคาไปด้วยก็ได้ ถ้าอยากให้เดือนนี้เข้าคิวเลยไม่ต้องรอรอบดึง)</div>
+        <div class="frow wu" style="margin-top:10px">
+          <div><label class="f">หน้าเว็บขายเป็นหน่วยอะไร</label><input type="text" id="mWebUnit" placeholder="เช่น ถุง 50 กก."><div class="hint">ปล่อยว่างถ้าหน่วยตรงกับบัญชีคุมอยู่แล้ว</div></div>
+          <div><label class="f">1 <span id="mFacU">หน่วยมาตรฐาน</span> = กี่ <span id="mFacW">หน่วยร้าน</span></label><input type="number" id="mFac" step="0.0001" min="0" placeholder="1"><div class="hint" id="mFacHint">ราคาบนเว็บ × ตัวเลขนี้ = ราคาต่อหน่วยมาตรฐาน</div></div>
+        </div>
+      </div>
       <label class="f">หมายเหตุ / ที่มา (เลขหนังสือ · ใบเสนอราคา · หน่วยงาน)</label><input type="text" id="mRef" placeholder="เช่น ใบเสนอราคา SQ.690801 ลว. 10 ส.ค. 69 · ไม่รวม VAT">
       <div style="display:flex;gap:8px;margin-top:12px;flex-wrap:wrap">
         <button class="btn" id="mAdd">เพิ่มเข้าคิว</button>
@@ -1184,8 +1193,8 @@ const SELFCHK={missing:new Set(),ok:false};
 const $ = id => { const el=document.getElementById(id);
   if(!el) SELFCHK.missing.add(id);
   return el; };
-const APPVER='8.5';        /* เลขรุ่นที่เดียว — ที่อื่นดึงจากตัวนี้ */
-const APPDATE='21 ส.ค. 2569';   /* วันที่ของรุ่นนี้ ที่เดียวเหมือนกัน */
+const APPVER='8.8';        /* เลขรุ่นที่เดียว — ที่อื่นดึงจากตัวนี้ */
+const APPDATE='22 ส.ค. 2569';   /* วันที่ของรุ่นนี้ ที่เดียวเหมือนกัน */
 /* ⚠ ป้ายรุ่นบนแถบข้างเคยเป็นข้อความตายตัวใน HTML (v6.2) พอขึ้นรุ่นใหม่แล้วลืมแก้
    ผู้ใช้เลยเห็นเลขรุ่นเก่าทั้งที่โค้ดใหม่หมดแล้ว — ต่อไปนี้เขียนจาก APPVER เสมอ */
 try{ const _bv=document.getElementById('bVer'); if(_bv) _bv.textContent='v'+APPVER;
@@ -3525,9 +3534,6 @@ function buildMovers(){
 const queue=[];
 function impInit(){
   $('mUnitList').innerHTML=P.units.filter(u=>u).map(u=>`<option value="${esc(u)}">`).join('');
-  const prevTyp=$('mType').value;
-  $('mType').innerHTML='<option value="">— เลือก —</option>'
-    + P.types.filter(x=>x).map(x=>`<option ${x===prevTyp?'selected':''}>${esc(x)}</option>`).join('');
   /* แหล่ง: dropdown จากบัญชีแหล่งวัสดุ + แหล่งที่มีในคลัง */
   const prevSrc=$('mSrcSel').value;
   const srcSet=[...new Set([...SRC.map(x=>x.name),...P.srcs.filter(Boolean)])].sort((a,b)=>a.localeCompare(b,'th'));
@@ -3538,13 +3544,38 @@ function impInit(){
   const srcTog=()=>{ const nw=$('mSrcSel').value==='__new__';
     $('mSrcNewBox').style.display=nw?'':'none'; $('mSrcRow').classList.toggle('two',nw); };
   $('mSrcSel').onchange=srcTog; srcTog();
-  /* ช่องทางเว็บร้านค้า → โชว์ช่องวางลิงก์หน้าสินค้า (ผนวกเข้าหมายเหตุ/ที่มาให้เอง) */
-  const urlTog=()=>{ $('mUrlBox').style.display=$('mChan').value==='เว็บร้านค้า'?'':'none'; };
+  /* ═══ ช่องทางเว็บร้านค้า → โชว์กล่องลิงก์ + ปลดเงื่อนไข "ต้องกรอกราคา" ═══
+     ใส่ลิงก์แล้วไม่ต้องกรอกราคา — สคริปต์ฝั่งชีทจะวิ่งอ่านราคาจากหน้านั้นเอง
+     หน่วยที่ร้านขาย (ถุง/แผ่น/ท่อน) มักไม่ตรงหน่วยบัญชีคุม (ตัน/ลบ.ม.) จึงมีตัวคูณกำกับ
+     ระบบเดาตัวคูณให้เองไม่ได้ ถ้าเดาแล้วผิดคือราคากลางเพี้ยนเงียบ ๆ — ต้องให้คนบอก */
+  const webOn=()=>$('mChan').value==='เว็บร้านค้า';
+  const hasUrl=()=>/^https?:\/\//i.test(($('mUrl').value||'').trim());
+  const syncWeb=()=>{
+    const opt=webOn()&&hasUrl();
+    $('mPriceReq').style.display=opt?'none':'';
+    $('mPriceHint').innerHTML=opt
+      ? 'เว้นว่างได้ — ระบบจะดึงราคาจากลิงก์เอง · กรอกไว้ = เดือนนี้เข้าคิวทันทีไม่ต้องรอรอบดึง' : '';
+    const u=($('mUnit').value||'').trim(), w=($('mWebUnit').value||'').trim();
+    $('mFacU').textContent=u||'หน่วยมาตรฐาน';
+    $('mFacW').textContent=w||'หน่วยร้าน';
+    const f=parseFloat($('mFac').value)||1;
+    $('mFacHint').innerHTML = f===1
+      ? 'ตัวคูณ 1 = ราคาบนเว็บคือราคาต่อ '+esc(u||'หน่วยมาตรฐาน')+' ตรง ๆ'
+      : 'ราคาบนเว็บ × <b>'+f+'</b> = ราคาต่อ 1 '+esc(u||'หน่วยมาตรฐาน');
+  };
+  const urlTog=()=>{ $('mUrlBox').style.display=webOn()?'':'none'; syncWeb(); };
   $('mChan').onchange=urlTog; urlTog();   /* ต้องเป็น onchange= ไม่ใช่ addEventListener — impInit ถูกเรียกซ้ำทุกครั้งที่โหลดคลังใหม่ */
-  /* วัสดุ: หมวดกรองรายการให้สั้นลง */
+  $('mUrl').oninput=$('mWebUnit').oninput=$('mFac').oninput=syncWeb;
+  /* ═══ "หมวด" — ช่องเดียวจบ (v8.8) ═══
+     เดิมมีสองช่องที่เป็นเรื่องเดียวกัน: "หมวด" (ตัวกรอง ไม่บันทึก) กับ "ประเภท" (ค่าที่บันทึก)
+     "ประเภท" เป็นคอลัมน์เก่าใน PRICES ตั้งแต่ยังไม่มีบัญชีคุม พอมีบัญชีคุมแล้ว
+     ที่อื่นในระบบอ่านหมวดจากบัญชีคุมก่อนเสมอ (expCatOf · หน้าสถิติ) เหลือแค่ฟอร์มนี้ที่ยังถามซ้ำ
+     ตอนนี้เหลือช่องเดียว: กรองรายการก็ช่องนี้ · ค่าที่บันทึกลงคลังก็ช่องนี้ */
   const prevCat=$('mCat').value;
-  const mcats=REG.on?[...new Set(Object.values(REG.cat))].sort((a,b)=>a.localeCompare(b,'th')):P.types.filter(Boolean);
-  $('mCat').innerHTML='<option value="">ทุกหมวด</option>'+mcats.map(c=>`<option ${c===prevCat?'selected':''}>${esc(c)}</option>`).join('');
+  const mcats=[...new Set([...Object.values(REG.cat||{}), ...P.types.filter(x=>x)])]
+    .filter(Boolean).sort((a,b)=>cmpSrcName(a,b));
+  $('mCat').innerHTML='<option value="">— เลือก —</option>'
+    +mcats.map(c=>`<option ${c===prevCat?'selected':''}>${esc(c)}</option>`).join('');
   const fillMat=()=>{
     const c=$('mCat').value; let names=[];
     if(REG.on){   /* ใช้ชื่อมาตรฐานทั้งหมดจากบัญชีคุม แม้เดือนนี้ยังไม่มีราคา */
@@ -3556,7 +3587,11 @@ function impInit(){
     names.sort((a,b)=>a.localeCompare(b,'th'));
     $('mMatList').innerHTML=names.slice(0,4000).map(n=>`<option value="${esc(n)}">`).join('');
   };
-  $('mCat').onchange=fillMat; fillMat();
+  const CATHINT='เลือกวัสดุแล้วระบบเติมหมวดให้เอง · เลือกเองก่อนได้ถ้าอยากกรองรายการให้สั้นลง';
+  /* คนเลือกหมวดเอง = ตั้งใจกรอง → กรองรายการใหม่ และเลิกถือว่าเป็นค่าที่ระบบเติม
+     (การเติมอัตโนมัติใช้ .value= ซึ่งไม่ยิง onchange จึงไม่กรองรายการทิ้งโดยไม่ตั้งใจ) */
+  $('mCat').onchange=()=>{ $('mCat').dataset.auto=''; fillMat(); $('mCatHint').textContent=CATHINT; };
+  fillMat();
   /* เลือกวัสดุแล้วเติมหน่วยตามบัญชีคุมให้เลย — หน่วยผิด = ได้แถวใหม่ในคลังแทนการอัปเดตแถวเดิม */
   $('mMat').oninput=$('mMat').onchange=()=>{
     const std=regStd($('mMat').value.trim())||$('mMat').value.trim();
@@ -3565,6 +3600,17 @@ function impInit(){
     if(h) h.innerHTML = u ? (el.value.trim()&&el.value.trim()!==u
         ? '<span class="pill warn">หน่วยไม่ตรงบัญชีคุม</span> บัญชีคุมระบุ <b>'+esc(u)+'</b>'
         : 'หน่วยตามบัญชีคุม: <b>'+esc(u)+'</b>') : '';
+    /* ⚠ "หมวด" เติมจากบัญชีคุมให้เอง — เลือกวัสดุแล้วบัญชีคุมรู้อยู่แล้วว่าอยู่หมวดไหน
+       (ไม่ใช่การ "เลือกให้ล่วงหน้า" ตามกฎ R2 เพราะมันมาจากของที่ผู้ใช้เลือกเองแล้ว)
+       ยังแก้เองได้ ถ้าบัญชีคุมยังไม่ได้ระบุหมวดของวัสดุตัวนั้น */
+    const c=regCat(std), cSel=$('mCat'), cH=$('mCatHint');
+    if(c && [...cSel.options].some(o=>o.value===c)){
+      if(!cSel.value || cSel.dataset.auto==='1'){ cSel.value=c; cSel.dataset.auto='1'; }
+      if(cH) cH.innerHTML = cSel.value===c
+        ? 'เติมจากบัญชีคุมให้แล้ว: <b>'+esc(c)+'</b>'
+        : '<span class="pill warn">ไม่ตรงบัญชีคุม</span> บัญชีคุมระบุ <b>'+esc(c)+'</b>';
+    } else if(cH) cH.innerHTML = std ? 'บัญชีคุมยังไม่ได้ระบุหมวดของรายการนี้ — เลือกเอง' : CATHINT;
+    syncWeb();
   };
   $('mUnit').oninput=()=>{ const ev=$('mMat').onchange; if(ev) ev(); };
   const getSrc=()=>$('mSrcSel').value==='__new__'?$('mSrc').value.trim():$('mSrcSel').value;
@@ -3581,15 +3627,19 @@ function impInit(){
     const isNew=$('mSrcSel').value==='__new__';
     const src=getSrc();
     /* ตรวจให้ครบทุกช่องบังคับ — "ชื่อแหล่งใหม่" บังคับเฉพาะตอนเลือก + แหล่งใหม่ เท่านั้น */
+    /* แถว "จดลิงก์อย่างเดียว" = ช่องทางเว็บร้านค้า + มีลิงก์ + ไม่ได้กรอกราคา
+       แถวแบบนี้ไม่ใช่ราคาของเดือนไหน จึงไม่บังคับ ปี/เดือน/ราคา — มันคือทะเบียนลิงก์ */
+    const _url0=($('mUrl').value||'').trim();
+    const linkOnly=webOn() && /^https?:\/\//i.test(_url0) && !String($('mPrice').value||'').trim();
     const need=[];
-    if(!(y>=2560&&y<=2600)) need.push(['mYear','ปี พ.ศ.']);
-    if(!(mo>=1&&mo<=12))    need.push(['mMonth','เดือน']);
+    if(!linkOnly && !(y>=2560&&y<=2600)) need.push(['mYear','ปี พ.ศ.']);
+    if(!linkOnly && !(mo>=1&&mo<=12))    need.push(['mMonth','เดือน']);
     if(!$('mChan').value)   need.push(['mChan','ช่องทาง']);
     if(!mat)                need.push(['mMat','รายการวัสดุ']);
     if(!unit)               need.push(['mUnit','หน่วย']);
     /* เพดานราคา — กันพิมพ์ผิดจนได้ตัวเลขมหาศาล (เดิมเช็คแค่ >0 พิมพ์ 1e30 ก็ผ่าน) */
-    if(!(price>0&&price<10000000)) need.push(['mPrice','ราคา (มากกว่า 0 และไม่เกิน 10,000,000)']);
-    if(!$('mType').value)   need.push(['mType','ประเภท']);
+    if(!linkOnly && !(price>0&&price<10000000)) need.push(['mPrice','ราคา (มากกว่า 0 และไม่เกิน 10,000,000)']);
+    if(!$('mCat').value)    need.push(['mCat','หมวด']);
     if(!$('mSrcSel').value) need.push(['mSrcSel','แหล่ง / ผู้ให้ราคา']);
     else if(isNew && !src)  need.push(['mSrc','ชื่อแหล่งใหม่']);
     document.querySelectorAll('#impModeMan .miss').forEach(e=>e.classList.remove('miss'));
@@ -3600,19 +3650,24 @@ function impInit(){
       toast('ยังไม่ได้กรอก: '+need.map(x=>x[1]).join(' · '));
       return;
     }
-    const _url=($('mUrl').value||'').trim();
+    const _url=_url0;
     const _ref=(_url?_url+' · ':'')+$('mRef').value.trim();
     /* ใช้ชื่อมาตรฐานตามบัญชีคุม — ถ้าส่งชื่อดิบไป คลังจะได้แถวใหม่แทนการอัปเดตแถวเดิม */
     const std=regStd(mat)||mat;
+    const fac=Math.max(0,parseFloat($('mFac').value)||1);
+    const webUnit=($('mWebUnit').value||'').trim();
     /* คีย์เดียวกันอยู่ในคิวแล้ว = แก้ราคา ไม่ใช่เพิ่มแถวใหม่ (เซิร์ฟเวอร์จะทิ้งแถวหลังเงียบ ๆ) */
-    const key=[y,mo,std,src,unit].join('|');
-    const at=queue.findIndex(q=>[q.y,q.mo,q.mat,q.src,q.unit].join('|')===key);
-    const row={y,mo,mat:std,unit,price,src,ref:_ref,typ:$('mType').value,chan:$('mChan').value,
+    const key=[linkOnly?'':y,linkOnly?'':mo,std,src,unit].join('|');
+    const at=queue.findIndex(q=>[q.linkOnly?'':q.y,q.linkOnly?'':q.mo,q.mat,q.src,q.unit].join('|')===key);
+    const row={y:linkOnly?0:y,mo:linkOnly?0:mo,mat:std,unit,price:linkOnly?null:price,src,ref:_ref,
+               typ:$('mCat').value,chan:$('mChan').value,
+               url:_url,webUnit,fac,linkOnly,
                raw:std!==mat?mat:'',fromFile:0,known:P.mats.includes(std)||!!regStd(mat)};
     if(at>=0){ const old=queue[at].price; queue[at]=row;
-      toast('มีคีย์นี้ในคิวแล้ว — แทนราคาเดิม '+fmt(old)+' → '+fmt(price)); }
-    else { queue.push(row); toast('เพิ่มเข้าคิวแล้ว · รวม '+queue.length+' รายการ'); }
-    $('mMat').value='';$('mPrice').value='';$('mUnit').value='';
+      toast(old==null?'มีคีย์นี้ในคิวแล้ว — แทนของเดิม':'มีคีย์นี้ในคิวแล้ว — แทนราคาเดิม '+fmt(old)+' → '+fmt(price)); }
+    else { queue.push(row); toast((linkOnly?'จดลิงก์เข้าคิวแล้ว':'เพิ่มเข้าคิวแล้ว')+' · รวม '+queue.length+' รายการ'); }
+    $('mMat').value='';$('mPrice').value='';$('mUnit').value='';$('mUrl').value='';
+    $('mWebUnit').value='';$('mFac').value=''; syncWeb();
     document.querySelectorAll('#impModeMan .miss').forEach(e=>e.classList.remove('miss'));
     renderQueue(); try{ drawNoGeo(); }catch(e){}
   };
@@ -3879,42 +3934,77 @@ function impInit(){
     XLSX.writeFile(wb,'แบบฟอร์มนำเข้าราคา.xlsx');
   };
 
-  /* ชื่อผู้กรอก — จำไว้ในเครื่องนี้ */
-  try{ $('mBy').value=localStorage.getItem('kkmat_by')||''; }catch(e){}
-  $('mBy').oninput=()=>{ try{ localStorage.setItem('kkmat_by',$('mBy').value); }catch(e){} };
+  /* ⚠ ชื่อผู้กรอก "ห้ามจำ" เด็ดขาด — เครื่องนี้หลายคนใช้ร่วมกัน (กฎ R2)
+     ของเดิมเก็บลง localStorage แล้วเติมกลับทุกครั้งที่เปิดหน้า
+     คนถัดไปจะส่งงานในนามคนก่อนโดยไม่รู้ตัว · เริ่มว่างทุกครั้ง จบ */
+  $('mBy').value='';
+  try{ localStorage.removeItem('kkmat_by'); }catch(e){}
   $('mPush').onclick=async()=>{
     const url=($('cfgUrl').value||'').trim(), st=$('mPushStat');
     if(!queue.length){ st.textContent='คิวว่าง — เพิ่มรายการก่อน'; return; }
-    const noChan=queue.filter(q=>!String(q.chan||'').trim()).length;
+    /* คิวมีสองชนิดปนกันได้: แถวราคา (เข้า PENDING) กับ แถวจดลิงก์ (เข้า WEBITEMS)
+       ส่งคนละคำสั่ง และแยกความสำเร็จจากกัน — พังอย่างหนึ่งต้องไม่ลบอีกอย่างทิ้ง */
+    const priced=queue.filter(q=>!q.linkOnly);
+    const links =queue.filter(q=>/^https?:\/\//i.test(String(q.url||'')));
+    const noChan=priced.filter(q=>!String(q.chan||'').trim()).length;
     if(noChan){ st.innerHTML='<span class="up">ยังมี '+noChan+' แถวไม่ได้ระบุช่องทาง</span> — เติมที่แถบเตือนในโหมดนำเข้าไฟล์ก่อน'; return; }
     if(!url){ st.textContent='ยังไม่ตั้ง WebApp URL (ดูหน้า ระบบ)'; return; }
     const by=($('mBy').value||'').trim();
     if(!by){ st.innerHTML='<span class="up">ใส่ชื่อผู้กรอกก่อนส่ง</span>'; $('mBy').focus(); return; }
-    if(!confirm('ส่งขออนุมัติ '+queue.length+' รายการ\n\nราคาจะยังไม่เข้าคลัง จนกว่าผู้ดูแลจะกดอนุมัติ\nระบบจะส่งอีเมลแจ้งผู้อนุมัติทันที')) return;
-    $('mPush').disabled=true; st.textContent='กำลังส่งขออนุมัติ '+queue.length+' รายการ…';
-    try{
-      const rows=queue.map(q=>[q.y,q.mo,q.mat,q.unit,q.price,q.src,q.typ,(q.chan||'กรอกเอง')+(q.ref?' · '+q.ref:'')]);
-      const r=await fetch(url,{method:'POST',headers:{'Content-Type':'text/plain;charset=utf-8'},
-        body:JSON.stringify({token:WTOKEN,action:'submit',rows,by})});
-      const res=await r.json();
-      if(!res.ok) throw new Error(res.error||'ส่งไม่สำเร็จ');
-      if(res.batch===undefined) throw new Error('ชีทยังใช้ Code.gs รุ่นเก่า — ต้องรุ่น 22 ขึ้นไป');
-      st.innerHTML='<span class="pill ok">ส่งขออนุมัติแล้ว</span> ชุด <b>'+esc(res.batch)+'</b> · '+res.added+' รายการ'
-        +(res.mailed?' · แจ้งอีเมลผู้อนุมัติแล้ว':' · <span class="up">ส่งอีเมลไม่ผ่าน (ดูสิทธิ์ใน Apps Script)</span>')
-        +'<br>ราคายังไม่เข้าคลัง รอผู้ดูแลกดอนุมัติที่การ์ด "รายการรออนุมัติ"';
-      /* ส่งจบแล้วต้องล้างชื่อผู้กรอกด้วย — เครื่องนี้หลายคนใช้ร่วมกัน
-         ถ้าค้างชื่อคนเดิมไว้ คนถัดไปจะส่งงานในนามคนก่อนโดยไม่รู้ตัว */
-      queue.length=0; $('mBy').value='';
-      try{ localStorage.removeItem('kkmat_by'); }catch(e){}
-      renderQueue(); loadPending();
-    }catch(e){ st.textContent='ส่งไม่สำเร็จ: '+e.message; }
+    if(!confirm((priced.length?'ส่งขออนุมัติราคา '+priced.length+' รายการ\n':'')
+      +(links.length?'จดลิงก์สินค้า '+links.length+' รายการ (ระบบจะดึงราคาให้เองทุกเดือน)\n':'')
+      +'\nราคาจะยังไม่เข้าคลัง จนกว่าผู้ดูแลจะกดอนุมัติ')) return;
+    $('mPush').disabled=true; st.textContent='กำลังส่ง…';
+    let okPrice=!priced.length, okLink=!links.length, out='';
+    if(priced.length){
+      try{
+        const rows=priced.map(q=>[q.y,q.mo,q.mat,q.unit,q.price,q.src,q.typ,(q.chan||'กรอกเอง')+(q.ref?' · '+q.ref:'')]);
+        const res=await (await fetch(url,{method:'POST',headers:{'Content-Type':'text/plain;charset=utf-8'},
+          body:JSON.stringify({token:WTOKEN,action:'submit',rows,by})})).json();
+        if(!res.ok) throw new Error(res.error||'ส่งไม่สำเร็จ');
+        if(res.batch===undefined) throw new Error('ชีทยังใช้ Code.gs รุ่นเก่า — ต้องรุ่น 22 ขึ้นไป');
+        okPrice=true;
+        out+='<span class="pill ok">ส่งขออนุมัติแล้ว</span> ชุด <b>'+esc(res.batch)+'</b> · '+res.added+' รายการ'
+          +(res.mailed?' · แจ้งอีเมลผู้อนุมัติแล้ว':' · <span class="up">ส่งอีเมลไม่ผ่าน (ดูสิทธิ์ใน Apps Script)</span>')
+          +'<br>ราคายังไม่เข้าคลัง รอผู้ดูแลกดอนุมัติที่การ์ด "รายการรออนุมัติ"';
+      }catch(e){ out+='<span class="up">ส่งราคาไม่สำเร็จ: '+esc(e.message)+'</span>'; }
+    }
+    /* จดลิงก์สินค้าไว้ในชีท (แท็บ WEBITEMS) — สคริปต์ฝั่ง Google จะวิ่งอ่านลิงก์เองทุกเดือน
+       แล้วส่งราคาที่ดึงได้เข้าคิวรออนุมัติให้ ไม่ต้องมานั่งเปิดเว็บทีละร้าน
+       ตัวคูณหน่วยไปด้วย เพราะหน่วยที่ร้านขายมักไม่ตรงหน่วยบัญชีคุม */
+    if(links.length){
+      try{
+        const lrows=links.map(q=>[q.mat,q.unit,q.fac||1,q.src,q.url,
+          'จดจากแดชบอร์ด '+by+(q.webUnit?' · เว็บขายเป็น '+q.webUnit:'')]);
+        const lr=await (await fetch(url,{method:'POST',headers:{'Content-Type':'text/plain;charset=utf-8'},
+          body:JSON.stringify({token:WTOKEN,action:'weblink',rows:lrows})})).json();
+        if(!lr.ok) throw new Error(lr.error||'จดลิงก์ไม่สำเร็จ');
+        okLink=true;
+        out+=(out?'<br>':'')+'<span class="pill ok">จดลิงก์สินค้าแล้ว '+links.length+' รายการ</span> '
+          +'เดือนหน้าระบบจะดึงราคาจากลิงก์เองแล้วเข้าคิวรออนุมัติให้';
+      }catch(e){ out+=(out?'<br>':'')+'<span class="up">จดลิงก์ไม่สำเร็จ: '+esc(e.message)
+        +' — ชีทอาจยังใช้ Code.gs ก่อนรุ่น 26</span>'; }
+    }
+    /* เอาออกจากคิวเฉพาะส่วนที่ส่งผ่าน — ส่วนที่พังยังอยู่ให้กดส่งซ้ำได้ */
+    for(let i=queue.length-1;i>=0;i--){
+      const q=queue[i], isL=/^https?:\/\//i.test(String(q.url||''));
+      const done=(q.linkOnly? okLink : (okPrice && (!isL || okLink)));
+      if(done) queue.splice(i,1);
+    }
+    /* ส่งจบแล้วต้องล้างชื่อผู้กรอกด้วย — เครื่องนี้หลายคนใช้ร่วมกัน
+       ถ้าค้างชื่อคนเดิมไว้ คนถัดไปจะส่งงานในนามคนก่อนโดยไม่รู้ตัว */
+    if(!queue.length) $('mBy').value='';
+    st.innerHTML=out;
+    renderQueue(); loadPending();
     $('mPush').disabled=false;
   };
   $('apLoad').onclick=()=>loadPending();
   loadPending(true);
   $('mCopy').onclick=()=>{
-    if(!queue.length) return;
-    const x=queue.map(q=>[q.y,q.mo,q.mat,q.unit,q.price,q.src,q.typ,q.ref].join('\t')).join('\n');
+    /* คัดลอกเฉพาะแถวราคา — แถวจดลิงก์ไม่มีราคาและไม่ผูกเดือน วางลงตารางราคาไม่ได้ */
+    const qp=queue.filter(q=>!q.linkOnly);
+    if(!qp.length) return;
+    const x=qp.map(q=>[q.y,q.mo,q.mat,q.unit,q.price,q.src,q.typ,q.ref].join('\t')).join('\n');
     navigator.clipboard.writeText('ปี พ.ศ.\tเดือน\tรายการวัสดุ\tหน่วย\tราคา\tแหล่งวัสดุ\tประเภท\tอ้างอิง\n'+x);
     $('mCopy').textContent='คัดลอกแล้ว ✓'; setTimeout(()=>$('mCopy').textContent='คัดลอกคิว',1500);
   };
@@ -4001,6 +4091,28 @@ function noGeoInit(){
 
 /* ============ รายการรออนุมัติ (Code.gs รุ่น 17) ============ */
 let PEND=[];
+/* ─ แกะ "ที่มา" ออกจากคอลัมน์ ช่องทาง ของแถวรออนุมัติ ─
+   แถวที่สคริปต์ดึงมาจากเว็บจะเขียนไว้ว่า
+   "เว็บร้านค้า · ดึงอัตโนมัติ 22/08/69 · JSON-LD · เว็บ 150 ×20 · https://..."
+   ต้องโชว์ให้ครบว่า ราคาบนหน้าเว็บเท่าไร คูณเท่าไร แกะด้วยวิธีไหน และลิงก์ไหน
+   ไม่งั้นคนอนุมัติเห็นแค่ตัวเลขสุดท้าย แล้วเช็คไม่ได้ว่าดึงถูกหรือเปล่า */
+function pendMeta(chan){
+  const s=String(chan||'');
+  const u=s.match(/https?:\/\/[^\s·]+/);
+  const raw=s.match(/เว็บ\s*([\d.,]+)\s*×\s*([\d.]+)/);
+  return {auto:/ดึงอัตโนมัติ/.test(s), url:u?u[0]:'',
+          how:(s.match(/·\s*(JSON-LD|meta|เดาจากข้อความ)\s*(?:·|$)/)||[])[1]||'',
+          raw:raw?raw[1]:'', fac:raw?raw[2]:''};
+}
+/* ราคาล่าสุดที่มีอยู่จริงในคลัง สำหรับ วัสดุ+แหล่ง+หน่วย เดียวกัน — ใช้เทียบว่าดึงมาเพี้ยนไหม */
+function lastKnown(mat,src,unit){
+  const mi=P.mats.indexOf(mat); if(mi<0) return null;
+  const si=P.srcs.indexOf(src), ui=P.units.indexOf(unit);
+  const s=P.series.find(x=>x[0]===mi&&(si<0||x[1]===si)&&(ui<0||x[2]===ui));
+  if(!s) return null;
+  for(let i=s[4].length-1;i>=0;i--) if(s[4][i]!=null) return {p:s[4][i],at:mLabI(i)};
+  return null;
+}
 async function loadPending(silent){
   const id=($('cfgSheet').value||'').trim(), box=$('apBox'), st=$('apStat');
   if(!id){ if(!silent) box.innerHTML='<div class="hint">ยังไม่ตั้งค่า Sheet (หน้า ระบบ)</div>'; return; }
@@ -4018,11 +4130,33 @@ async function loadPending(silent){
     if(!list.length){ box.innerHTML='<div class="hint">ไม่มีรายการรออนุมัติ — คลังเป็นปัจจุบันแล้ว</div>'; return; }
     box.innerHTML=list.map(g=>{
       const sum=g.items.reduce((a,c)=>a+(parseFloat(c[5])||0),0);
+      let odd=0, anyAuto=0;
+      const body=g.items.map(c=>{
+        const mt=pendMeta(c[8]); if(mt.auto) anyAuto++;
+        const price=parseFloat(c[5]), old=lastKnown(c[3],c[6],c[4]);
+        const d=(old&&old.p)?((price-old.p)/old.p*100):null;
+        const big=d!=null&&Math.abs(d)>=25; if(big) odd++;
+        const via=mt.auto
+          ? [mt.how?'<span class="hint">'+esc(mt.how)+'</span>':'',
+             mt.raw?'<span class="hint">เว็บ '+esc(mt.raw)+' ×'+esc(mt.fac)+'</span>':'',
+             /^https?:\/\//i.test(mt.url)?'<a href="'+esc(mt.url)+'" target="_blank" rel="noopener">เปิดเว็บ ↗</a>':''
+            ].filter(Boolean).join(' ')
+          : '<span class="hint">กรอกมือ</span>';
+        return `<tr${big?' style="background:#FBF0E6"':''}>
+          <td>${esc(TH_M[(+c[2]||1)-1]||c[2])} ${String(c[1]).slice(2)}</td>
+          <td>${esc(c[3])}${mt.auto?' <span class="pill">🌐 ดึงจากเว็บ</span>':''}</td>
+          <td>${esc(c[4])}</td><td class="num">${fmt(price)}</td>
+          <td class="num">${old?fmt(old.p)+'<div class="hint">'+esc(old.at)+'</div>':'<span class="hint">ยังไม่มีในคลัง</span>'}</td>
+          <td class="num ${d>0?'up':'dn'}">${d==null?'—':(d>0?'+':'')+d.toFixed(1)+'%'+(big?' ⚠':'')}</td>
+          <td>${esc(c[6])}</td><td>${via}</td></tr>`;
+      }).join('');
       return `<div class="apgrp">
         <div class="ap-h"><b>${esc(g.batch)}</b> · ${g.items.length} รายการ
+          ${anyAuto?'<span class="pill">🌐 ดึงจากเว็บ '+anyAuto+'</span>':''}
           <span class="hint">ผู้กรอก ${esc(g.who||'-')} · ส่งเมื่อ ${esc(g.at||'-')}</span></div>
-        <div class="tw" style="max-height:190px"><table><thead><tr><th>เดือน</th><th>รายการ</th><th>หน่วย</th><th class="num">ราคา</th><th>แหล่ง</th></tr></thead><tbody>
-        ${g.items.map(c=>`<tr><td>${esc(TH_M[(+c[2]||1)-1]||c[2])} ${String(c[1]).slice(2)}</td><td>${esc(c[3])}</td><td>${esc(c[4])}</td><td class="num">${fmt(parseFloat(c[5]))}</td><td>${esc(c[6])}</td></tr>`).join('')}
+        ${odd?'<div class="hint" style="margin:6px 0"><span class="pill warn">ตรวจก่อนอนุมัติ</span> มี '+odd+' รายการราคาขยับเกิน 25% จากคลัง — มักแปลว่าหน่วยไม่ตรง (ร้านขายเป็นถุง แต่คลังใช้ตัน) หรือแกะเลขผิด กดเปิดเว็บเทียบก่อน</div>':''}
+        <div class="tw" style="max-height:230px"><table><thead><tr><th>เดือน</th><th>รายการ</th><th>หน่วย</th><th class="num">ราคาที่ส่งมา</th><th class="num">เดิมในคลัง</th><th class="num">Δ%</th><th>แหล่ง</th><th>ตรวจที่มา</th></tr></thead><tbody>
+        ${body}
         </tbody></table></div>
         <div class="ap-act">
           <input type="password" class="ap-pass" placeholder="รหัสผู้ดูแล" autocomplete="new-password">
@@ -4062,9 +4196,17 @@ function impChips(){
 function renderQueue(){
   $('qStat').textContent=queue.length+' รายการ';
   const hi=$('hcImp'); if(hi) hi.innerHTML=impChips();
-  $('qRows').innerHTML=queue.map(q=>`<tr><td>${TH_M[q.mo-1]} ${String(q.y).slice(2)}</td><td>${esc(q.mat)}</td><td>${esc(q.unit)}</td><td class="num">${fmt(q.price)}</td><td>${esc(q.src)}</td>
+  $('qRows').innerHTML=queue.map(q=>{
+    /* แถวจดลิงก์ไม่มีราคาและไม่ผูกกับเดือนไหน — ต้องดูออกทันทีว่าคนละชนิดกับแถวราคา */
+    const per=q.linkOnly
+      ? '<span class="pill">🌐 ระบบดึงราคาเอง</span>'+(q.fac&&q.fac!==1?' <span class="hint">×'+q.fac+'</span>':'')
+      : fmt(q.price)+(q.fac&&q.fac!==1?' <span class="hint">×'+q.fac+'</span>':'');
+    return `<tr><td>${q.linkOnly?'<span class="hint">ทุกเดือน</span>':esc((TH_M[q.mo-1]||'')+' '+String(q.y).slice(2))}</td>
+    <td>${esc(q.mat)}</td><td>${esc(q.unit)}${q.webUnit?'<div class="hint">เว็บขายเป็น '+esc(q.webUnit)+'</div>':''}</td>
+    <td class="num">${per}</td><td>${esc(q.src)}</td>
     <td>${q.chan?esc(q.chan):'<span class="pill bad">ยังไม่ระบุ</span>'}</td><td>${esc(q.ref||'—')}</td>
-    <td>${q.known?'<span class="pill ok">ตรงบัญชีคุม</span>':'<span class="pill warn">ชื่อใหม่ — รอจับคู่</span>'}</td></tr>`).join('');
+    <td>${q.known?'<span class="pill ok">ตรงบัญชีคุม</span>':'<span class="pill warn">ชื่อใหม่ — รอจับคู่</span>'}</td></tr>`;
+  }).join('');
 }
 
 const CHAN_OPTS=['ใบเสนอราคา','หน่วยงานราชการ','เว็บร้านค้า','TPSO','กรอกเอง'];
