@@ -575,12 +575,11 @@ th.sortable.desc::after{content:'↓';opacity:1}
 .notebox.teal{border-left-color:var(--teal);background:var(--teal-soft);color:#0b5a54}
 .tabbar{display:flex;gap:6px;margin-bottom:10px;flex-wrap:wrap}
 .tabbar .btn.ghost.on{border-color:var(--teal);color:var(--teal);font-weight:700}
-/* ปุ่มสลับมุมมองแบบแท็บใต้เส้น — ใช้ในการ์ดความครบถ้วน */
-.tabbtn{background:none;border:none;border-bottom:2px solid transparent;font-family:inherit;font-size:12.5px;
-  font-weight:600;color:var(--muted);padding:6px 12px;cursor:pointer;transition:color .16s,border-color .16s}
-.tabbtn:hover{color:var(--teal)}
-.tabbtn.on{color:var(--navy);border-bottom-color:var(--teal)}
-#covTabs{border-bottom:1px solid var(--hairline);gap:0;margin-bottom:0}
+/* แท็บทั้งระบบใช้ทรงเดียว: ปุ่มกล่อง .btn.ghost · ตัวที่เลือกอยู่ขึ้นขอบเขียวด้วยคลาส .on
+   เดิมมีสองทรงปนกัน — ปุ่มกล่อง (หน้าคำนวณระยะขนส่ง) กับ แท็บขีดเส้นใต้ (หน้านำเข้า/สถิติ)
+   ถอดทรงขีดเส้นใต้ทิ้งทั้งหมดแล้ว ห้ามเอากลับมา — ผู้ใช้ไม่ควรต้องเรียนรู้แท็บสองแบบในระบบเดียว
+   t_ui มีข้อทดสอบตรึงไว้ว่าทุกแท็บต้องเป็นปุ่มกล่อง */
+#covTabs{margin-bottom:8px}
 canvas{max-width:100%}
 @media print{
   /* ตอนพิมพ์ต้องปิดแอนิเมชันทั้งหมด — การ์ดใช้แอนิเมชันโผล่แบบ backwards
@@ -824,9 +823,9 @@ canvas{max-width:100%}
     <div id="covChain" class="cap" style="margin:0 0 10px"></div>
     <div id="covKpi" class="kcards" style="margin-bottom:12px"></div>
     <div class="tabbar no-print" id="covTabs">
-      <button class="tabbtn on" data-cv="chan">ตามช่องทางที่มา</button>
-      <button class="tabbtn" data-cv="cat">ตามหมวดวัสดุ</button>
-      <button class="tabbtn" data-cv="mat">ตามรายการวัสดุ</button>
+      <button class="btn ghost on" data-cv="chan">ตามช่องทางที่มา</button>
+      <button class="btn ghost" data-cv="cat">ตามหมวดวัสดุ</button>
+      <button class="btn ghost" data-cv="mat">ตามรายการวัสดุ</button>
     </div>
 
     <div id="covPaneChan">
@@ -880,20 +879,20 @@ canvas{max-width:100%}
        หน้านี้ทำงานคนละเรื่องกัน 5 อย่าง (กรอกราคา · อนุมัติ · ดึงราคาเว็บ · จับคู่ชื่อ · พิกัด)
        ถ้ากองรวมกันในหน้าเดียว ข้อมูลเยอะจนสับสนว่ากำลังทำอะไรอยู่
        แต่ละแท็บโหลดข้อมูลของตัวเองตอนเปิดครั้งแรกเท่านั้น เปิดหน้ามาจึงไม่หน่วง -->
-  <div class="tabbar no-print" id="ipTabs" style="border-bottom:1px solid var(--hairline);gap:0;margin-bottom:12px">
-    <button class="tabbtn on" data-ip="add">✎ กรอกราคา</button>
-    <button class="tabbtn" data-ip="ap">✓ รออนุมัติ <span class="pill warn" id="apStat">—</span></button>
-    <button class="tabbtn" data-ip="wi">🔗 ลิงก์ดึงราคาเว็บ <span class="pill" id="wiStat">—</span></button>
-    <button class="tabbtn" data-ip="ni">🧩 จับคู่ชื่อ <span class="pill warn" id="niStat">—</span></button>
-    <button class="tabbtn" data-ip="geo">📍 พิกัดแหล่ง <span class="pill warn" id="noGeoStat">—</span></button>
+  <div class="tabbar no-print" id="ipTabs">
+    <button class="btn ghost on" data-ip="add">กรอกราคา</button>
+    <button class="btn ghost" data-ip="ap">รออนุมัติ <span class="pill warn" id="apStat">—</span></button>
+    <button class="btn ghost" data-ip="wi">ลิงก์ดึงราคาเว็บ <span class="pill" id="wiStat">—</span></button>
+    <button class="btn ghost" data-ip="ni">จับคู่ชื่อกับบัญชีคุม <span class="pill warn" id="niStat">—</span></button>
+    <button class="btn ghost" data-ip="geo">พิกัดแหล่ง <span class="pill warn" id="noGeoStat">—</span></button>
   </div>
   <div class="ipane" id="ip-add">
   <div class="grid2">
     <div class="card">
       <h2 data-ic="pen">เพิ่มราคาเข้าคิว</h2>
-      <div class="tabbar no-print" id="impTabs" style="border-bottom:1px solid var(--hairline);gap:0;margin-bottom:10px">
-        <button class="tabbtn on" data-im="man">✎ กรอกทีละรายการ</button>
-        <button class="tabbtn" data-im="xl">⬇ นำเข้าจากไฟล์ Excel</button>
+      <div class="tabbar no-print" id="impTabs">
+        <button class="btn ghost on" data-im="man">กรอกทีละรายการ</button>
+        <button class="btn ghost" data-im="xl">นำเข้าจากไฟล์ Excel</button>
       </div>
 
       <!-- ── โหมด 2: ไฟล์ Excel — ไม่ยืมค่าจากฟอร์มกรอกมือแม้แต่ช่องเดียว ── -->
@@ -1238,8 +1237,8 @@ const SELFCHK={missing:new Set(),ok:false};
 const $ = id => { const el=document.getElementById(id);
   if(!el) SELFCHK.missing.add(id);
   return el; };
-const APPVER='8.11';        /* เลขรุ่นที่เดียว — ที่อื่นดึงจากตัวนี้ */
-const APPDATE='22 ส.ค. 2569';   /* วันที่ของรุ่นนี้ ที่เดียวเหมือนกัน */
+const APPVER='8.12';        /* เลขรุ่นที่เดียว — ที่อื่นดึงจากตัวนี้ */
+const APPDATE='23 ส.ค. 2569';   /* วันที่ของรุ่นนี้ ที่เดียวเหมือนกัน */
 /* ⚠ ป้ายรุ่นบนแถบข้างเคยเป็นข้อความตายตัวใน HTML (v6.2) พอขึ้นรุ่นใหม่แล้วลืมแก้
    ผู้ใช้เลยเห็นเลขรุ่นเก่าทั้งที่โค้ดใหม่หมดแล้ว — ต่อไปนี้เขียนจาก APPVER เสมอ */
 try{ const _bv=document.getElementById('bVer'); if(_bv) _bv.textContent='v'+APPVER;
@@ -3678,8 +3677,8 @@ function covInit(){
   if(!$('covCat')) return;
   /* แท็บสลับมุมมอง */
   const panes={chan:'covPaneChan',cat:'covPaneCat',mat:'covPaneMat'};
-  document.querySelectorAll('#covTabs .tabbtn').forEach(b=>b.onclick=()=>{
-    document.querySelectorAll('#covTabs .tabbtn').forEach(x=>x.classList.toggle('on',x===b));
+  document.querySelectorAll('#covTabs .btn').forEach(b=>b.onclick=()=>{
+    document.querySelectorAll('#covTabs .btn').forEach(x=>x.classList.toggle('on',x===b));
     Object.entries(panes).forEach(([k,id])=>{ const el=$(id); if(el) el.style.display = (k===b.dataset.cv)?'':'none'; });
   });
   const cats = REG.on ? [...new Set(Object.values(P.matCat||{}))].sort((a,b)=>a.localeCompare(b,'th'))
@@ -4178,8 +4177,8 @@ function impInit(){
     return dup;
   }
   /* สลับโหมด กรอกมือ ↔ ไฟล์ Excel */
-  document.querySelectorAll('#impTabs .tabbtn').forEach(b=>b.onclick=()=>{
-    document.querySelectorAll('#impTabs .tabbtn').forEach(x=>x.classList.toggle('on',x===b));
+  document.querySelectorAll('#impTabs .btn').forEach(b=>b.onclick=()=>{
+    document.querySelectorAll('#impTabs .btn').forEach(x=>x.classList.toggle('on',x===b));
     $('impModeMan').style.display = b.dataset.im==='man'?'':'none';
     $('impModeXl').style.display  = b.dataset.im==='xl' ?'':'none';
   });
@@ -4387,8 +4386,8 @@ function impInit(){
      ถ้าเรียกทันทีที่เข้าหน้า จะเหมือนหน้าค้างทั้งที่ผู้ใช้แค่จะมากรอกราคา */
   const IPLOAD={ap:()=>loadPending(), wi:()=>loadWebItems(), ni:()=>loadNewItems(),
                 geo:()=>{ try{ drawNoGeo(); }catch(e){} }};
-  document.querySelectorAll('#ipTabs .tabbtn').forEach(b=>b.onclick=()=>{
-    document.querySelectorAll('#ipTabs .tabbtn').forEach(x=>x.classList.toggle('on',x===b));
+  document.querySelectorAll('#ipTabs .btn').forEach(b=>b.onclick=()=>{
+    document.querySelectorAll('#ipTabs .btn').forEach(x=>x.classList.toggle('on',x===b));
     document.querySelectorAll('#pg-imp .ipane').forEach(p=>{
       p.style.display = p.id==='ip-'+b.dataset.ip ? '' : 'none'; });
     if(!IPDONE[b.dataset.ip] && IPLOAD[b.dataset.ip]){ IPDONE[b.dataset.ip]=1; IPLOAD[b.dataset.ip](); }
