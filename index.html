@@ -373,6 +373,51 @@ h2 .ic{color:var(--teal)}
 .frow.up{grid-template-columns:minmax(78px,110px) minmax(120px,190px);justify-content:start}
 .frow.up input#mPrice{text-align:right}
 #mGeoBox input{max-width:360px}
+/* ══ ฟอร์มกรอกราคาแบบชุด — หัวชุดใช้ร่วมกัน แล้วรายการวัสดุหลายบรรทัด (v8.20) ══
+   กติกาหน้าตาที่ KORN วางไว้: วัสดุ 1 รายการ ต้องไม่เกิน 2 บรรทัด */
+.bhead{border:1px solid var(--grid);border-left:3px solid var(--teal);border-radius:11px;
+  padding:12px 14px;background:var(--soft)}
+.bh-t{font-size:12.5px;font-weight:700;color:var(--navy);letter-spacing:.2px;display:block;margin-bottom:8px}
+.mlist-h{display:flex;align-items:center;justify-content:space-between;gap:10px;margin:16px 0 8px;flex-wrap:wrap}
+.mlist-h .bh-t{margin:0}
+.mlist-h .hint{flex:1 1 250px;text-align:right;min-width:0}
+.mrow{display:flex;gap:8px;align-items:center;border:1px solid var(--grid);border-radius:10px;
+  padding:8px 10px;margin-bottom:8px;background:#fff}
+.mrow:focus-within{border-color:var(--teal);box-shadow:0 0 0 2px rgba(13,148,136,.10)}
+.mr-n{flex:none;width:22px;height:22px;border-radius:6px;background:var(--soft);color:var(--ink2);
+  display:flex;align-items:center;justify-content:center;font-size:11.5px;font-weight:700}
+.mr-b{flex:1;min-width:0;display:flex;flex-direction:column;gap:6px}
+.mr-l{display:flex;gap:8px;align-items:center;min-width:0}
+.mr-l>*{min-width:0}
+/* ⚠ .kdd{width:100%} ประกาศไว้ก่อนหน้านี้ในไฟล์ ต้องใช้สองคลาสเพื่อชนะความจำเพาะ
+   ไม่งั้นตัวห่อดรอปดาวน์กว้าง 100% แล้วแถวล้นออกนอกการ์ด (แถวเดียวกินสามบรรทัด) */
+.mr-l>.kdd{width:auto}
+.mr-l>.kdd.mr-cat{flex:none;width:142px}
+.mr-l>.kdd.mr-mat{flex:1 1 auto;width:auto}
+.mr-l>.kdd.mr-unit{flex:none;width:118px}
+@media(max-width:520px){ .mr-l>.kdd.mr-cat,.mr-l>.kdd.mr-unit,.mr-l>.kdd.mr-mat{flex:1 1 130px;width:auto} }
+.mr-l .kdd input.kdd-inp{padding-top:7px;padding-bottom:7px}
+/* ⚠ ต้องใช้ ".mr-l>" นำหน้าทุกกฎ — บรรทัด input[type=number]{width:100%} ข้างบนมีความจำเพาะ 0,1,1
+   ซึ่งชนะคลาสเดี่ยว 0,1,0 · ของเดิมเขียนคลาสเดี่ยวไว้ ช่องราคาเลยกว้าง 100% แล้วแถวล้นออกนอกการ์ด */
+.mr-l>.mr-cat{flex:none;width:142px}
+.mr-l>.mr-mat{flex:1 1 auto;width:auto}
+.mr-l>.mr-unit{flex:none;width:118px}
+.mr-l>.mr-price{flex:none;width:104px;text-align:right}
+.mr-l>.mr-url{flex:1 1 130px;width:auto}
+.mr-l>.mr-fac{flex:none;width:64px;text-align:right}
+.mr-l>.mr-probe,.mrow>.mr-x{flex:none;padding:5px 10px}
+/* ป้ายสถานะลิงก์ — ยอมให้ย่อได้ ห้ามดันแถวจนล้น (กฎ R10) รายละเอียดเต็มอยู่ในทูลทิป */
+.mr-l>.mr-st{flex:0 1 auto;min-width:0;max-width:118px;overflow:hidden;font-size:11.5px}
+.mr-l>.mr-st:empty{display:none}
+.mr-l>.mr-st .pill{max-width:100%;overflow:hidden;text-overflow:ellipsis;
+  display:inline-block;vertical-align:middle;white-space:nowrap}
+.mr-x{color:var(--muted)}
+.mr-x:hover{color:var(--crit);border-color:var(--crit)}
+/* พับเป็นหลายบรรทัดเฉพาะจอแคบจริง ๆ — บนจอทำงานปกติต้องคง "หนึ่งรายการ = สองบรรทัด" ไว้ */
+@media(max-width:520px){
+  .mr-l{flex-wrap:wrap}
+  .mr-l>.mr-cat,.mr-l>.mr-unit,.mr-l>.mr-price,.mr-l>.mr-fac,.mr-l>.mr-mat,.mr-l>.mr-url{flex:1 1 130px;width:auto}
+}
 .frow.src{grid-template-columns:minmax(0,1fr)}
 .frow.src.two{grid-template-columns:minmax(150px,1fr) minmax(140px,1fr)}
 .frow.cl{grid-template-columns:minmax(160px,1.1fr) minmax(130px,1fr)}
@@ -791,7 +836,7 @@ canvas{max-width:100%}
         <label class="f">ชื่อโครงการ</label>
         <input type="text" id="dProj" placeholder="เช่น ขก.3021 แยก ทล.2 – บ้าน...">
         <label class="f">วันที่กำหนดราคากลาง</label>
-        <input type="text" id="dDate" value="16 ส.ค. 2569">
+        <input type="text" id="dDate" placeholder="เช่น 16 ส.ค. 2569">
         <button class="btn" id="dGoDist" style="width:100%;margin-top:12px">📏 หาระยะทางทุกแหล่ง</button>
         <div class="hint" id="dStatus1" style="margin-top:6px"></div>
       </div>
@@ -801,7 +846,7 @@ canvas{max-width:100%}
         <select id="dProv"></select>
         <label class="f">ราคาดีเซล (บาท/ลิตร)</label>
         <div style="display:flex;gap:8px">
-          <input type="number" id="dDiesel" value="37.98" step="0.01" min="25" max="69.99" style="flex:1">
+          <input type="number" id="dDiesel" placeholder="อ่านจากคลังให้เอง" step="0.01" min="25" max="69.99" style="flex:1">
           <button class="btn" id="dOilBtn" style="white-space:nowrap">⟳ ราคาล่าสุด</button>
           <button class="btn ghost" id="dOilSave" style="white-space:nowrap">💾 ขึ้นคลัง</button>
         </div>
@@ -925,54 +970,57 @@ canvas{max-width:100%}
 
       <!-- ── โหมด 1: กรอกทีละรายการ ── -->
       <div id="impModeMan">
-      <div class="frow ymc">
-        <div><label class="f">ปี พ.ศ. <span class="req">*</span></label><input type="number" id="mYear" min="2560" max="2600"></div>
-        <div><label class="f">เดือน <span class="req">*</span></label><select id="mMonth"></select></div>
-        <div><label class="f">ช่องทาง <span class="req">*</span></label><select id="mChan">
-          <option value="">— เลือก —</option>
-          <option value="ใบเสนอราคา">ใบเสนอราคา / หนังสือจากผู้ผลิต</option>
-          <option value="หน่วยงานราชการ">หน่วยงานราชการ</option>
-          <option value="เว็บร้านค้า">เว็บร้านค้า</option>
-          <option value="กรอกเอง">สืบราคา / กรอกเอง</option>
-        </select></div>
-      </div>
-      <div class="frow cm">
-        <div><label class="f">หมวด <span class="req">*</span></label><select id="mCat"></select><div class="hint" id="mCatHint">เลือกวัสดุแล้วระบบเติมหมวดให้เอง · เลือกเองก่อนได้ถ้าอยากกรองรายการให้สั้นลง</div></div>
-        <div><label class="f">รายการวัสดุ <span class="req">*</span></label><input type="text" id="mMat" list="mMatList" placeholder="พิมพ์ / เลือกจากรายการ"><datalist id="mMatList"></datalist></div>
-      </div>
-      <div class="frow up">
-        <div><label class="f">หน่วย <span class="req">*</span></label><input type="text" id="mUnit" list="mUnitList"><datalist id="mUnitList"></datalist><div class="hint" id="mUnitHint"></div></div>
-        <div><label class="f">ราคา (ไม่รวมขนส่ง) <span class="req" id="mPriceReq">*</span></label><input type="number" id="mPrice" step="0.01"><div class="hint" id="mPriceHint"></div></div>
-      </div>
-      <div class="frow src" id="mSrcRow">
-        <div><label class="f">แหล่ง / ผู้ให้ราคา <span class="req">*</span></label><select id="mSrcSel"></select></div>
-        <div id="mSrcNewBox" style="display:none"><label class="f">ชื่อแหล่งใหม่ <span class="req">*</span></label><input type="text" id="mSrc" placeholder="พิมพ์ชื่อแหล่ง/บริษัท"></div>
-      </div>
-      <!-- พิกัดแหล่ง — โผล่เมื่อ "แหล่งที่เลือกยังไม่มีหมุดในคลัง" ไม่ว่าจะเป็นแหล่งใหม่หรือแหล่งเดิม (กฎ R18)
-           ไม่มีพิกัด = คำนวณระยะขนส่งไม่ได้ ต้องกลับมาเติมทีหลังที่แท็บ "พิกัดแหล่ง" ซึ่งคือการทำงานซ้ำ
-           ⚠ ไม่บังคับกรอก (กฎ R2) — ไม่รู้พิกัดตอนนี้ก็ต้องส่งราคาได้ แท็บพิกัดแหล่งยังเป็นตาข่ายรับอยู่ -->
-      <div id="mGeoBox" style="display:none;margin-top:10px">
-        <label class="f">พิกัดแหล่ง <span class="hint" style="font-weight:400">(ไม่บังคับ)</span></label>
-        <input type="text" id="mGeo" placeholder="วางพิกัดหรือลิงก์ Google Maps">
-        <div class="hint" id="mGeoHint"></div>
-        <div class="hint" style="margin-top:2px">วิธีเอาพิกัด: เปิด Google Maps → คลิกขวาที่ตำแหน่งแหล่ง → กดตัวเลขชุดแรกเพื่อคัดลอก → วางลงช่องนี้ · วางลิงก์แผนที่ทั้งเส้นก็ได้ ระบบดึงตัวเลขออกให้เอง</div>
-      </div>
-      <div id="mUrlBox" style="display:none">
-        <label class="f">ลิงก์หน้าสินค้า (URL เว็บที่สืบราคา)</label>
-        <input type="url" id="mUrl" placeholder="วางลิงก์หน้าสินค้า เช่น https://www.globalhouse.co.th/...">
-        <div class="hint">ใส่ลิงก์แล้ว <b>ไม่ต้องกรอกราคา</b> — ระบบจะวิ่งอ่านราคาจากหน้านี้เองทุกเดือน แล้วส่งเข้าคิวรออนุมัติให้
-          <br>(จะกรอกราคาไปด้วยก็ได้ ถ้าอยากให้เดือนนี้เข้าคิวเลยไม่ต้องรอรอบดึง)</div>
-        <div class="frow wu" style="margin-top:10px">
-          <div><label class="f">หน้าเว็บขายเป็นหน่วยอะไร</label><input type="text" id="mWebUnit" placeholder="เช่น ถุง 50 กก."><div class="hint">ปล่อยว่างถ้าหน่วยตรงกับบัญชีคุมอยู่แล้ว</div></div>
-          <div><label class="f">1 <span id="mFacU">หน่วยมาตรฐาน</span> = กี่ <span id="mFacW">หน่วยร้าน</span></label><input type="number" id="mFac" step="0.0001" min="0" placeholder="1"><div class="hint" id="mFacHint">ราคาบนเว็บ × ตัวเลขนี้ = ราคาต่อหน่วยมาตรฐาน</div></div>
+      <!-- ══ ส่วนหัวของ "ชุด" — ใช้ร่วมกันทุกรายการวัสดุในชุดนี้ ══
+           KORN: "1 แหล่ง ก็มีได้หลายวัสดุ เวลาเพิ่มทีนึงในแหล่งเดียวกัน จะได้ไม่เสียเวลากดเพิ่มทีละรายการ"
+           ตรงกับกฎ R18: งานซ้ำ ๆ ที่คนต้องทำเองทุกรอบ = บั๊ก · ใบเสนอราคาหนึ่งใบมี 10-20 รายการเป็นเรื่องปกติ
+           ของเดิมต้องกรอก ปี/เดือน/ช่องทาง/แหล่ง ซ้ำทุกรายการ = พิมพ์ซ้ำ 4 ช่อง × 20 รอบ -->
+      <div class="bhead">
+        <div class="bh-t">ใช้ร่วมกันทั้งชุด</div>
+        <div class="frow ymc">
+          <div><label class="f">ปี พ.ศ. <span class="req">*</span></label><input type="number" id="mYear" min="2560" max="2600"></div>
+          <div><label class="f">เดือน <span class="req">*</span></label><select id="mMonth"></select></div>
+          <div><label class="f">ช่องทาง <span class="req">*</span></label><select id="mChan">
+            <option value="">— เลือก —</option>
+            <option value="ใบเสนอราคา">ใบเสนอราคา / หนังสือจากผู้ผลิต</option>
+            <option value="หน่วยงานราชการ">หน่วยงานราชการ</option>
+            <option value="เว็บร้านค้า">เว็บร้านค้า</option>
+            <option value="กรอกเอง">สืบราคา / กรอกเอง</option>
+          </select></div>
         </div>
-        <div style="margin-top:10px"><button class="btn ghost" id="mProbe">🔎 ลองดึงราคาเดี๋ยวนี้</button>
-          <span class="hint">ให้ระบบวิ่งอ่านลิงก์นี้ทันที จะได้เห็นเลยว่าอ่านราคาออกไหม · ชื่อสินค้าตรงกับที่เลือกไหม</span></div>
-        <div id="mProbeOut" style="margin-top:8px"></div>
+        <div class="frow src" id="mSrcRow" style="margin-top:10px">
+          <div><label class="f">แหล่ง / ผู้ให้ราคา <span class="req">*</span></label><select id="mSrcSel"></select></div>
+          <div id="mSrcNewBox" style="display:none"><label class="f">ชื่อแหล่งใหม่ <span class="req">*</span></label><input type="text" id="mSrc" placeholder="พิมพ์ชื่อแหล่ง/บริษัท"></div>
+        </div>
+        <!-- พิกัดแหล่ง — โผล่เมื่อ "แหล่งที่เลือกยังไม่มีหมุดในคลัง" ไม่ว่าจะเป็นแหล่งใหม่หรือแหล่งเดิม (กฎ R18)
+             ไม่มีพิกัด = คำนวณระยะขนส่งไม่ได้ ต้องกลับมาเติมทีหลังที่แท็บ "พิกัดแหล่ง" ซึ่งคือการทำงานซ้ำ
+             ⚠ ไม่บังคับกรอก (กฎ R2) — ไม่รู้พิกัดตอนนี้ก็ต้องส่งราคาได้ แท็บพิกัดแหล่งยังเป็นตาข่ายรับอยู่ -->
+        <div id="mGeoBox" style="display:none;margin-top:10px">
+          <label class="f">พิกัดแหล่ง <span class="hint" style="font-weight:400">(ไม่บังคับ)</span></label>
+          <input type="text" id="mGeo" placeholder="วางพิกัดหรือลิงก์ Google Maps">
+          <div class="hint" id="mGeoHint"></div>
+          <div class="hint" style="margin-top:2px">วิธีเอาพิกัด: เปิด Google Maps → คลิกขวาที่ตำแหน่งแหล่ง → กดตัวเลขชุดแรกเพื่อคัดลอก → วางลงช่องนี้ · วางลิงก์แผนที่ทั้งเส้นก็ได้ ระบบดึงตัวเลขออกให้เอง</div>
+        </div>
+        <div style="margin-top:10px">
+          <label class="f">หมายเหตุ / ที่มา (เลขหนังสือ · ใบเสนอราคา · หน่วยงาน)</label>
+          <input type="text" id="mRef" placeholder="เช่น ใบเสนอราคา SQ.690801 ลว. 10 ส.ค. 69 · ไม่รวม VAT">
+        </div>
       </div>
-      <label class="f">หมายเหตุ / ที่มา (เลขหนังสือ · ใบเสนอราคา · หน่วยงาน)</label><input type="text" id="mRef" placeholder="เช่น ใบเสนอราคา SQ.690801 ลว. 10 ส.ค. 69 · ไม่รวม VAT">
-      <div style="display:flex;gap:8px;margin-top:12px;flex-wrap:wrap">
-        <button class="btn" id="mAdd">เพิ่มเข้าคิว</button>
+
+      <!-- ══ รายการวัสดุในชุดนี้ — หนึ่งรายการ = สองบรรทัดเสมอ ══ -->
+      <div class="mlist-h">
+        <span class="bh-t">รายการวัสดุในชุดนี้ <span class="pill" id="mrStat">0 รายการ</span></span>
+        <span class="hint" id="mPriceReq">ราคาบังคับกรอกทุกรายการ</span>
+      </div>
+      <div id="mRows"></div>
+      <datalist id="mMatList"></datalist><datalist id="mUnitList"></datalist>
+      <div class="hint" id="mCatHint" style="margin-top:4px">เลือกวัสดุแล้วระบบเติมหมวดกับหน่วยให้เอง · เลือกหมวดเองก่อนได้ถ้าอยากกรองรายการให้สั้นลง</div>
+      <div class="hint" id="mUnitHint" style="margin-top:2px"></div>
+      <div id="mProbeOut" style="margin-top:8px"></div>
+      <div style="display:flex;gap:8px;margin-top:12px;flex-wrap:wrap;align-items:center">
+        <button class="btn ghost" id="mrAdd">+ เพิ่มบรรทัด</button>
+        <button class="btn" id="mAdd">เพิ่มทั้งหมดเข้าคิว</button>
+        <button class="btn ghost" id="mrClear">ล้างหัวชุด</button>
+        <span class="hint" id="mrCap"></span>
       </div>
       </div><!-- /impModeMan -->
 
@@ -1066,7 +1114,9 @@ canvas{max-width:100%}
       </div>
       <div class="chips" id="eCatChips" style="margin-top:6px"></div>
       <label class="f" style="margin-top:12px">ยกยอดราคาเดือนก่อน เมื่อเดือนที่เลือกไม่มีราคา</label>
-      <select id="eCarry"><option value="1" selected>เปิด — ใช้ราคาล่าสุดที่มี (แนะนำ)</option><option value="0">ปิด — เดือนไหนไม่มี ตัดทิ้ง</option></select>
+      <!-- ⚠ ห้ามตั้งค่าไว้ให้ล่วงหน้า (กฎ R2) — ตัวเลือกนี้ "สร้างแถวราคาขึ้นมาใหม่" ในไฟล์ที่ส่งให้ Estimate
+           ถ้าเปิดไว้ให้เงียบ ๆ คนส่งออกอาจไม่รู้ว่าไฟล์มีราคาเดือนก่อนปนอยู่ด้วย -->
+      <select id="eCarry"><option value="">— เลือก —</option><option value="1">เปิด — ใช้ราคาล่าสุดที่มี</option><option value="0">ปิด — เดือนไหนไม่มี ตัดทิ้ง</option></select>
       <div class="statusline" style="margin-top:14px">
         <button class="btn" id="eXlsx" title="ชื่อไฟล์คงที่เสมอ — วางทับไฟล์เดิมแล้วกดรีเฟรชในไฟล์ Estimate ได้เลย">⬇ ราคาวัสดุประจำเดือน.xlsx → Estimate</button>
         <button class="btn ghost" id="eXlsxM" title="ชื่อตามเดือน เอาไว้เก็บประวัติย้อนหลัง">สำเนาเก็บประวัติ (ชื่อตามเดือน)</button>
@@ -1258,7 +1308,7 @@ const SELFCHK={missing:new Set(),ok:false};
 const $ = id => { const el=document.getElementById(id);
   if(!el) SELFCHK.missing.add(id);
   return el; };
-const APPVER='8.19';        /* เลขรุ่นที่เดียว — ที่อื่นดึงจากตัวนี้ */
+const APPVER='8.21';        /* เลขรุ่นที่เดียว — ที่อื่นดึงจากตัวนี้ */
 const APPDATE='25 ส.ค. 2569';   /* วันที่ของรุ่นนี้ ที่เดียวเหมือนกัน */
 /* ⚠ ป้ายรุ่นบนแถบข้างเคยเป็นข้อความตายตัวใน HTML (v6.2) พอขึ้นรุ่นใหม่แล้วลืมแก้
    ผู้ใช้เลยเห็นเลขรุ่นเก่าทั้งที่โค้ดใหม่หมดแล้ว — ต่อไปนี้เขียนจาก APPVER เสมอ */
@@ -2725,11 +2775,20 @@ function parseCoord(s){
   return null;
 }
 const hav=(a,b,c,d)=>{const R=6371,r=Math.PI/180,x=(c-a)*r,y=(d-b)*r,h=Math.sin(x/2)**2+Math.cos(a*r)*Math.cos(c*r)*Math.sin(y/2)**2;return 2*R*Math.asin(Math.sqrt(h));};
-function dieselIdx(){ let v=parseFloat($('dDiesel').value)||37.98; let b=Math.floor(v); b=Math.max(25,Math.min(69,b));
-  $('dBand').innerHTML=`ใช้ตารางช่วง <b>${b}.00–${b}.99</b> บาท/ลิตร`;
+/* ⚠ ไม่มีราคาน้ำมัน = ห้ามเดาเงียบ ๆ (กฎ R2 · R15 · R17)
+   ของเดิมพิมพ์ 37.98 ตายไว้ทั้งใน HTML และในบรรทัดนี้ · วันไหนแท็บ OIL อ่านไม่ได้
+   ค่าขนส่งทั้งใบจะคิดจากราคาน้ำมันสมมุติ แล้วพิมพ์ออกไปเป็นเอกสารราคากลางโดยไม่มีใครรู้
+   ตอนนี้: ยังคำนวณต่อได้ (ไม่ให้จอพัง) แต่ต้องขึ้นป้ายเตือนทุกที่ที่โชว์ตัวเลขนั้น */
+const DIESEL_FALLBACK=37.98;
+function dieselHas(){ return !!String($('dDiesel').value||'').trim(); }
+function dieselIdx(){ const has=dieselHas();
+  let v=parseFloat($('dDiesel').value)||DIESEL_FALLBACK; let b=Math.floor(v); b=Math.max(25,Math.min(69,b));
+  $('dBand').innerHTML=has
+    ? `ใช้ตารางช่วง <b>${b}.00–${b}.99</b> บาท/ลิตร`
+    : `<span class="pill warn">ยังไม่มีราคาน้ำมัน</span> ยังอ่านจากแท็บ OIL ไม่ได้ — กรอกเอง หรือกดปุ่มดึงราคา ปตท. · ระหว่างนี้ใช้ช่วง ${b}.00–${b}.99 ไปก่อน <b>ห้ามใช้เป็นเอกสารจริง</b>`;
   const hd=document.getElementById('hcDist');
   if(hd) hd.innerHTML=`<span class="ph-chip">📍 ${esc($('dProv')?$('dProv').value:'ขอนแก่น')}</span>
-    <span class="ph-chip">⛽ ดีเซล <b>${v.toFixed(2)}</b> บาท/ลิตร${oilMeta?' · ปตท.'+(oilMeta.ref?' '+esc(oilMeta.ref):'')+' · มีผล '+esc(oilMeta.date):''}</span>
+    <span class="ph-chip">⛽ ดีเซล ${has?'<b>'+v.toFixed(2)+'</b> บาท/ลิตร'+(oilMeta?' · ปตท.'+(oilMeta.ref?' '+esc(oilMeta.ref):'')+' · มีผล '+esc(oilMeta.date):''):'<b class="up">ยังไม่มีราคา</b>'}</span>
     <span class="ph-chip">📖 ใช้ตารางช่วง <b>${b}.00–${b}.99</b></span>
     <span class="ph-chip">🚚 ว 477 (26 มิ.ย. 2569)</span>
     <span class="ph-chip">⚑ ${SRC.length?SRC.length+' แหล่งมีพิกัด':'ยังไม่มีบัญชีแหล่ง'}</span>`;
@@ -4132,6 +4191,265 @@ function buildMovers(){
 
 /* ============ นำเข้าข้อมูล ============ */
 const queue=[];
+/* แถววัสดุที่กำลังกรอกค้างไว้ — ต้องอยู่นอก impInit เพราะ impInit ถูกเรียกซ้ำทุกครั้งที่คลังโหลดใหม่
+   ถ้าประกาศไว้ข้างใน สิ่งที่พิมพ์ค้างไว้จะหายทั้งชุดตอนมีคนกดอนุมัติราคาอีกหน้าหนึ่ง */
+/* ทะเบียนลิงก์ที่อ่านมาแล้ว — ใช้ร่วมกันระหว่างแท็บ "ลิงก์ดึงราคาเว็บ" กับแถวกรอกราคา (กฎ R11)
+   คีย์ด้วย "ลิงก์" เพราะคำถามคือ "ลิงก์เส้นนี้ดึงราคาได้ไหม" ไม่ใช่ "วัสดุตัวนี้ดึงได้ไหม" */
+let WITEMS=[];
+const urlKey=u=>String(u||'').trim().replace(/[#?].*$/,'').replace(/\/+$/,'').toLowerCase();
+function witemOf(url){ const k=urlKey(url); if(!k) return null;
+  return WITEMS.find(c=>urlKey(c[4])===k)||null; }
+const MR_MAX=20;
+const mrBlank=()=>({cat:'',mat:'',unit:'',price:'',url:'',fac:''});
+let MROWS=[mrBlank(),mrBlank(),mrBlank()];
+/* ══ กลไกของ "แถววัสดุ" — อยู่ระดับบนสุด ไม่ได้ซ่อนอยู่ใน impInit ══
+   impInit ถูกเรียกซ้ำทุกครั้งที่คลังโหลดใหม่ ถ้าฟังก์ชันพวกนี้อยู่ข้างใน
+   จะถูกสร้างใหม่ทุกรอบ และชุดทดสอบ/โค้ดส่วนอื่นเรียกใช้ไม่ได้เลย
+   ค่าที่ต้องสดใหม่ทุกครั้ง (หมวด · รายชื่อวัสดุ) คำนวณตอนเรียก ไม่ได้จำไว้ตั้งแต่ตอนโหลด */
+const srcTog=()=>{ const nw=$('mSrcSel').value==='__new__';
+  $('mSrcNewBox').style.display=nw?'':'none'; $('mSrcRow').classList.toggle('two',nw);
+  geoTog(); };
+$('mSrcSel').onchange=srcTog;
+/* แหล่งที่เลือกมีหมุดอยู่แล้วหรือยัง — แหล่งใหม่ยังไงก็ยังไม่มี */
+function geoNeed(){
+  const v=$('mSrcSel').value;
+  if(!v) return {show:false};
+  if(v==='__new__'){ const nm=($('mSrc').value||'').trim();
+    return {show:true, name:nm, had:false}; }
+  const sc=findSrc(v);
+  return sc? {show:false, name:v, had:true} : {show:true, name:v, had:false};
+}
+function geoTog(){
+  const g=geoNeed();
+  $('mGeoBox').style.display=g.show?'':'none';
+  if(!g.show){ $('mGeoHint').innerHTML=''; return; }
+  const raw=($('mGeo').value||'').trim();
+  if(!raw){
+    $('mGeoHint').innerHTML=($('mSrcSel').value==='__new__')
+      ? 'แหล่งใหม่ยังไม่มีหมุดในคลัง — กรอกตรงนี้เลยจะได้ไม่ต้องกลับมาเติมทีหลังที่แท็บ "พิกัดแหล่ง"'
+      : '<span class="up">แหล่งนี้ยังไม่มีหมุดในคลัง</span> — คำนวณระยะขนส่งให้ไม่ได้จนกว่าจะมีพิกัด';
+    return;
+  }
+  /* กางให้ตรวจ: อ่านได้เท่าไร เปิดดูในแผนที่ได้เลย (กฎ R17) */
+  const ll=parseLatLon(raw);
+  $('mGeoHint').innerHTML = ll
+    ? '<span class="pill ok">อ่านพิกัดได้</span> '+ll.lat.toFixed(5)+', '+ll.lon.toFixed(5)
+      +' · <a href="https://www.google.com/maps?q='+ll.lat+','+ll.lon+'" target="_blank" rel="noopener">เปิดดูในแผนที่ ↗</a>'
+    : '<span class="up">อ่านพิกัดไม่ออก</span> — ต้องเป็นตัวเลขสองตัวคั่นด้วยจุลภาค เช่น 16.43220, 102.82360';
+}
+$('mGeo').oninput=geoTog;
+$('mSrc').oninput=geoTog;
+
+const webOn=()=>$('mChan').value==='เว็บร้านค้า';
+const syncWeb=()=>{
+  const el=$('mPriceReq'); if(!el) return;
+  el.innerHTML = webOn()
+    ? 'ช่องทางเว็บร้านค้า — <b>แถวที่วางลิงก์ ไม่ต้องกรอกราคา</b> ระบบจะดึงให้เองทุกเดือน'
+    : 'ราคาบังคับกรอกทุกแถว';
+};
+const urlTog=()=>{ syncWeb(); renderMRows(); };
+$('mChan').onchange=urlTog;   /* ต้องเป็น onchange= ไม่ใช่ addEventListener — impInit ถูกเรียกซ้ำทุกครั้งที่โหลดคลังใหม่ */
+
+/* ═══ "หมวด" — ช่องเดียวจบ (v8.8) ═══
+   เดิมมีสองช่องที่เป็นเรื่องเดียวกัน: "หมวด" (ตัวกรอง ไม่บันทึก) กับ "ประเภท" (ค่าที่บันทึก)
+   "ประเภท" เป็นคอลัมน์เก่าใน PRICES ตั้งแต่ยังไม่มีบัญชีคุม พอมีบัญชีคุมแล้ว
+   ที่อื่นในระบบอ่านหมวดจากบัญชีคุมก่อนเสมอ (expCatOf · หน้าสถิติ) เหลือแค่ฟอร์มนี้ที่ยังถามซ้ำ */
+const mCats=()=>[...new Set([...Object.values(REG.cat||{}), ...P.types.filter(x=>x)])]
+  .filter(Boolean).sort((a,b)=>cmpSrcName(a,b));
+const CATHINT='เลือกวัสดุแล้วระบบเติมหมวดกับหน่วยให้เอง · เลือกหมวดเองก่อนได้ถ้าอยากกรองรายการให้สั้นลง';
+/* รายการวัสดุใน datalist = ของแถวที่กำลังโฟกัสอยู่ (กรองตามหมวดของแถวนั้น)
+   ใช้ datalist ก้อนเดียวร่วมกันทุกแถว เพราะโฟกัสได้ทีละแถวอยู่แล้ว — 20 ก้อน × 4,000 ชื่อ ช้าเปล่า ๆ */
+function fillMat(c){
+  let names=[];
+  if(REG.on){   /* ใช้ชื่อมาตรฐานทั้งหมดจากบัญชีคุม แม้เดือนนี้ยังไม่มีราคา */
+    const seen=new Set();
+    Object.keys(REG.cat).forEach(n=>{ if((!c||REG.cat[n]===c)&&!seen.has(n)){ seen.add(n); names.push(n); } });
+    Object.values(REG.map).forEach(n=>{ if(!c&&!seen.has(n)){ seen.add(n); names.push(n); } });
+  } else if(!c){ names=P.mats.slice(); }
+  else { const ti=P.types.indexOf(c); const st=new Set(); P.series.forEach(sr=>{ if(sr[3]===ti) st.add(P.mats[sr[0]]); }); names=[...st]; }
+  names.sort((a,b)=>a.localeCompare(b,'th'));
+  $('mMatList').innerHTML=names.slice(0,4000).map(n=>`<option value="${esc(n)}">`).join('');
+}
+$('mUnitList').innerHTML=P.units.filter(u=>u).map(u=>`<option value="${esc(u)}">`).join('');
+fillMat('');
+
+/* ═══ แถววัสดุ — หนึ่งรายการ = สองบรรทัดเสมอ ═══
+   ⚠ ความจริงอยู่ที่อาเรย์ MROWS ไม่ใช่ที่ช่องกรอกบนจอ
+   เพราะ impInit ถูกเรียกซ้ำทุกครั้งที่คลังโหลดใหม่ (กด "ส่งขึ้นคลัง" · อนุมัติ · รีเฟรช)
+   ถ้าเก็บค่าไว้ในช่องอย่างเดียว สิ่งที่พิมพ์ค้างไว้จะหายทั้งชุดโดยไม่มีอะไรเตือน (กฎ R24)
+   ⚠ เก็บ "ชื่อวัสดุ" ไม่ใช่ลำดับใน P.mats (กฎ R1) — ลำดับเลื่อนได้ทุกครั้งที่อ่านคลังใหม่ */
+function mrEl(i,f){ return document.querySelector(`#mRows [data-i="${i}"][data-f="${f}"]`); }
+/* ป้ายบอกสถานะของลิงก์เส้นนั้น — ตอบว่า "ลิงก์นี้ดึงราคาได้หรือไม่ได้" โดยไม่ต้องกดลองดึงเอง
+   อ่านจากทะเบียน WEBITEMS ที่ชีทเขียนไว้ทุกครั้งที่วิ่งดึงอัตโนมัติ (กฎ R17 · กางให้ตรวจ) */
+function linkBadge(url){
+  const u=String(url||'').trim();
+  if(!u) return '';
+  if(!/^https?:\/\//i.test(u)) return '<span class="pill bad" title="ต้องขึ้นต้นด้วย http:// หรือ https://">ลิงก์ไม่ถูกรูปแบบ</span>';
+  if(!WITEMS.length) return '<span class="pill" title="ยังอ่านทะเบียนลิงก์จากชีทไม่ได้">ลิงก์ใหม่</span>';
+  const c=witemOf(u);
+  if(!c) return '<span class="pill" title="ยังไม่เคยจดลิงก์เส้นนี้ — ส่งขึ้นคลังแล้วระบบจะเริ่มดึงให้เองทุกวันที่ 1 เวลา 07:00">ลิงก์ใหม่</span>';
+  const st=String(c[8]||'').trim(), when=String(c[7]||'').trim();
+  const raw=(c[5]!==''&&c[5]!=null)?fmt(parseFloat(c[5])):'';
+  const std=(c[6]!==''&&c[6]!=null)?fmt(parseFloat(c[6])):'';
+  if(/ไม่ได้|ไม่เจอ/.test(st))
+    return `<span class="pill bad" title="ครั้งล่าสุด ${esc(when||'-')} · ${esc(String(c[9]||'').slice(0,150))}">ดึงไม่ได้</span>`;
+  if(raw||std)
+    return `<span class="pill ok" title="ครั้งล่าสุด ${esc(when||'-')} · ราคาบนเว็บ ${raw} → ต่อหน่วยมาตรฐาน ${std}">ดึงได้ ${std||raw}</span>`;
+  return `<span class="pill warn" title="จดไว้แล้ว รอรอบดึงวันที่ 1">รอดึง</span>`;
+}
+/* พิมพ์/แก้ลิงก์แล้วป้ายต้องเปลี่ยนตามทันที ไม่วาดทั้งแถวใหม่ (จะเสียโฟกัสที่กำลังพิมพ์อยู่) */
+function linkBadgeSync(i){
+  const s=document.querySelector(`#mRows .mr-st[data-i="${i}"]`);
+  if(s) s.innerHTML=linkBadge(MROWS[i].url);
+}
+function linkBadgeAll(){ MROWS.forEach((r,i)=>linkBadgeSync(i)); }
+function mrFilled(r){ return !!(String(r.mat).trim()||String(r.price).trim()||String(r.url).trim()); }
+function mrStat(){
+  const n=MROWS.filter(mrFilled).length;
+  $('mrStat').textContent=n+' รายการ';
+  $('mrStat').className='pill '+(n?'ok':'');
+  $('mrCap').textContent=`${MROWS.length} บรรทัด (สูงสุด ${MR_MAX}) · กรอกได้หลายรายการในแหล่งเดียวกัน แล้วกดเพิ่มเข้าคิวทีเดียว`;
+  $('mrAdd').disabled=MROWS.length>=MR_MAX;
+}
+function renderMRows(){
+  const web=webOn();
+  $('mRows').innerHTML=MROWS.map((r,i)=>`
+    <div class="mrow" data-i="${i}">
+      <div class="mr-n">${i+1}</div>
+      <div class="mr-b">
+        <div class="mr-l">
+          <select class="mr-cat" data-i="${i}" data-f="cat" title="หมวด">
+            <option value="">— หมวด —</option>
+            ${mCats().map(c=>`<option ${c===r.cat?'selected':''}>${esc(c)}</option>`).join('')}
+          </select>
+          <input class="mr-mat" data-i="${i}" data-f="mat" list="mMatList" value="${esc(r.mat)}"
+                 placeholder="รายการวัสดุ — พิมพ์ค้นหา / เลือกจากบัญชีคุม">
+        </div>
+        <div class="mr-l">
+          <input class="mr-unit" data-i="${i}" data-f="unit" list="mUnitList" value="${esc(r.unit)}" placeholder="หน่วย">
+          <input class="mr-price" type="number" step="0.01" data-i="${i}" data-f="price" value="${esc(r.price)}" placeholder="ราคา">
+          ${web?`<input class="mr-url" type="url" data-i="${i}" data-f="url" value="${esc(r.url)}" placeholder="ลิงก์หน้าสินค้า (วางแล้วไม่ต้องกรอกราคา)">
+          <input class="mr-fac" type="number" step="0.0001" min="0" data-i="${i}" data-f="fac" value="${esc(r.fac)}" placeholder="×1" title="ราคาบนเว็บ × ตัวเลขนี้ = ราคาต่อ 1 หน่วยมาตรฐาน">
+          <button class="btn ghost mr-probe" data-i="${i}" title="ลองให้ชีทวิ่งอ่านลิงก์นี้เดี๋ยวนี้">🔎</button>
+          <span class="mr-st" data-i="${i}">${linkBadge(r.url)}</span>`:''}
+        </div>
+      </div>
+      <button class="btn ghost mr-x" data-i="${i}" title="เอาบรรทัดนี้ออก">✕</button>
+    </div>`).join('');
+  bindMRows();
+  /* ห่อ select/input[list] ที่เพิ่งสร้างใหม่ให้เป็นดรอปดาวน์ค้นหาได้เหมือนช่องอื่นทั้งระบบ (กฎ R14)
+     แล้วยกคลาสความกว้างขึ้นไปที่ตัวห่อ ไม่งั้นตัวห่อกว้าง 100% แล้วแถวแตกเกิน 2 บรรทัด */
+  try{ kddAll(); kfreeAll(); }catch(e){}
+  $('mRows').querySelectorAll('.kdd').forEach(w=>{
+    const c=w.querySelector('[data-f]'); if(!c) return;
+    [...c.classList].filter(x=>/^mr-/.test(x)).forEach(x=>w.classList.add(x));
+  });
+  mrStat();
+}
+function bindMRows(){
+  $('mRows').querySelectorAll('[data-f]').forEach(el=>{
+    const i=+el.dataset.i, f=el.dataset.f;
+    const set=()=>{ MROWS[i][f]=el.value; mrStat(); };
+    if(f==='cat'){ el.onchange=()=>{ set(); el.dataset.auto=''; fillMat(el.value); $('mCatHint').textContent=CATHINT; }; }
+    else if(f==='mat'){ el.onfocus=()=>fillMat(MROWS[i].cat); el.oninput=el.onchange=()=>{ set(); matPick(i); }; }
+    else if(f==='unit'){ el.onfocus=()=>fillMat(MROWS[i].cat); el.oninput=()=>{ set(); matPick(i); }; }
+    else if(f==='url'){ el.oninput=()=>{ set(); linkBadgeSync(i); }; }
+    else el.oninput=set;
+  });
+  $('mRows').querySelectorAll('.mr-x').forEach(b=>b.onclick=()=>{
+    /* เอาออกได้ทุกบรรทัด (กฎ R22) · เหลือบรรทัดเดียวให้ล้างค่าแทนการลบทิ้ง จะได้ไม่เหลือลิสต์ว่างเปล่า */
+    const i=+b.dataset.i;
+    if(MROWS.length<=1) MROWS[0]=mrBlank(); else MROWS.splice(i,1);
+    renderMRows();
+  });
+  $('mRows').querySelectorAll('.mr-probe').forEach(b=>b.onclick=()=>probeRow(+b.dataset.i));
+}
+/* เลือกวัสดุแล้วเติมหน่วย+หมวดตามบัญชีคุมให้เลย — หน่วยผิด = ได้แถวใหม่ในคลังแทนการอัปเดตแถวเดิม
+   (ไม่ใช่การ "เลือกให้ล่วงหน้า" ตามกฎ R2 เพราะมันมาจากของที่ผู้ใช้เลือกเองแล้ว) */
+function matPick(i){
+  const r=MROWS[i];
+  const std=regStd(String(r.mat).trim())||String(r.mat).trim();
+  const u=REG.unit[std], uEl=mrEl(i,'unit');
+  if(u && !String(r.unit).trim()){ r.unit=u; if(uEl) uEl.value=u; }
+  $('mUnitHint').innerHTML = u ? (String(r.unit).trim()&&String(r.unit).trim()!==u
+      ? '<span class="pill warn">หน่วยไม่ตรงบัญชีคุม</span> บัญชีคุมระบุ <b>'+esc(u)+'</b>'
+      : 'หน่วยตามบัญชีคุม: <b>'+esc(u)+'</b>') : '';
+  const c=regCat(std), cEl=mrEl(i,'cat');
+  if(c && mCats().includes(c)){
+    if(!r.cat || (cEl&&cEl.dataset.auto==='1')){
+      if(r.cat!==c){ r.cat=c; if(cEl){ cEl.value=c; kddSync(cEl); } fillMat(c); }   /* หมวดเปลี่ยน = กรองรายการตามด้วยเสมอ */
+      if(cEl) cEl.dataset.auto='1';
+    }
+    $('mCatHint').innerHTML = r.cat===c
+      ? 'เติมจากบัญชีคุมให้แล้ว: <b>'+esc(c)+'</b> · รายการถูกกรองเหลือเฉพาะหมวดนี้'
+      : '<span class="pill warn">ไม่ตรงบัญชีคุม</span> บัญชีคุมระบุ <b>'+esc(c)+'</b>';
+  } else $('mCatHint').innerHTML = std ? 'บัญชีคุมยังไม่ได้ระบุหมวดของรายการนี้ — เลือกเอง' : CATHINT;
+  syncWeb(); mrStat();
+}
+$('mrAdd').onclick=()=>{ if(MROWS.length<MR_MAX){ MROWS.push(mrBlank()); renderMRows();
+  const el=mrEl(MROWS.length-1,'mat'); if(el) el.focus(); } };
+$('mrClear').onclick=()=>{
+  if(!confirm('ล้างหัวชุด (ปี · เดือน · ช่องทาง · แหล่ง · พิกัด · หมายเหตุ) ?\nรายการวัสดุที่กรอกไว้ยังอยู่')) return;
+  ['mYear','mChan','mSrcSel','mSrc','mGeo','mRef'].forEach(id=>{ const e=$(id); if(e) e.value=''; });
+  $('mMonth').value=''; kddAll(); srcTog(); syncWeb();
+};
+
+async function probeRow(i){
+  const out=$('mProbeOut'), url=String(MROWS[i]&&MROWS[i].url||'').trim();
+  const wurl=($('cfgUrl').value||'').trim();
+  const raw=String(MROWS[i]&&MROWS[i].mat||'').trim();
+  const mat=regStd(raw)||raw;
+  if(!/^https?:\/\//i.test(url)){ out.innerHTML='<span class="up">วางลิงก์หน้าสินค้าก่อน</span>'; return; }
+  if(!wurl){ out.innerHTML='<span class="up">ยังไม่ตั้ง WebApp URL (ดูหน้า ระบบ)</span>'; return; }
+  const btn=$('mRows').querySelector(`.mr-probe[data-i="${i}"]`);
+  if(btn) btn.disabled=true;
+  out.innerHTML='<span class="hint">บรรทัด '+(i+1)+' — กำลังให้ชีทวิ่งอ่านหน้านี้… (หน้าหมวดอาจใช้เวลาสัก 10–20 วินาที)</span>';
+  try{
+    const r=await (await fetch(wurl,{method:'POST',headers:{'Content-Type':'text/plain;charset=utf-8'},
+      body:JSON.stringify({token:WTOKEN,action:'webprobe',url,mat})})).json();
+    if(!r.ok) throw new Error(r.error||'เรียกไม่สำเร็จ');
+    const d=r.result||{};
+    const fac=Math.max(0,parseFloat(MROWS[i].fac)||1);
+    let h='';
+    if(d.ok){
+      const std=Math.round(d.price*fac*100)/100;
+      h+='<span class="pill ok">อ่านราคาได้</span> <b>'+fmt(d.price)+'</b> บาท ตามที่หน้าเว็บเขียน'
+        +(fac!==1?' · × '+fac+' = <b>'+fmt(std)+'</b> บาท/'+esc(String(MROWS[i].unit||'').trim()):'')
+        +' <span class="hint">('+esc(d.how)+')</span>';
+      MROWS[i].price=String(std); const pEl=mrEl(i,'price'); if(pEl) pEl.value=std; mrStat();
+      h+='<div class="hint" style="margin-top:4px">เติมราคาให้ในบรรทัด '+(i+1)+' แล้ว — ตรวจแล้วกด "เพิ่มทั้งหมดเข้าคิว" ได้เลย</div>';
+    } else {
+      h+='<span class="pill bad">อ่านราคาไม่ได้</span> '+esc(d.note||'');
+      /* ⚠ ห้ามจบแค่ "อ่านไม่ได้" — ต้องบอกว่าเห็นอะไร ไม่งั้นแยกไม่ออกว่าเป็นเพราะ
+         หน้าเว็บ · ชื่อในบัญชีคุม · หรือชีทยังไม่ได้ Deploy รุ่นใหม่ (กฎ R17) */
+      const w=d.why||{};
+      h+='<div class="hint" style="margin-top:4px">ชีทตอบกลับจาก <b>Code.gs รุ่น '+esc(String(d.ver||'?'))+'</b>'
+        +' · เจอตาราง '+(w.tables|0)+' · ข้อความ '+(w.chunks|0)+' ชิ้น'
+        +(w.need?' · สเปกที่ต้องเจอ <b>'+esc(w.need)+'</b>':'')+'</div>';
+      if(w.nearN) h+='<div class="hint">เจอชื่อใกล้เคียง '+w.nearN+' ชิ้น เช่น '
+        +w.near.map(x=>'<b>'+esc(x)+'</b>').join(' · ')
+        +'<br>= หน้าเว็บอ่านได้ แต่สเปกไม่ตรง — ตรวจว่าชื่อในบัญชีคุมเขียนขนาด/รหัสตรงกับที่ร้านเขียนไหม</div>';
+      else if(w.chunks) h+='<div class="hint">ไม่เจอชื่อใกล้เคียงเลยในหน้านี้ — ลิงก์อาจไม่ใช่หน้าที่มีสินค้าตัวนี้</div>';
+    }
+    /* ราคามาจากตารางแบบแถว×คอลัมน์ ต้องบอกให้ครบว่าหยิบช่องไหน ไม่งั้นตรวจย้อนไม่ได้เลย */
+    if(d.cell) h+='<div class="hint" style="margin-top:4px">หยิบจากตาราง: แถว <b>'+esc(d.cell.row)
+      +'</b> × คอลัมน์ <b>'+esc(String(d.cell.col).replace(/\s+/g,' '))+'</b>'
+      +(d.cell.ties?' <span class="pill warn">มีช่องอื่นคะแนนเท่ากัน '+d.cell.ties+' ช่อง — ตรวจก่อน</span>':'')+'</div>';
+    if(d.title) h+='<div class="hint" style="margin-top:4px">ชื่อสินค้าที่อ่านได้: <b>'+esc(d.title)+'</b>'
+      +(d.via&&d.via!=='หน้าที่ให้มา'?' <span class="pill">'+esc(d.via)+'</span>':'')+'</div>';
+    /* จุดสำคัญที่ KORN ถาม: ชื่อจับคู่ถูกไหม — ต้องบอกด้วยว่าตรงเพราะอะไร */
+    if(mat){
+      h+='<div class="hint" style="margin-top:4px">เทียบกับ <b>'+esc(mat)+'</b>: '
+        +(d.match?'<span class="pill ok">'+esc(d.match.tier)+'</span> '+esc(d.match.why)
+                 :'<span class="pill warn">สเปกไม่ตรง</span> ชื่อบนหน้าเว็บไม่มีขนาด/รหัสที่ตรงกับรายการที่เลือก — ตรวจว่าวางลิงก์ถูกตัวไหม')+'</div>';
+    }
+    if(d.choices&&d.choices.length) h+='<div class="hint" style="margin-top:4px">สินค้าในหน้านี้ที่สเปกตรง: '
+      +d.choices.map(c=>'<a href="'+esc(c.url)+'" target="_blank" rel="noopener">'+esc(c.text.slice(0,60))+'</a>').join(' · ')+'</div>';
+    out.innerHTML=h;
+  }catch(e){ out.innerHTML='<span class="up">ลองดึงไม่สำเร็จ: '+esc(e.message)+' — ชีทอาจยังใช้ Code.gs ก่อนรุ่น 27</span>'; }
+  if(btn) btn.disabled=false;
+}
+
 /* แท็บไหนโหลดข้อมูลไปแล้วบ้าง — ต้องอยู่นอก impInit เพราะ impInit ถูกเรียกซ้ำทุกครั้งที่คลังโหลดใหม่
    ถ้าเก็บไว้ข้างใน จะรีเซ็ตแล้วไล่จับคู่ใหม่ทั้งหมดโดยไม่จำเป็น */
 const IPDONE={};
@@ -4144,112 +4462,8 @@ function impInit(){
   $('mSrcSel').innerHTML='<option value="">— เลือก —</option>'
     + srcSet.map(x=>`<option ${x===prevSrc?'selected':''}>${esc(x)}</option>`).join('')
     +'<option value="__new__" '+(prevSrc==='__new__'?'selected':'')+'>+ แหล่งใหม่ (พิมพ์เอง)…</option>';
-  const srcTog=()=>{ const nw=$('mSrcSel').value==='__new__';
-    $('mSrcNewBox').style.display=nw?'':'none'; $('mSrcRow').classList.toggle('two',nw);
-    geoTog(); };
-  $('mSrcSel').onchange=srcTog;
-  /* แหล่งที่เลือกมีหมุดอยู่แล้วหรือยัง — แหล่งใหม่ยังไงก็ยังไม่มี */
-  function geoNeed(){
-    const v=$('mSrcSel').value;
-    if(!v) return {show:false};
-    if(v==='__new__'){ const nm=($('mSrc').value||'').trim();
-      return {show:true, name:nm, had:false}; }
-    const sc=findSrc(v);
-    return sc? {show:false, name:v, had:true} : {show:true, name:v, had:false};
-  }
-  function geoTog(){
-    const g=geoNeed();
-    $('mGeoBox').style.display=g.show?'':'none';
-    if(!g.show){ $('mGeoHint').innerHTML=''; return; }
-    const raw=($('mGeo').value||'').trim();
-    if(!raw){
-      $('mGeoHint').innerHTML=($('mSrcSel').value==='__new__')
-        ? 'แหล่งใหม่ยังไม่มีหมุดในคลัง — กรอกตรงนี้เลยจะได้ไม่ต้องกลับมาเติมทีหลังที่แท็บ "พิกัดแหล่ง"'
-        : '<span class="up">แหล่งนี้ยังไม่มีหมุดในคลัง</span> — คำนวณระยะขนส่งให้ไม่ได้จนกว่าจะมีพิกัด';
-      return;
-    }
-    /* กางให้ตรวจ: อ่านได้เท่าไร เปิดดูในแผนที่ได้เลย (กฎ R17) */
-    const ll=parseLatLon(raw);
-    $('mGeoHint').innerHTML = ll
-      ? '<span class="pill ok">อ่านพิกัดได้</span> '+ll.lat.toFixed(5)+', '+ll.lon.toFixed(5)
-        +' · <a href="https://www.google.com/maps?q='+ll.lat+','+ll.lon+'" target="_blank" rel="noopener">เปิดดูในแผนที่ ↗</a>'
-      : '<span class="up">อ่านพิกัดไม่ออก</span> — ต้องเป็นตัวเลขสองตัวคั่นด้วยจุลภาค เช่น 16.43220, 102.82360';
-  }
-  $('mGeo').oninput=geoTog;
-  $('mSrc').oninput=geoTog;
   srcTog();
-  /* ═══ ช่องทางเว็บร้านค้า → โชว์กล่องลิงก์ + ปลดเงื่อนไข "ต้องกรอกราคา" ═══
-     ใส่ลิงก์แล้วไม่ต้องกรอกราคา — สคริปต์ฝั่งชีทจะวิ่งอ่านราคาจากหน้านั้นเอง
-     หน่วยที่ร้านขาย (ถุง/แผ่น/ท่อน) มักไม่ตรงหน่วยบัญชีคุม (ตัน/ลบ.ม.) จึงมีตัวคูณกำกับ
-     ระบบเดาตัวคูณให้เองไม่ได้ ถ้าเดาแล้วผิดคือราคากลางเพี้ยนเงียบ ๆ — ต้องให้คนบอก */
-  const webOn=()=>$('mChan').value==='เว็บร้านค้า';
-  const hasUrl=()=>/^https?:\/\//i.test(($('mUrl').value||'').trim());
-  const syncWeb=()=>{
-    const opt=webOn()&&hasUrl();
-    $('mPriceReq').style.display=opt?'none':'';
-    $('mPriceHint').innerHTML=opt
-      ? 'เว้นว่างได้ — ระบบจะดึงราคาจากลิงก์เอง · กรอกไว้ = เดือนนี้เข้าคิวทันทีไม่ต้องรอรอบดึง' : '';
-    const u=($('mUnit').value||'').trim(), w=($('mWebUnit').value||'').trim();
-    $('mFacU').textContent=u||'หน่วยมาตรฐาน';
-    $('mFacW').textContent=w||'หน่วยร้าน';
-    const f=parseFloat($('mFac').value)||1;
-    $('mFacHint').innerHTML = f===1
-      ? 'ตัวคูณ 1 = ราคาบนเว็บคือราคาต่อ '+esc(u||'หน่วยมาตรฐาน')+' ตรง ๆ'
-      : 'ราคาบนเว็บ × <b>'+f+'</b> = ราคาต่อ 1 '+esc(u||'หน่วยมาตรฐาน');
-  };
-  const urlTog=()=>{ $('mUrlBox').style.display=webOn()?'':'none'; syncWeb(); };
-  $('mChan').onchange=urlTog; urlTog();   /* ต้องเป็น onchange= ไม่ใช่ addEventListener — impInit ถูกเรียกซ้ำทุกครั้งที่โหลดคลังใหม่ */
-  $('mUrl').oninput=$('mWebUnit').oninput=$('mFac').oninput=syncWeb;
-  /* ═══ "หมวด" — ช่องเดียวจบ (v8.8) ═══
-     เดิมมีสองช่องที่เป็นเรื่องเดียวกัน: "หมวด" (ตัวกรอง ไม่บันทึก) กับ "ประเภท" (ค่าที่บันทึก)
-     "ประเภท" เป็นคอลัมน์เก่าใน PRICES ตั้งแต่ยังไม่มีบัญชีคุม พอมีบัญชีคุมแล้ว
-     ที่อื่นในระบบอ่านหมวดจากบัญชีคุมก่อนเสมอ (expCatOf · หน้าสถิติ) เหลือแค่ฟอร์มนี้ที่ยังถามซ้ำ
-     ตอนนี้เหลือช่องเดียว: กรองรายการก็ช่องนี้ · ค่าที่บันทึกลงคลังก็ช่องนี้ */
-  const prevCat=$('mCat').value;
-  const mcats=[...new Set([...Object.values(REG.cat||{}), ...P.types.filter(x=>x)])]
-    .filter(Boolean).sort((a,b)=>cmpSrcName(a,b));
-  $('mCat').innerHTML='<option value="">— เลือก —</option>'
-    +mcats.map(c=>`<option ${c===prevCat?'selected':''}>${esc(c)}</option>`).join('');
-  const fillMat=()=>{
-    const c=$('mCat').value; let names=[];
-    if(REG.on){   /* ใช้ชื่อมาตรฐานทั้งหมดจากบัญชีคุม แม้เดือนนี้ยังไม่มีราคา */
-      const seen=new Set();
-      Object.keys(REG.cat).forEach(n=>{ if((!c||REG.cat[n]===c)&&!seen.has(n)){ seen.add(n); names.push(n); } });
-      Object.values(REG.map).forEach(n=>{ if(!c&&!seen.has(n)){ seen.add(n); names.push(n); } });
-    } else if(!c){ names=P.mats.slice(); }
-    else { const ti=P.types.indexOf(c); const st=new Set(); P.series.forEach(sr=>{ if(sr[3]===ti) st.add(P.mats[sr[0]]); }); names=[...st]; }
-    names.sort((a,b)=>a.localeCompare(b,'th'));
-    $('mMatList').innerHTML=names.slice(0,4000).map(n=>`<option value="${esc(n)}">`).join('');
-  };
-  const CATHINT='เลือกวัสดุแล้วระบบเติมหมวดให้เอง · เลือกเองก่อนได้ถ้าอยากกรองรายการให้สั้นลง';
-  /* คนเลือกหมวดเอง = ตั้งใจกรอง → กรองรายการใหม่ และเลิกถือว่าเป็นค่าที่ระบบเติม
-     (การเติมอัตโนมัติใช้ .value= ซึ่งไม่ยิง onchange จึงไม่กรองรายการทิ้งโดยไม่ตั้งใจ) */
-  $('mCat').onchange=()=>{ $('mCat').dataset.auto=''; fillMat(); $('mCatHint').textContent=CATHINT; };
-  fillMat();
-  /* เลือกวัสดุแล้วเติมหน่วยตามบัญชีคุมให้เลย — หน่วยผิด = ได้แถวใหม่ในคลังแทนการอัปเดตแถวเดิม */
-  $('mMat').oninput=$('mMat').onchange=()=>{
-    const std=regStd($('mMat').value.trim())||$('mMat').value.trim();
-    const u=REG.unit[std]; const el=$('mUnit'); const h=$('mUnitHint');
-    if(u && !el.value.trim()){ el.value=u; }
-    if(h) h.innerHTML = u ? (el.value.trim()&&el.value.trim()!==u
-        ? '<span class="pill warn">หน่วยไม่ตรงบัญชีคุม</span> บัญชีคุมระบุ <b>'+esc(u)+'</b>'
-        : 'หน่วยตามบัญชีคุม: <b>'+esc(u)+'</b>') : '';
-    /* ⚠ "หมวด" เติมจากบัญชีคุมให้เอง — เลือกวัสดุแล้วบัญชีคุมรู้อยู่แล้วว่าอยู่หมวดไหน
-       (ไม่ใช่การ "เลือกให้ล่วงหน้า" ตามกฎ R2 เพราะมันมาจากของที่ผู้ใช้เลือกเองแล้ว)
-       ยังแก้เองได้ ถ้าบัญชีคุมยังไม่ได้ระบุหมวดของวัสดุตัวนั้น */
-    const c=regCat(std), cSel=$('mCat'), cH=$('mCatHint');
-    if(c && [...cSel.options].some(o=>o.value===c)){
-      if(!cSel.value || cSel.dataset.auto==='1'){
-        if(cSel.value!==c){ cSel.value=c; kddSync(cSel); fillMat(); }   /* หมวดเปลี่ยน = กรองรายการตามด้วยเสมอ */
-        cSel.dataset.auto='1';
-      }
-      if(cH) cH.innerHTML = cSel.value===c
-        ? 'เติมจากบัญชีคุมให้แล้ว: <b>'+esc(c)+'</b> · รายการถูกกรองเหลือเฉพาะหมวดนี้'
-        : '<span class="pill warn">ไม่ตรงบัญชีคุม</span> บัญชีคุมระบุ <b>'+esc(c)+'</b>';
-    } else if(cH) cH.innerHTML = std ? 'บัญชีคุมยังไม่ได้ระบุหมวดของรายการนี้ — เลือกเอง' : CATHINT;
-    syncWeb();
-  };
-  $('mUnit').oninput=()=>{ const ev=$('mMat').onchange; if(ev) ev(); };
+
   const getSrc=()=>$('mSrcSel').value==='__new__'?$('mSrc').value.trim():$('mSrcSel').value;
   /* ปี/เดือน ก็ต้องเริ่มว่างเหมือนช่องอื่น — ไม่ทิ้งค่าตั้งต้นให้เผลอติดไปกับข้อมูล
      (คงค่าที่ผู้ใช้เลือกไว้ ถ้า impInit ถูกเรียกซ้ำตอนคลังโหลดเสร็จ) */
@@ -4258,60 +4472,85 @@ function impInit(){
     $('mMonth').innerHTML='<option value="">— เลือก —</option>'
       +TH_M.map((t,i)=>`<option value="${i+1}">${t}</option>`).join('');
     if(keep) $('mMonth').value=keep; }
+  syncWeb();
+  /* อ่านทะเบียนลิงก์เงียบ ๆ ตั้งแต่เปิดแท็บกรอกราคา — ไม่ต้องให้คนไปกดแท็บทะเบียนก่อน (กฎ R18)
+     อ่านครั้งเดียวพอ ครั้งต่อไปใช้ของที่จำไว้ · ล้มเหลวก็ไม่เป็นไร ป้ายจะขึ้นว่า "ลิงก์ใหม่" */
+  if(!WITEMS.length && !impInit._wi){ impInit._wi=1;
+    setTimeout(()=>{ loadWebItems(true).catch(()=>{}); },400); }
+  /* วาดแถววัสดุใหม่ทุกครั้งที่คลังโหลดเสร็จ — ค่าที่พิมพ์ค้างไว้อยู่ใน MROWS ไม่ได้อยู่บนจอ
+     จึงวาดทับได้โดยไม่ทำของหาย และรายชื่อหมวด/วัสดุจะสดตามคลังรอบล่าสุดเสมอ (กฎ R24) */
+  renderMRows();
+
+  /* ═══ เพิ่มทั้งชุดเข้าคิว ═══
+     หัวชุด (ปี · เดือน · ช่องทาง · แหล่ง · พิกัด · หมายเหตุ) ตรวจครั้งเดียว
+     แล้วไล่ทีละแถววัสดุ — แถวที่ยังว่างทั้งบรรทัดข้ามไป ไม่ถือว่าผิด */
   $('mAdd').onclick=()=>{
-    const mat=$('mMat').value.trim(), unit=$('mUnit').value.trim(), price=parseFloat($('mPrice').value);
     const y=+$('mYear').value, mo=+$('mMonth').value;
     const isNew=$('mSrcSel').value==='__new__';
     const src=getSrc();
-    /* ตรวจให้ครบทุกช่องบังคับ — "ชื่อแหล่งใหม่" บังคับเฉพาะตอนเลือก + แหล่งใหม่ เท่านั้น */
-    /* แถว "จดลิงก์อย่างเดียว" = ช่องทางเว็บร้านค้า + มีลิงก์ + ไม่ได้กรอกราคา
-       แถวแบบนี้ไม่ใช่ราคาของเดือนไหน จึงไม่บังคับ ปี/เดือน/ราคา — มันคือทะเบียนลิงก์ */
-    const _url0=($('mUrl').value||'').trim();
-    const linkOnly=webOn() && /^https?:\/\//i.test(_url0) && !String($('mPrice').value||'').trim();
+    const rows=MROWS.map((r,i)=>({r,i})).filter(x=>mrFilled(x.r));
+    document.querySelectorAll('#impModeMan .miss').forEach(e=>e.classList.remove('miss'));
+    /* ⚠ ไม่มีแถววัสดุเลย ห้ามหยุดตรวจแค่ตรงนี้ — ต้องไล่ตรวจหัวชุดต่อให้ครบ
+       ไม่งั้นคนกดปุ่มตอนยังไม่กรอกอะไรเลย จะเห็นแค่ "ยังไม่ได้กรอกรายการวัสดุ"
+       แล้วพอกรอกวัสดุเสร็จค่อยมาเจอว่ายังขาด ปี/เดือน/แหล่ง อีก = ฟ้องทีละรอบ */
+    /* ทั้งชุดเป็น "จดลิงก์อย่างเดียว" ไหม — ถ้าทุกแถวมีลิงก์และไม่มีราคาเลย ไม่ต้องบังคับ ปี/เดือน */
+    const linkOf=r=>webOn() && /^https?:\/\//i.test(String(r.url||'').trim()) && !String(r.price||'').trim();
+    /* ⚠ ต้องมี rows.length ด้วย — [].every() คืน true เสมอ
+       ไม่มีแถวเลย จะกลายเป็น "ทั้งชุดเป็นแค่ลิงก์" แล้วข้ามการตรวจ ปี/เดือน ไปเงียบ ๆ */
+    const allLink=rows.length>0 && rows.every(x=>linkOf(x.r));
     const need=[];
-    if(!linkOnly && !(y>=2560&&y<=2600)) need.push(['mYear','ปี พ.ศ.']);
-    if(!linkOnly && !(mo>=1&&mo<=12))    need.push(['mMonth','เดือน']);
-    if(!$('mChan').value)   need.push(['mChan','ช่องทาง']);
-    if(!mat)                need.push(['mMat','รายการวัสดุ']);
-    if(!unit)               need.push(['mUnit','หน่วย']);
-    /* เพดานราคา — กันพิมพ์ผิดจนได้ตัวเลขมหาศาล (เดิมเช็คแค่ >0 พิมพ์ 1e30 ก็ผ่าน) */
-    if(!linkOnly && !(price>0&&price<10000000)) need.push(['mPrice','ราคา (มากกว่า 0 และไม่เกิน 10,000,000)']);
-    if(!$('mCat').value)    need.push(['mCat','หมวด']);
-    if(!$('mSrcSel').value) need.push(['mSrcSel','แหล่ง / ผู้ให้ราคา']);
-    else if(isNew && !src)  need.push(['mSrc','ชื่อแหล่งใหม่']);
+    if(!rows.length) need.push([mrEl(0,'mat'),'รายการวัสดุ (ยังไม่ได้กรอกสักบรรทัด)']);
+    if(!allLink && !(y>=2560&&y<=2600)) need.push([$('mYear'),'ปี พ.ศ.']);
+    if(!allLink && !(mo>=1&&mo<=12))    need.push([$('mMonth'),'เดือน']);
+    if(!$('mChan').value)   need.push([$('mChan'),'ช่องทาง']);
+    if(!$('mSrcSel').value) need.push([$('mSrcSel'),'แหล่ง / ผู้ให้ราคา']);
+    else if(isNew && !src)  need.push([$('mSrc'),'ชื่อแหล่งใหม่']);
     /* พิกัดไม่บังคับ (กฎ R2) แต่พิมพ์มาแล้วอ่านไม่ออก ต้องฟ้อง ไม่ใช่ทิ้งเงียบ
        ทิ้งเงียบ = คนกรอกคิดว่าบันทึกพิกัดแล้ว ไปงงทีหลังว่าทำไมยังคำนวณระยะขนส่งไม่ได้ */
     const _geoRaw=($('mGeoBox').style.display!=='none') ? ($('mGeo').value||'').trim() : '';
     const _geo=_geoRaw?parseLatLon(_geoRaw):null;
-    if(_geoRaw && !_geo) need.push(['mGeo','พิกัดแหล่ง (อ่านไม่ออก — ต้องเป็นตัวเลขสองตัวคั่นด้วยจุลภาค)']);
-    document.querySelectorAll('#impModeMan .miss').forEach(e=>e.classList.remove('miss'));
+    if(_geoRaw && !_geo) need.push([$('mGeo'),'พิกัดแหล่ง (อ่านไม่ออก — ต้องเป็นตัวเลขสองตัวคั่นด้วยจุลภาค)']);
+    /* ตรวจรายแถว — บอกเลขบรรทัดด้วย ไม่งั้น 20 บรรทัดแล้วไม่รู้ว่าผิดบรรทัดไหน */
+    rows.forEach(({r,i})=>{
+      const lk=linkOf(r), n=i+1;
+      const price=parseFloat(r.price);
+      if(!String(r.mat).trim()) need.push([mrEl(i,'mat'),'บรรทัด '+n+': รายการวัสดุ']);
+      if(!String(r.unit).trim()) need.push([mrEl(i,'unit'),'บรรทัด '+n+': หน่วย']);
+      /* เพดานราคา — กันพิมพ์ผิดจนได้ตัวเลขมหาศาล (เดิมเช็คแค่ >0 พิมพ์ 1e30 ก็ผ่าน) */
+      if(!lk && !(price>0&&price<10000000)) need.push([mrEl(i,'price'),'บรรทัด '+n+': ราคา (มากกว่า 0 ไม่เกิน 10,000,000)']);
+      if(!String(r.cat).trim()) need.push([mrEl(i,'cat'),'บรรทัด '+n+': หมวด']);
+    });
     if(need.length){
-      need.forEach(([id])=>{ const el=$(id); if(el){ el.classList.add('miss');
+      need.forEach(([el])=>{ if(el){ el.classList.add('miss');
         const w=el.closest('.kdd'); if(w) w.classList.add('miss'); } });
-      const el=$(need[0][0]); if(el){ const w=el.closest('.kdd'); (w?w.querySelector('.kdd-inp')||el:el).focus(); }
-      toast('ยังไม่ได้กรอก: '+need.map(x=>x[1]).join(' · '));
+      const el=need[0][0]; if(el){ const w=el.closest('.kdd'); (w?w.querySelector('.kdd-inp')||el:el).focus(); }
+      toast('ยังไม่ได้กรอก: '+need.slice(0,4).map(x=>x[1]).join(' · ')+(need.length>4?` (อีก ${need.length-4} จุด)`:''));
       return;
     }
-    const _url=_url0;
-    const _ref=(_url?_url+' · ':'')+$('mRef').value.trim();
-    /* ใช้ชื่อมาตรฐานตามบัญชีคุม — ถ้าส่งชื่อดิบไป คลังจะได้แถวใหม่แทนการอัปเดตแถวเดิม */
-    const std=regStd(mat)||mat;
-    const fac=Math.max(0,parseFloat($('mFac').value)||1);
-    const webUnit=($('mWebUnit').value||'').trim();
-    /* คีย์เดียวกันอยู่ในคิวแล้ว = แก้ราคา ไม่ใช่เพิ่มแถวใหม่ (เซิร์ฟเวอร์จะทิ้งแถวหลังเงียบ ๆ) */
-    const key=[linkOnly?'':y,linkOnly?'':mo,std,src,unit].join('|');
-    const at=queue.findIndex(q=>[q.linkOnly?'':q.y,q.linkOnly?'':q.mo,q.mat,q.src,q.unit].join('|')===key);
-    const row={y:linkOnly?0:y,mo:linkOnly?0:mo,mat:std,unit,price:linkOnly?null:price,src,ref:_ref,
-               typ:$('mCat').value,chan:$('mChan').value,
-               url:_url,webUnit,fac,linkOnly,
-               lat:_geo?_geo.lat:null, lon:_geo?_geo.lon:null,
-               raw:std!==mat?mat:'',fromFile:0,known:P.mats.includes(std)||!!regStd(mat)};
-    if(at>=0){ const old=queue[at].price; queue[at]=row;
-      toast(old==null?'มีคีย์นี้ในคิวแล้ว — แทนของเดิม':'มีคีย์นี้ในคิวแล้ว — แทนราคาเดิม '+fmt(old)+' → '+fmt(price)); }
-    else { queue.push(row); toast((linkOnly?'จดลิงก์เข้าคิวแล้ว':'เพิ่มเข้าคิวแล้ว')+' · รวม '+queue.length+' รายการ'); }
-    $('mMat').value='';$('mPrice').value='';$('mUnit').value='';$('mUrl').value='';
-    $('mWebUnit').value='';$('mFac').value=''; $('mGeo').value=''; geoTog(); syncWeb();
-    document.querySelectorAll('#impModeMan .miss').forEach(e=>e.classList.remove('miss'));
+    let added=0, replaced=0;
+    rows.forEach(({r})=>{
+      const lk=linkOf(r);
+      const mat=String(r.mat).trim(), unit=String(r.unit).trim();
+      const price=parseFloat(r.price);
+      const _url=String(r.url||'').trim();
+      const _ref=(_url?_url+' · ':'')+$('mRef').value.trim();
+      /* ใช้ชื่อมาตรฐานตามบัญชีคุม — ถ้าส่งชื่อดิบไป คลังจะได้แถวใหม่แทนการอัปเดตแถวเดิม */
+      const std=regStd(mat)||mat;
+      const fac=Math.max(0,parseFloat(r.fac)||1);
+      /* คีย์เดียวกันอยู่ในคิวแล้ว = แก้ราคา ไม่ใช่เพิ่มแถวใหม่ (เซิร์ฟเวอร์จะทิ้งแถวหลังเงียบ ๆ)
+         คีย์ครบ 5 ส่วน ปี|เดือน|ชื่อ|แหล่ง|หน่วย เสมอ (กฎ R5) */
+      const key=[lk?'':y,lk?'':mo,std,src,unit].join('|');
+      const at=queue.findIndex(q=>[q.linkOnly?'':q.y,q.linkOnly?'':q.mo,q.mat,q.src,q.unit].join('|')===key);
+      const row={y:lk?0:y,mo:lk?0:mo,mat:std,unit,price:lk?null:price,src,ref:_ref,
+                 typ:String(r.cat).trim(),chan:$('mChan').value,
+                 url:_url,webUnit:'',fac,linkOnly:lk,
+                 lat:_geo?_geo.lat:null, lon:_geo?_geo.lon:null,
+                 raw:std!==mat?mat:'',fromFile:0,known:P.mats.includes(std)||!!regStd(mat)};
+      if(at>=0){ queue[at]=row; replaced++; } else { queue.push(row); added++; }
+    });
+    /* หัวชุดคงไว้ตามเดิม (แหล่งเดียวกันมักกรอกต่อหลายชุด) · ล้างเฉพาะรายการวัสดุ */
+    MROWS=[mrBlank(),mrBlank(),mrBlank()]; renderMRows();
+    toast(`เข้าคิวแล้ว ${added} รายการ`+(replaced?` · แทนของเดิม ${replaced} รายการ`:'')+` · รวมในคิว ${queue.length}`);
     renderQueue(); try{ drawNoGeo(); }catch(e){}
   };
   /* ชื่อเดือนที่ยอมรับ — ทั้งแบบย่อมีจุด แบบย่อไม่มีจุด และแบบเต็ม */
@@ -4664,58 +4903,6 @@ function impInit(){
   /* ═══ ลองดึงราคาเดี๋ยวนี้ ═══
      วางลิงก์แล้วต้องรู้ผลตอนนั้น ไม่ใช่รอถึงรอบดึงเดือนหน้าถึงจะรู้ว่าอ่านไม่ออก
      ฝั่งเบราว์เซอร์ยิงหาเว็บร้านค้าเองไม่ได้ (ติด CORS) จึงให้ชีทเป็นคนไปอ่านแทน */
-  $('mProbe').onclick=async()=>{
-    const out=$('mProbeOut'), url=($('mUrl').value||'').trim();
-    const wurl=($('cfgUrl').value||'').trim();
-    const mat=regStd(($('mMat').value||'').trim())||($('mMat').value||'').trim();
-    if(!/^https?:\/\//i.test(url)){ out.innerHTML='<span class="up">วางลิงก์หน้าสินค้าก่อน</span>'; return; }
-    if(!wurl){ out.innerHTML='<span class="up">ยังไม่ตั้ง WebApp URL (ดูหน้า ระบบ)</span>'; return; }
-    $('mProbe').disabled=true; out.innerHTML='<span class="hint">กำลังให้ชีทวิ่งอ่านหน้านี้… (หน้าหมวดอาจใช้เวลาสัก 10–20 วินาที)</span>';
-    try{
-      const r=await (await fetch(wurl,{method:'POST',headers:{'Content-Type':'text/plain;charset=utf-8'},
-        body:JSON.stringify({token:WTOKEN,action:'webprobe',url,mat})})).json();
-      if(!r.ok) throw new Error(r.error||'เรียกไม่สำเร็จ');
-      const d=r.result||{};
-      const fac=Math.max(0,parseFloat($('mFac').value)||1);
-      let h='';
-      if(d.ok){
-        const std=Math.round(d.price*fac*100)/100;
-        h+='<span class="pill ok">อ่านราคาได้</span> <b>'+fmt(d.price)+'</b> บาท ตามที่หน้าเว็บเขียน'
-          +(fac!==1?' · × '+fac+' = <b>'+fmt(std)+'</b> บาท/'+esc(($('mUnit').value||'').trim()):'')
-          +' <span class="hint">('+esc(d.how)+')</span>';
-        $('mPrice').value=std; syncWeb();
-        h+='<div class="hint" style="margin-top:4px">เติมราคาให้ในช่องแล้ว — ตรวจแล้วกด "เพิ่มเข้าคิว" ได้เลย</div>';
-      } else {
-        h+='<span class="pill bad">อ่านราคาไม่ได้</span> '+esc(d.note||'');
-        /* ⚠ ห้ามจบแค่ "อ่านไม่ได้" — ต้องบอกว่าเห็นอะไร ไม่งั้นแยกไม่ออกว่าเป็นเพราะ
-           หน้าเว็บ · ชื่อในบัญชีคุม · หรือชีทยังไม่ได้ Deploy รุ่นใหม่ (กฎ R17) */
-        const w=d.why||{};
-        h+='<div class="hint" style="margin-top:4px">ชีทตอบกลับจาก <b>Code.gs รุ่น '+esc(String(d.ver||'?'))+'</b>'
-          +' · เจอตาราง '+(w.tables|0)+' · ข้อความ '+(w.chunks|0)+' ชิ้น'
-          +(w.need?' · สเปกที่ต้องเจอ <b>'+esc(w.need)+'</b>':'')+'</div>';
-        if(w.nearN) h+='<div class="hint">เจอชื่อใกล้เคียง '+w.nearN+' ชิ้น เช่น '
-          +w.near.map(x=>'<b>'+esc(x)+'</b>').join(' · ')
-          +'<br>= หน้าเว็บอ่านได้ แต่สเปกไม่ตรง — ตรวจว่าชื่อในบัญชีคุมเขียนขนาด/รหัสตรงกับที่ร้านเขียนไหม</div>';
-        else if(w.chunks) h+='<div class="hint">ไม่เจอชื่อใกล้เคียงเลยในหน้านี้ — ลิงก์อาจไม่ใช่หน้าที่มีสินค้าตัวนี้</div>';
-      }
-      /* ราคามาจากตารางแบบแถว×คอลัมน์ ต้องบอกให้ครบว่าหยิบช่องไหน ไม่งั้นตรวจย้อนไม่ได้เลย */
-      if(d.cell) h+='<div class="hint" style="margin-top:4px">หยิบจากตาราง: แถว <b>'+esc(d.cell.row)
-        +'</b> × คอลัมน์ <b>'+esc(String(d.cell.col).replace(/\s+/g,' '))+'</b>'
-        +(d.cell.ties?' <span class="pill warn">มีช่องอื่นคะแนนเท่ากัน '+d.cell.ties+' ช่อง — ตรวจก่อน</span>':'')+'</div>';
-      if(d.title) h+='<div class="hint" style="margin-top:4px">ชื่อสินค้าที่อ่านได้: <b>'+esc(d.title)+'</b>'
-        +(d.via&&d.via!=='หน้าที่ให้มา'?' <span class="pill">'+esc(d.via)+'</span>':'')+'</div>';
-      /* จุดสำคัญที่ KORN ถาม: ชื่อจับคู่ถูกไหม — ต้องบอกด้วยว่าตรงเพราะอะไร */
-      if(mat){
-        h+='<div class="hint" style="margin-top:4px">เทียบกับ <b>'+esc(mat)+'</b>: '
-          +(d.match?'<span class="pill ok">'+esc(d.match.tier)+'</span> '+esc(d.match.why)
-                   :'<span class="pill warn">สเปกไม่ตรง</span> ชื่อบนหน้าเว็บไม่มีขนาด/รหัสที่ตรงกับรายการที่เลือก — ตรวจว่าวางลิงก์ถูกตัวไหม')+'</div>';
-      }
-      if(d.choices&&d.choices.length) h+='<div class="hint" style="margin-top:4px">สินค้าในหน้านี้ที่สเปกตรง: '
-        +d.choices.map(c=>'<a href="'+esc(c.url)+'" target="_blank" rel="noopener">'+esc(c.text.slice(0,60))+'</a>').join(' · ')+'</div>';
-      out.innerHTML=h;
-    }catch(e){ out.innerHTML='<span class="up">ลองดึงไม่สำเร็จ: '+esc(e.message)+' — ชีทอาจยังใช้ Code.gs ก่อนรุ่น 27</span>'; }
-    $('mProbe').disabled=false;
-  };
   $('apLoad').onclick=()=>loadPending();
   $('wiLoad').onclick=()=>loadWebItems();
   $('niLoad').onclick=()=>loadNewItems();
@@ -4937,6 +5124,8 @@ async function loadWebItems(silent){
   try{
     const rows=await gvizRows('WEBITEMS');
     if(rows===null){ if(!silent) box.innerHTML='<div class="hint">ยังไม่ตั้งค่า Sheet (หน้า ระบบ)</div>'; return; }
+    /* เก็บไว้ให้แถวกรอกราคาใช้ด้วย — ทะเบียนชุดเดียว ไม่ให้สองที่ตอบคนละอย่าง (กฎ R11) */
+    WITEMS=rows; try{ linkBadgeAll(); }catch(e){}
     st.textContent=rows.length?rows.length+' ลิงก์':'ยังไม่มีลิงก์';
     st.className='pill '+(rows.length?'ok':'warn');
     if(!rows.length){ box.innerHTML='<div class="hint">ยังไม่มีลิงก์ในทะเบียน — กรอกราคาโดยเลือกช่องทาง "เว็บร้านค้า" แล้ววางลิงก์ ระบบจะจดให้เอง</div>'; return; }
@@ -5301,8 +5490,22 @@ function expInit(){
     panel.onmousedown=e=>e.stopPropagation();
     box._close=()=>box.classList.remove('open');
   }
+  /* ยังไม่เลือกว่าจะยกยอดหรือไม่ = ยังส่งออกไม่ได้ (กฎ R2 — ห้ามเดาแทนคน)
+     ตัวช่วยตัวเดียวที่ทุกปุ่มส่งออกเรียกใช้ร่วมกัน จะได้ตอบเหมือนกันทุกปุ่ม (กฎ R11) */
+  const carryPick=()=>{ const v=$('eCarry').value;
+    if(v==='') { toast('เลือกก่อนว่าจะยกยอดราคาเดือนก่อนหรือไม่');
+      const w=$('eCarry').closest('.kdd'); if(w) w.classList.add('miss'); else $('eCarry').classList.add('miss');
+      return null; }
+    const w=$('eCarry').closest('.kdd'); if(w) w.classList.remove('miss'); $('eCarry').classList.remove('miss');
+    return v==='1'; };
   const upd=()=>{
     const mi=+$('eMonth').value, carry=$('eCarry').value==='1';
+    if($('eCarry').value===''){
+      $('eInfo').innerHTML='<span class="pill warn">ยังเลือกไม่ครบ</span> เลือกก่อนว่าจะ '
+        +'<b>ยกยอดราคาเดือนก่อน</b> หรือไม่ — ตัวเลือกนี้เปลี่ยนจำนวนแถวในไฟล์ที่ส่งให้ Estimate';
+      $('tblPrev').innerHTML='<thead><tr><th>รายการวัสดุ</th><th>หน่วย</th><th class="num">ราคา</th><th>แหล่งวัสดุ</th><th>ประเภท</th><th>ยกยอดจาก</th></tr></thead><tbody></tbody>';
+      return;
+    }
     const {rows,carried,dropped}=expRows(mi,carry,eCatSel);
     const catTxt=eCatSel.size?` (เฉพาะหมวด ${esc([...eCatSel].join(' · '))})`:'';
     $('eInfo').innerHTML=`จะส่งออก <b>${rows.length.toLocaleString()}</b> แถว${catTxt} · ยกยอดจากเดือนก่อน <b>${carried.toLocaleString()}</b> แถว · ไม่มีราคาเลยตัดทิ้ง <b>${dropped.toLocaleString()}</b> แถว`;
@@ -5316,7 +5519,7 @@ function expInit(){
       if(i>=0&&i<P.months.length) window._eMonthPick=P.ylist[i]*100+P.months[i]; }); }
   $('eMonth').onchange=upd; $('eCarry').onchange=upd; upd();
   const buildXlsx=(fname)=>{
-    const mi=+$('eMonth').value, carry=$('eCarry').value==='1';
+    const mi=+$('eMonth').value, carry=carryPick(); if(carry===null) return;
     const {rows}=expRows(mi,carry,eCatSel);
     const aoa=[['รายการวัสดุ','หน่วย','ราคา','แหล่งวัสดุ','ประเภท'],...rows.map(r=>r.slice(0,5))];
     const noted=rows.filter(r=>r[5]);
@@ -5370,7 +5573,7 @@ function expInit(){
     toast('ได้บัญชีแหล่ง '+SRC.length+' แหล่ง — วางที่เดียวกับไฟล์ราคา แล้วทุก Estimate กดรีเฟรช');
   };
   $('eCsv').onclick=()=>{
-    const mi=+$('eMonth').value, carry=$('eCarry').value==='1';
+    const mi=+$('eMonth').value, carry=carryPick(); if(carry===null) return;
     const {rows}=expRows(mi,carry,eCatSel);
     const t=[['รายการวัสดุ','หน่วย','ราคา','แหล่งวัสดุ','ประเภท'],...rows.map(r=>r.slice(0,5))]
       .map(r=>r.map(x=>/[",\r\n]/.test(x)?'"'+String(x).replace(/"/g,'""')+'"':x).join(',')).join('\n');
