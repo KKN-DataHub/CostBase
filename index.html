@@ -1089,6 +1089,7 @@ canvas{max-width:100%}
         <button class="btn ghost" id="noGeoScan">🔄 ตรวจหาแหล่งที่ยังไม่มีพิกัด</button>
         <button class="btn gold" id="noGeoSave">📍 บันทึกพิกัดขึ้นคลัง</button>
       </div>
+      <div class="hint" id="noGeoCap" style="margin-top:8px"></div>
       <div id="noGeoBox" style="margin-top:10px"></div>
       <div class="hint" id="noGeoMsg" style="margin-top:8px"></div>
     </div>
@@ -1308,7 +1309,7 @@ const SELFCHK={missing:new Set(),ok:false};
 const $ = id => { const el=document.getElementById(id);
   if(!el) SELFCHK.missing.add(id);
   return el; };
-const APPVER='8.22';        /* เลขรุ่นที่เดียว — ที่อื่นดึงจากตัวนี้ */
+const APPVER='8.24';        /* เลขรุ่นที่เดียว — ที่อื่นดึงจากตัวนี้ */
 const APPDATE='25 ส.ค. 2569';   /* วันที่ของรุ่นนี้ ที่เดียวเหมือนกัน */
 /* ⚠ ป้ายรุ่นบนแถบข้างเคยเป็นข้อความตายตัวใน HTML (v6.2) พอขึ้นรุ่นใหม่แล้วลืมแก้
    ผู้ใช้เลยเห็นเลขรุ่นเก่าทั้งที่โค้ดใหม่หมดแล้ว — ต่อไปนี้เขียนจาก APPVER เสมอ */
@@ -2694,15 +2695,24 @@ const srcNorm=s=>rNorm(s).toLowerCase()
   .replace(/[()\s.\-–—]/g,'')
   .replace(/[็-๎]/g,'')
   .replace(/ี/g,'ิ');
-function findSrc(nm){
-  if(SRCBYNAME[nm]) return SRCBYNAME[nm];
-  const q=srcNorm(nm); if(!q) return null;
-  const hits=SRC.filter(x=>{
+function srcHits(nm){
+  if(SRCBYNAME[nm]) return [SRCBYNAME[nm]];
+  const q=srcNorm(nm); if(!q) return [];
+  return SRC.filter(x=>{
     const t=srcNorm(x.name); if(!t) return false;
     if(t===q) return true;
     return Math.min(t.length,q.length)>=4 && (q.includes(t)||t.includes(q));
   });
-  return hits.length===1?hits[0]:null;
+}
+function findSrc(nm){ const h=srcHits(nm); return h.length===1?h[0]:null; }
+/* ทำไมแหล่งนี้ถึงยังไม่มีหมุด — สามสาเหตุ แก้คนละวิธี ต้องบอกให้ตรง ไม่ใช่บอกแค่ "ไม่มีพิกัด" (กฎ R17)
+   ① บัญชีแหล่งยังว่าง  ② ไม่มีชื่อนี้ในบัญชีแหล่ง  ③ มีชื่อคล้ายกันหลายแหล่ง ระบบไม่กล้าเดา */
+function noGeoWhy(nm){
+  if(!SRC.length) return {code:'nolist', txt:'ยังไม่มีบัญชีแหล่งวัสดุในคลัง — อัปโหลดบัญชีคุม (ชีต แหล่งวัสดุ) ที่หน้า ระบบ ก่อน'};
+  const h=srcHits(nm);
+  if(h.length>1) return {code:'amb',
+    txt:'ชื่อคล้ายกันหลายแหล่งในบัญชี ('+h.slice(0,3).map(x=>x.name).join(' · ')+') — ระบบไม่กล้าเดา กรอกพิกัดตรงนี้ได้เลย'};
+  return {code:'none', txt:'ยังไม่มีชื่อนี้ในบัญชีแหล่งวัสดุ (แท็บ SOURCES)'};
 }
 const TYPE_TH={online:'ออนไลน์','กล่อง':'กล่องเกเบียน','ดินถม':'ดินถม','ทราย':'ทราย','พาณิชย์':'พาณิชย์','ยาง':'ยาง','สะพาน':'สะพาน','หิน':'หิน','เหล็ก':'เหล็ก','ไฟฟ้า':'ไฟฟ้า'};
 const TRUCKS=[['6','🚚 6 ล้อ','รถบรรทุก 6 ล้อ · น้ำหนักรวมไม่เกิน 15 ตัน'],
@@ -4661,18 +4671,140 @@ function impInit(){
     return ci;
   }
   window.mapHeader=mapHeader; window.parsePrice=parsePrice; window.thMonthNum=thMonthNum;  /* เปิดไว้ให้สคริปต์ทดสอบเรียกได้ */
+
+  /* ══ อ่านชีต "แหล่งวัสดุ" — ตัวเดียวใช้ทั้งตอนนำเข้าไฟล์ราคา และตอนอัปโหลดบัญชีคุม (กฎ R11) ══
+     ⚠ บั๊กจริงที่ KORN เจอ: ของเดิมอ่านแบบ "ยึดตำแหน่งคอลัมน์ตายตัว" A=ชื่อ B=lat C=lon D=หมายเหตุ
+     แต่ไฟล์ที่ระบบส่งออกเอง (แหล่งวัสดุ.xlsx) มี 6 คอลัมน์: ลำดับ · แหล่งวัสดุ · ชนิด · ละติจูด · ลองจิจูด · พิกัด
+     พอเอาไฟล์นั้นไปวางในบัญชีคุมแล้วอัปโหลดกลับ ระบบอ่าน A เป็นชื่อ (ได้เลขลำดับ) B เป็น lat (ได้ข้อความ)
+     → parseFloat ไม่ผ่าน → ทิ้งทุกแถว → ข้ามการส่งพิกัดทั้งชุด "เงียบสนิท" ไม่มีข้อความบอกสักคำ
+     KORN: "ชั้นกรอกพิกัดไปหมดแล้วนะ ตอนนั้นก็ export ไฟล์ excel ก็มีนะ แต่พอเวอร์ชั่นใหม่มาแจ้งว่าไม่มีพิกัด"
+     ตอนนี้อ่านจาก "ชื่อหัวคอลัมน์" แทน — ไฟล์ที่ระบบส่งออกเอง ต้องอ่านกลับเข้าไปได้เสมอ (สัญญาข้อมูล R9) */
+  const SRC_H=[
+    {k:'name', names:['ชื่อแหล่ง','แหล่งวัสดุ','ชื่อแหล่งวัสดุ','แหล่ง','ผู้ให้ราคา']},
+    {k:'lat',  names:['ละติจูด','latitude','lat']},
+    {k:'lon',  names:['ลองจิจูด','longitude','long','lon','lng']},
+    {k:'pair', names:['พิกัด','coordinates','coord','latlon']},
+    {k:'note', names:['หมายเหตุ','ที่อยู่','โน้ต','remark','note']}];
+  function readSrcSheet(ws){
+    const aoa=XLSX.utils.sheet_to_json(ws,{header:1,defval:''});
+    if(!aoa.length) return {rows:[],head:[],skipped:0,why:'ชีตว่าง'};
+    const norm=s=>String(s==null?'':s).replace(/[ \u200b]/g,' ').replace(/\s+/g,' ').trim();
+    const head=aoa[0].map(norm);
+    const ci={name:-1,lat:-1,lon:-1,pair:-1,note:-1}, used={};
+    SRC_H.forEach(f=>{ head.forEach((h,c)=>{
+      if(!h||used[c]||ci[f.k]>=0) return;
+      const low=h.toLowerCase();
+      if(f.names.some(n=>low===n||low.indexOf(n)===0)){ ci[f.k]=c; used[c]=1; }
+    }); });
+    /* ไม่มีหัวคอลัมน์ที่อ่านออกเลย → ถอยไปใช้ตำแหน่งเดิม A-D (ไฟล์เก่าที่ทำไว้ก่อนมีหัวตาราง) */
+    const byHead = ci.name>=0 && (ci.pair>=0 || (ci.lat>=0 && ci.lon>=0));
+    if(!byHead){ ci.name=0; ci.lat=1; ci.lon=2; ci.note=3; ci.pair=-1; }
+    /* ไม่มีหัวตาราง = แถวแรกเป็นข้อมูล ห้ามตัดทิ้ง (ไฟล์เก่าที่ทำไว้ก่อนมีหัวตาราง) */
+    const noHead = !byHead && isFinite(parseFloat(aoa[0][1])) && isFinite(parseFloat(aoa[0][2]));
+    const rows=[]; let skipped=0;
+    aoa.slice(noHead?0:1).forEach(r=>{
+      const nm=String(r[ci.name]==null?'':r[ci.name]).trim();
+      if(!nm) return;
+      let lat=null, lon=null;
+      if(ci.lat>=0 && ci.lon>=0){ const a=parseFloat(r[ci.lat]), b=parseFloat(r[ci.lon]);
+        if(isFinite(a)&&isFinite(b)){ lat=a; lon=b; } }
+      if(lat==null && ci.pair>=0){ const ll=parseLatLon(r[ci.pair]); if(ll){ lat=ll.lat; lon=ll.lon; } }
+      if(lat==null||Math.abs(lat)>90||Math.abs(lon)>180){ skipped++; return; }
+      rows.push([nm,lat,lon,ci.note>=0?String(r[ci.note]||'').trim():'']);
+    });
+    return {rows, head, skipped, byHead,
+            why: rows.length?'' : ('อ่านหัวคอลัมน์ได้: '+(head.filter(Boolean).join(' · ')||'(ไม่มีหัวตาราง)'))};
+  }
+  window.readSrcSheet=readSrcSheet;
+
+  /* ══ อ่านชีต "บัญชีคุม" — อ่านจากหัวคอลัมน์เหมือนกัน (กฎ R27) ══
+     ⚠ ของเดิม: ws = Sheets['บัญชีคุม'] || Sheets[SheetNames[0]] แล้วนับคอลัมน์ A-E ตายตัว
+     ถ้าเลือกไฟล์ผิดช่อง — เช่นหยิบ แหล่งวัสดุ.xlsx ที่ระบบส่งออกเองมาใส่ —
+     ระบบจะถอยไปหยิบ "ชีตแรก" มาใช้แทน แล้วยิงคำสั่ง registry mode:'replace'
+     = ล้างบัญชีคุมทั้งแท็บ ทับด้วยชื่อแหล่ง+ละติจูด แล้วขึ้นว่า "อัปโหลดบัญชีคุมสำเร็จ" ด้วย
+     บัญชีคุมทั้งชุดหายในคลิกเดียวโดยไม่มีอะไรเตือน · ต่อไปนี้ไม่มีการเดาชีต */
+  const REG_H=[
+    {k:'seq', names:['ลำดับ','ที่','no','#']},
+    {k:'raw', names:['ชื่อเดิม','ชื่อที่พบ','ชื่อวัสดุ','รายการวัสดุ','ชื่อรายการ']},
+    {k:'cat', names:['หมวด','ประเภท','กลุ่ม']},
+    {k:'unit',names:['หน่วย','unit']},
+    {k:'std', names:['ชื่อมาตรฐาน','ชื่อกลาง','ชื่อที่ใช้จริง']}];
+  function readRegSheet(ws){
+    if(!ws) return {rows:[],head:[],ok:false,why:'ไม่มีชีต'};
+    const aoa=XLSX.utils.sheet_to_json(ws,{header:1,defval:''});
+    if(!aoa.length) return {rows:[],head:[],ok:false,why:'ชีตว่าง'};
+    const norm=s=>String(s==null?'':s).replace(/[ ​]/g,' ').replace(/\s+/g,' ').trim();
+    const bare=s=>s.replace(/\s*[\(（].*$/,'').trim();
+    const head=(aoa[0]||[]).map(norm);
+    const ci={seq:-1,raw:-1,cat:-1,unit:-1,std:-1}, used={};
+    REG_H.forEach(f=>{ head.forEach((h,c)=>{
+      if(!h||used[c]||ci[f.k]>=0) return;
+      const b=bare(h).toLowerCase();
+      if(f.names.some(n=>b===n||b.indexOf(n)===0)){ ci[f.k]=c; used[c]=1; }
+    }); });
+    /* ok    = พอจะเป็นบัญชีคุมได้ ใช้ตอนที่ผู้ใช้ชี้ชีตมาเองแล้ว (ชีตชื่อ "บัญชีคุม")
+       strong = ยืนยันตัวเองได้ว่าเป็นบัญชีคุมแน่ ๆ ต้องมีคู่ ชื่อเดิม→ชื่อมาตรฐาน ซึ่งเป็นหน้าที่เดียวของบัญชีคุม
+       ใช้ strong ตอนต้องเดาชีตเอง — ไม่งั้นไฟล์ราคา (รายการวัสดุ·หน่วย·ราคา·แหล่ง·ประเภท)
+       ก็ผ่านด่านนี้ได้ แล้วไปล้างบัญชีคุมทับด้วยชื่อวัสดุที่ไม่มีชื่อมาตรฐานสักตัว */
+    const ok = ci.raw>=0 && (ci.std>=0 || ci.unit>=0 || ci.cat>=0);
+    const strong = ci.raw>=0 && ci.std>=0;
+    if(!ok) return {rows:[],head,ok:false,strong:false,
+      why:'หัวคอลัมน์ที่อ่านได้: '+(head.filter(Boolean).join(' · ')||'(ไม่มีหัวตาราง)')};
+    const rows=[];
+    aoa.slice(1).forEach(r=>{
+      const raw=String(r[ci.raw]==null?'':r[ci.raw]).trim(); if(!raw) return;
+      rows.push([ ci.seq>=0?r[ci.seq]:rows.length+1, raw,
+        ci.cat>=0 ?String(r[ci.cat] ||'').trim():'',
+        ci.unit>=0?String(r[ci.unit]||'').trim():'',
+        ci.std>=0 ?String(r[ci.std] ||'').trim():'' ]);
+    });
+    return {rows,head,ok:true,strong,why:''};
+  }
+  /* หาชีตบัญชีคุมในสมุดงาน — ชื่อ "บัญชีคุม" ก่อน ไม่มีจึงค่อยหาชีตที่หัวตารางยืนยันตัวเอง
+     ห้ามถอยไปหยิบชีตแรกมั่ว ๆ เพราะคำสั่งปลายทางเขียนทับทั้งแท็บ */
+  function findRegSheet(wb){
+    const named=wb.SheetNames.find(n=>/^บัญชีคุม/.test(n));
+    if(named) return named;
+    return wb.SheetNames.find(n=>!/^แหล่ง|^หมวด|^วิธี|^อ่านก่อน|^คำอธิบาย|^หมายเหตุ/.test(n)
+      && readRegSheet(wb.Sheets[n]).strong) || '';
+  }
+  window.readRegSheet=readRegSheet; window.findRegSheet=findRegSheet;
+
+  /* ══ เดือนที่ "ไฟล์ประกาศตัวเอง" — ไฟล์ที่ระบบส่งออกเองเขียนไว้ในชีตหมายเหตุ (กฎ R27) ══
+     ⚠ บั๊กจริง: ส่งออกราคาเดือน มิ.ย. แล้วเอาไฟล์นั้นกลับเข้าช่องนำเข้า
+     ไฟล์ราคาไม่มีคอลัมน์ ปี/เดือน (มีไม่ได้ — Table1 ต้องคง 5 คอลัมน์ให้ Power Query กฎ R9)
+     ตัวอ่านจึงใช้เดือนสำรอง = เดือนล่าสุดในคลัง → ราคาทั้งไฟล์ถูกประทับเป็นเดือนผิดเงียบ ๆ
+     ทั้งที่ตัวไฟล์เขียนบอกไว้ชัด ๆ ว่า "ราคาของเดือน มิ.ย. 69" · ตัวอ่านแค่ไม่เคยอ่าน */
+  function declaredYM(wb){
+    const sn=wb.SheetNames.find(n=>/^หมายเหตุ|^อ่านก่อนใช้|^คำอธิบาย/.test(n));
+    if(!sn) return null;
+    const aoa=XLSX.utils.sheet_to_json(wb.Sheets[sn],{header:1,defval:''});
+    let y=0,m=0,lab='',carried=0;
+    aoa.forEach(r=>{
+      const k=String(r[0]==null?'':r[0]).replace(/\s+/g,' ').trim(), v=r[1];
+      if(/^ปีของราคา/.test(k)){ const n=parseInt(v); if(n>=2560&&n<=2600) y=n; }
+      else if(/^เดือนของราคา/.test(k)){ const n=parseInt(v); if(n>=1&&n<=12) m=n; }
+      else if(/^ราคาของเดือน/.test(k)) lab=String(v==null?'':v).trim();
+      else if(/^รายการที่ยกยอดราคาจากเดือนก่อน/.test(k)) carried=1;
+    });
+    if((!y||!m)&&lab){          /* ไฟล์รุ่นก่อนมีแต่ป้ายให้คนอ่าน เช่น "มิ.ย. 69" — ถอดเอาเอง */
+      const mm=thMonthNum(lab.split(/\s+/)[0]); if(mm&&!m) m=mm;
+      const yy=parseInt(String(lab).replace(/[^\d]/g,''));
+      if(!y){ if(yy>0&&yy<100) y=2500+yy; else if(yy>=2560&&yy<=2600) y=yy; }
+    }
+    return (y&&m)?{y,m,carried,lab:lab||(TH_M[m-1]+' '+String(y).slice(-2))}:null;
+  }
+  window.declaredYM=declaredYM;
+
   window.parseImpWb=function(wb){
     /* ── ชีตแหล่งวัสดุ: เก็บพิกัดเข้า GEOQ ไว้ให้การ์ด "แหล่งที่ยังไม่มีพิกัด" ── */
     const nameOf=re=>wb.SheetNames.find(n=>re.test(n));
     let geo=0;
     const sName=nameOf(/^แหล่ง/);
     if(sName){
-      const aoaS=XLSX.utils.sheet_to_json(wb.Sheets[sName],{header:1,defval:''});
-      aoaS.slice(1).forEach(r=>{
-        const nm=String(r[0]||'').trim(); const lat=parseFloat(r[1]), lon=parseFloat(r[2]);
-        if(!nm||!isFinite(lat)||!isFinite(lon)||Math.abs(lat)>90||Math.abs(lon)>180) return;
-        const i=GEOQ.findIndex(g=>g.name===nm);
-        const rec={name:nm,lat,lon,note:String(r[3]||'').trim()};
+      readSrcSheet(wb.Sheets[sName]).rows.forEach(r=>{
+        const rec={name:r[0],lat:r[1],lon:r[2],note:r[3]};
+        const i=GEOQ.findIndex(g=>g.name===rec.name);
         if(i>=0) GEOQ[i]=rec; else GEOQ.push(rec);
         geo++;
       });
@@ -4682,10 +4814,12 @@ function impInit(){
     const fileRef =($('xlRef').value||'').trim();
     /* ปี/เดือนสำรอง = ช่องบนหน้าจอ (แท็บกรอกมือ) ไม่ใช่เดือนล่าสุดในคลัง
        เดิมใช้ P.ylist[LAST] ซึ่งผู้ใช้สั่งไม่ได้เลย ถ้าไฟล์ไม่มีคอลัมน์เดือนก็ยัดเข้าเดือนล่าสุดเงียบ ๆ */
-    const fbY=(()=>{ const v=parseInt(($('mYear')||{}).value); return (v>=2560&&v<=2600)?v:P.ylist[LAST]; })();
-    const fbM=(()=>{ const v=parseInt(($('mMonth')||{}).value); return (v>=1&&v<=12)?v:P.months[LAST]; })();
+    /* ไฟล์ประกาศเดือนของตัวเองมาหรือเปล่า (ไฟล์ที่ระบบส่งออกเองประกาศเสมอ) — ถ้าประกาศ ต้องเชื่อไฟล์ */
+    const decl=declaredYM(wb);
+    const fbY=decl?decl.y:(()=>{ const v=parseInt(($('mYear')||{}).value); return (v>=2560&&v<=2600)?v:P.ylist[LAST]; })();
+    const fbM=decl?decl.m:(()=>{ const v=parseInt(($('mMonth')||{}).value); return (v>=1&&v<=12)?v:P.months[LAST]; })();
     let ok=0,skip=0,badY=0,badP=0,noM=0,started=queue.length;
-    const mCount={}, sheetsRead=[], sheetsSkip=[], mapShown=[];
+    const mCount={}, sheetsRead=[], sheetsSkip=[], mapShown=[], seenSheet={};
     /* อ่านทุกชีตที่มีหัวตารางใช้ได้ — เดิมอ่านชีตเดียวแล้วชีตอื่นหายเงียบ ๆ
        (ไฟล์แยกชีตต่อเดือน เป็นรูปแบบที่พบบ่อย) */
     wb.SheetNames.forEach(sn=>{
@@ -4693,6 +4827,12 @@ function impInit(){
       if(/^วิธีกรอก|^คำอธิบาย|^หมายเหตุ/.test(sn)) return;
       const aoa=XLSX.utils.sheet_to_json(wb.Sheets[sn],{header:1,defval:''});
       if(!aoa.length){ sheetsSkip.push(sn+' (ว่าง)'); return; }
+      /* ⚠ ไฟล์ราคาที่ระบบส่งออกเองมี Sheet1 กับ Table1 เนื้อเดียวกันเป๊ะ (Table1 มีไว้ให้ Power Query)
+         เอากลับเข้าระบบแล้วเดิมอ่านทั้งสองชีต → ขึ้นว่า "46 แถว · คีย์ซ้ำ 23 แถว"
+         กลายเป็นระบบกล่าวหาไฟล์ของตัวเองว่าคีย์ซ้ำ · ชีตที่เนื้อซ้ำกันเป๊ะ อ่านชีตเดียวพอ (กฎ R27) */
+      const sig=JSON.stringify(aoa.map(r=>(r||[]).map(c=>String(c==null?'':c).trim())));
+      if(seenSheet[sig]){ sheetsSkip.push(sn+' (เนื้อซ้ำกับชีต '+seenSheet[sig]+')'); return; }
+      seenSheet[sig]=sn;
       /* หาแถวหัวตาราง — เผื่อมีแถวชื่อเรื่องอยู่ข้างบน มองลงไปได้ถึง 6 แถว */
       let hr=-1, ci=null;
       for(let i=0;i<Math.min(aoa.length,6);i++){
@@ -4757,7 +4897,8 @@ function impInit(){
     const months=Object.keys(mCount).sort().map(k=>({
       lab: TH_MS[(+k%100)-1]+' '+String(Math.floor(+k/100)).slice(-2), n: mCount[k] }));
     return {read:ok+skip,ok:ok-dup,skip,geo,months,noMonth:noM,badYear:badY,badPrice:badP,dup,
-            sheets:sheetsRead,sheetsSkip,map:mapShown,fbLab:TH_MS[fbM-1]+' '+String(fbY).slice(-2)};
+            sheets:sheetsRead,sheetsSkip,map:mapShown,fbLab:TH_MS[fbM-1]+' '+String(fbY).slice(-2),
+            decl: decl?{lab:decl.lab,carried:decl.carried}:null};
   };
   /* ทิ้งแถวที่คีย์ซ้ำกันในคิว เก็บแถวหลังสุด (ถือว่าเป็นค่าที่แก้แล้ว) */
   function dedupeQueue(from){
@@ -4809,8 +4950,13 @@ function impInit(){
             +' — รับเฉพาะ 2560–2600 ระบบใช้ปีจากแถวก่อนหน้า/ช่องบนหน้าจอแทน':'')
         +(res.dup?'<br><span class="pill warn">'+res.dup+' แถวคีย์ซ้ำในไฟล์</span>'
             +' (ปี·เดือน·รายการ·แหล่ง·หน่วย เดียวกัน) — เก็บแถวล่างสุดไว้':'')
-        +(res.noMonth?'<br><span class="pill bad">'+res.noMonth+' แถวไม่ได้ระบุเดือน</span> ระบบใส่ <b>'
-            +esc(res.fbLab)+'</b> ให้แทน (ตามช่องปี/เดือนในแท็บกรอกทีละรายการ) — ตรวจคอลัมน์ "เดือน" ก่อนส่งขึ้นคลัง':'');
+        +(res.noMonth&&!res.decl?'<br><span class="pill bad">'+res.noMonth+' แถวไม่ได้ระบุเดือน</span> ระบบใส่ <b>'
+            +esc(res.fbLab)+'</b> ให้แทน (ตามช่องปี/เดือนในแท็บกรอกทีละรายการ) — ตรวจคอลัมน์ "เดือน" ก่อนส่งขึ้นคลัง':'')
+        +(res.decl?'<br><span class="pill ok">ไฟล์ประกาศเดือนของตัวเอง</span> อ่านจากชีตหมายเหตุได้ <b>'
+            +esc(res.decl.lab)+'</b> — ใช้เดือนนี้กับแถวที่ไม่มีคอลัมน์เดือน แทนการเดาจากเดือนล่าสุดในคลัง':'')
+        +(res.decl&&res.decl.carried?'<br><span class="pill warn">ไฟล์นี้มีราคาที่ยกยอดมาจากเดือนก่อน</span>'
+            +' — ถ้าส่งขึ้นคลัง ราคายกยอดจะกลายเป็นราคาจริงของเดือน '+esc(res.decl.lab)
+            +' ตรวจชีต <b>หมายเหตุ</b> ในไฟล์ก่อนกดส่ง':'');
     }catch(e){ st.innerHTML='<span class="pill bad">อ่านไม่ได้</span> '+esc(e.message).replace(/\n/g,'<br>'); }
     $('impFile').value='';
   };
@@ -4998,7 +5144,7 @@ function noGeoList(){
   const out=[];
   names.forEach(n=>{ if(!n||n==='(ไม่ระบุ)') return; if(findSrc(n)) return;
     const g=GEOQ.find(x=>x.name===n);
-    out.push({name:n, lat:g?g.lat:null, lon:g?g.lon:null, note:g?g.note:''}); });
+    out.push({name:n, lat:g?g.lat:null, lon:g?g.lon:null, note:g?g.note:'', why:noGeoWhy(n)}); });
   out.sort((a,b)=>cmpSrcName(a.name,b.name));
   return out;
 }
@@ -5008,10 +5154,16 @@ function drawNoGeo(){
   const st=$('noGeoStat');
   st.textContent = list.length? list.length+' แหล่ง' : 'ครบทุกแหล่ง';
   st.className='pill '+(list.length?'warn':'ok');
+  const amb=list.filter(r=>r.why&&r.why.code==='amb').length;
+  const cap=$('noGeoCap');
+  if(cap) cap.innerHTML = !list.length ? ''
+    : (amb? '<span class="pill warn">'+amb+' แหล่งชื่อกำกวม</span> ชื่อในคลังราคาไปตรงกับหลายชื่อในบัญชีแหล่ง — '
+            +'แก้ให้ตรงกันในบัญชีคุมจะดีกว่ากรอกพิกัดซ้ำ' : '');
   if(!list.length){ $('noGeoBox').innerHTML='<div class="hint">แหล่งทุกแหล่งที่มีราคาในคลัง มีหมุดพิกัดครบแล้ว — คำนวณระยะขนส่งได้ทุกแหล่ง</div>'; return; }
   $('noGeoBox').innerHTML='<div class="tw" style="max-height:300px"><table id="tblNoGeo"><thead><tr>'
-    +'<th>ชื่อแหล่ง (ตามที่อยู่ในคลังราคา)</th><th>พิกัด — วางคู่ ละติจูด, ลองจิจูด</th><th>หมายเหตุ / ที่อยู่</th></tr></thead><tbody>'
+    +'<th>ชื่อแหล่ง (ตามที่อยู่ในคลังราคา)</th><th>ทำไมยังไม่มีหมุด</th><th>พิกัด — วางคู่ ละติจูด, ลองจิจูด</th><th>หมายเหตุ / ที่อยู่</th></tr></thead><tbody>'
     + list.map((r,i)=>`<tr><td>${esc(r.name)}</td>
+        <td class="hint">${esc((r.why&&r.why.txt)||'')}</td>
         <td><input type="text" class="ng-ll" data-i="${i}" placeholder="16.432100, 102.823600 หรือวางลิงก์ Google Maps"
               value="${r.lat!=null?r.lat+', '+r.lon:''}" style="min-width:250px"></td>
         <td><input type="text" class="ng-nt" data-i="${i}" placeholder="เช่น โรงโม่ ต.... อ.... จ...." value="${esc(r.note||'')}"></td></tr>`).join('')
@@ -5572,8 +5724,13 @@ function expInit(){
     const aoa=[['รายการวัสดุ','หน่วย','ราคา','แหล่งวัสดุ','ประเภท'],...rows.map(r=>r.slice(0,5))];
     const noted=rows.filter(r=>r[5]);
     /* ชื่อไฟล์คงที่แล้ว เดือนเลยต้องประกาศไว้ในไฟล์แทน — ไว้ชีตหมายเหตุ ไม่แตะ Table1 */
+    /* สองบรรทัดถัดจากป้ายอ่านด้วยตา คือ "เดือนแบบเครื่องอ่าน" — มีไว้ให้ตัวนำเข้าของระบบเองอ่านกลับ
+       ไฟล์นี้ไม่มีคอลัมน์ ปี/เดือน ในตาราง (ห้ามมี — Table1 ต้องคง 5 คอลัมน์ให้ Power Query กฎ R9)
+       ถ้าไม่ประกาศไว้ตรงนี้ เอาไฟล์กลับเข้าระบบเมื่อไร ราคาจะถูกประทับเป็นเดือนล่าสุดเงียบ ๆ (กฎ R27) */
     const extra = {name:'หมายเหตุ',
       aoa:[['ราคาของเดือน', mLabI(mi)],
+           ['ปีของราคา (พ.ศ.)', P.ylist[mi]],
+           ['เดือนของราคา (1-12)', P.months[mi]],
            ['ส่งออกจาก','CostBase v'+APPVER],
            ['จำนวนแถว', rows.length],
            ...(noted.length?[[''],['รายการที่ยกยอดราคาจากเดือนก่อน (เดือนที่เลือกยังไม่มีราคา)'],
@@ -5690,11 +5847,21 @@ function regInit(){
       if(!(g&&g.ok&&(g.ver||0)>=4)) throw new Error('Code.gs ในชีทยังเป็นรุ่นเก่า — วางโค้ดรุ่น 4 แล้ว Deploy → Manage deployments → New version ก่อน');
       st.textContent='กำลังอ่านไฟล์…';
       const wb=XLSX.read(await f.arrayBuffer(),{type:'array'});
-      const ws=wb.Sheets['บัญชีคุม']||wb.Sheets[wb.SheetNames[0]];
-      const aoa=XLSX.utils.sheet_to_json(ws,{header:1,defval:''});
-      const rows=aoa.slice(1).filter(r=>String(r[1]||'').trim())
-        .map(r=>[r[0],String(r[1]).trim(),String(r[2]||'').trim(),String(r[3]||'').trim(),String(r[4]||'').trim()]);
-      if(!rows.length) throw new Error('ไม่พบข้อมูลในชีต บัญชีคุม');
+      /* ⚠ ห้ามเดาชีตเด็ดขาด — คำสั่งข้างล่างคือ registry mode:'replace' ล้างบัญชีคุมทั้งแท็บ
+         ของเดิมถอยไปหยิบชีตแรกเมื่อไม่เจอชื่อ "บัญชีคุม" หยิบไฟล์ผิดทีเดียวบัญชีคุมหายทั้งชุด (กฎ R27) */
+      const regName=findRegSheet(wb);
+      if(!regName) throw new Error('ไฟล์นี้ไม่มีชีตบัญชีคุม — ต้องมีชีตชื่อ "บัญชีคุม" '
+        +'หรือชีตที่มีคอลัมน์ "ชื่อเดิม" คู่กับ "ชื่อมาตรฐาน"/"หน่วย"/"หมวด"'
+        +' · ชีตในไฟล์: '+wb.SheetNames.join(' · ')
+        +(wb.SheetNames.some(n=>/^แหล่ง/.test(n))?' — ถ้าตั้งใจอัปพิกัด ให้เอาชีต "แหล่งวัสดุ" ไปวางในไฟล์ บัญชีคุมวัสดุ.xlsx แล้วอัปไฟล์นั้น':''));
+      const gr=readRegSheet(wb.Sheets[regName]);
+      if(!gr.ok) throw new Error('ชีต "'+regName+'" อ่านหัวตารางไม่ออก — '+gr.why
+        +' · ต้องมีคอลัมน์ "ชื่อเดิม" เป็นอย่างน้อย');
+      if(!gr.rows.some(r=>r[4])) throw new Error('ชีต "'+regName+'" ไม่มีชื่อมาตรฐานสักแถว — '
+        +'บัญชีคุมมีหน้าที่เดียวคือจับคู่ ชื่อเดิม → ชื่อมาตรฐาน ถ้าไม่มีคู่ ส่งขึ้นไปก็ล้างของเดิมทิ้งเปล่า ๆ'
+        +' · หัวคอลัมน์ที่อ่านได้: '+(gr.head.filter(Boolean).join(' · ')||'(ไม่มีหัวตาราง)'));
+      const rows=gr.rows;
+      if(!rows.length) throw new Error('ไม่พบข้อมูลในชีต '+regName);
       const CH=500; let done=0;
       for(let i=0;i<rows.length;i+=CH){
         st.textContent='กำลังส่ง '+Math.min(i+CH,rows.length)+' / '+rows.length+' แถว…';
@@ -5708,16 +5875,20 @@ function regInit(){
       const wsS=wb.Sheets['แหล่งวัสดุ'];
       if(wsS){
         if((g.ver||0)>=5){
-          const aoaS=XLSX.utils.sheet_to_json(wsS,{header:1,defval:''});
-          const rowsS=aoaS.slice(1).filter(r=>String(r[0]||'').trim()&&isFinite(parseFloat(r[1]))&&isFinite(parseFloat(r[2])))
-            .map(r=>[String(r[0]).trim(),parseFloat(r[1]),parseFloat(r[2]),String(r[3]||'').trim()]);
+          const gs=readSrcSheet(wsS);
+          const rowsS=gs.rows;
+          /* ⚠ มีชีตแหล่งวัสดุมาแต่อ่านพิกัดไม่ได้สักแถว = ต้องหยุดและฟ้อง ห้ามข้ามเงียบ ๆ (กฎ R17)
+             ของเดิมข้ามเงียบ พิกัดที่ KORN นั่งกรอกทั้งหมดจึงไม่เคยขึ้นคลัง โดยไม่มีอะไรบอก */
+          if(!rowsS.length) throw new Error('ชีต "แหล่งวัสดุ" มีอยู่ แต่อ่านพิกัดไม่ได้สักแถว — '
+            +gs.why+' · ต้องมีคอลัมน์ "ชื่อแหล่ง" (หรือ "แหล่งวัสดุ") กับ "ละติจูด"+"ลองจิจูด" หรือคอลัมน์ "พิกัด"');
           if(rowsS.length){
             st.textContent='กำลังส่งพิกัดแหล่งวัสดุ '+rowsS.length+' แหล่ง…';
             const rS=await fetch(url,{method:'POST',headers:{'Content-Type':'text/plain;charset=utf-8'},
               body:JSON.stringify({token:WTOKEN,action:'sources',mode:'replace',pass:_pw,rows:rowsS})});
             const resS=await rS.json();
             if(!resS.ok) throw new Error(resS.error||'ส่งพิกัดไม่สำเร็จ');
-            srcTxt=' · พิกัดแหล่งวัสดุ '+rowsS.length+' แหล่งขึ้นแท็บ SOURCES แล้ว';
+            srcTxt=' · พิกัดแหล่งวัสดุ '+rowsS.length+' แหล่งขึ้นแท็บ SOURCES แล้ว'
+              +(gs.skipped?' (ข้าม '+gs.skipped+' แถวที่พิกัดว่าง/อ่านไม่ออก)':'');
           }
         } else srcTxt=' · ข้ามชีตแหล่งวัสดุ (ต้อง Code.gs รุ่น 5)';
       }
