@@ -868,6 +868,16 @@ canvas{max-width:100%}
       <span class="hint" id="covStat"></span>
     </div>
   </div>
+
+  <div class="card">
+    <h2 data-ic="check">แถวที่น่าจะบันทึกหน่วยผิด <span class="pill warn" id="uoStat">—</span></h2>
+    <div class="hint" style="margin-bottom:8px">
+      วัสดุตัวเดียวกัน หน่วยเดียวกัน แต่ราคาต่างกันหลายสิบเท่า = เกือบทุกครั้งคือมีแถวที่กรอกหน่วยผิด
+      <br>เช่น สายไฟราคาต่อ <b>เมตร</b> แต่ถูกบันทึกว่าเป็นต่อ <b>ม้วน</b> — กราฟกับราคากลางจะเพี้ยนทันที
+      <br>ระบบเทียบเฉพาะ "หน่วยเดียวกัน" เท่านั้น ต่างหน่วยกันไม่นับว่าผิด
+    </div>
+    <div id="uoBox"></div>
+  </div>
 </section>
 
 <!-- ================= นำเข้าข้อมูล ================= -->
@@ -1240,7 +1250,7 @@ const SELFCHK={missing:new Set(),ok:false};
 const $ = id => { const el=document.getElementById(id);
   if(!el) SELFCHK.missing.add(id);
   return el; };
-const APPVER='8.13';        /* เลขรุ่นที่เดียว — ที่อื่นดึงจากตัวนี้ */
+const APPVER='8.14';        /* เลขรุ่นที่เดียว — ที่อื่นดึงจากตัวนี้ */
 const APPDATE='25 ส.ค. 2569';   /* วันที่ของรุ่นนี้ ที่เดียวเหมือนกัน */
 /* ⚠ ป้ายรุ่นบนแถบข้างเคยเป็นข้อความตายตัวใน HTML (v6.2) พอขึ้นรุ่นใหม่แล้วลืมแก้
    ผู้ใช้เลยเห็นเลขรุ่นเก่าทั้งที่โค้ดใหม่หมดแล้ว — ต่อไปนี้เขียนจาก APPVER เสมอ */
@@ -1955,7 +1965,7 @@ async function loadLive(){
 const PAGES=[
   {p:'sum',  ชื่อ:'หน้าสรุป',        rerender:['buildSummary','buildMovers','drawMatChips']},
   {p:'dist', ชื่อ:'คำนวณระยะขนส่ง',  rerender:['matInit','_cmpRe']},
-  {p:'stat', ชื่อ:'สถิติราคา',       rerender:['statInit','covInit']},
+  {p:'stat', ชื่อ:'สถิติราคา',       rerender:['statInit','covInit','drawUnitOutliers']},
   {p:'imp',  ชื่อ:'นำเข้าข้อมูล',    rerender:['impInit','drawNoGeo']},
   {p:'exp',  ชื่อ:'ส่งออกข้อมูล',    rerender:['expInit']},
   {p:'sys',  ชื่อ:'ระบบ',           rerender:['sysInit']},
@@ -3572,6 +3582,49 @@ function buildMatList(jump){
   } else $('sMat').value=String(sSel.mat);
   kddAll();
 }
+/* ══════ จับแถวที่น่าจะบันทึกหน่วยผิด (กฎ R23) ══════
+   วัสดุเดียวกัน + หน่วยเดียวกัน + เดือนเดียวกัน ราคาไม่ควรต่างกันหลายสิบเท่า
+   ถ้าต่างขนาดนั้น แปลว่าเกือบแน่ ๆ มีแถวที่กรอกหน่วยผิด (ต่อเมตร ไปลงว่าต่อม้วน)
+   จับแบบนี้ได้เพราะเทียบ "ในหน่วยเดียวกัน" เท่านั้น — ต่างหน่วยกันไม่นับว่าผิด
+   ⚠ ระบบไม่แก้ให้เอง ได้แต่ชี้ให้ดู เพราะไม่มีทางรู้ว่าแถวไหนถูก ต้องคนตัดสิน */
+const UO_RATIO=20;                    /* ต่างกันกี่เท่าถึงถือว่าน่าสงสัย — ม้วน/เมตร ต่างกันราว 100 เท่า */
+function unitOutliers(){
+  const g={};
+  P.series.forEach(s=>{
+    const lv=latestVal(s[4]); if(!lv||!(lv.p>0)) return;
+    const k=s[0]+'|'+s[2];
+    (g[k]=g[k]||{mi:s[0],ui:s[2],rows:[]}).rows.push({p:lv.p,m:lv.m,si:s[1]});
+  });
+  const out=[];
+  Object.values(g).forEach(o=>{
+    if(o.rows.length<2) return;
+    const ps=o.rows.map(r=>r.p), mn=Math.min(...ps), mx=Math.max(...ps);
+    if(mn<=0 || mx/mn < UO_RATIO) return;
+    o.rows.sort((a,b)=>a.p-b.p);
+    out.push({mat:P.mats[o.mi]||'', mi:o.mi, unit:P.units[o.ui]||'(ไม่ระบุ)',
+              ratio:mx/mn, lo:o.rows[0], hi:o.rows[o.rows.length-1], n:o.rows.length});
+  });
+  return out.sort((a,b)=>b.ratio-a.ratio);
+}
+function drawUnitOutliers(){
+  if(!$('uoBox')) return;
+  const list=unitOutliers(), st=$('uoStat');
+  st.textContent=list.length?list.length+' รายการน่าสงสัย':'ไม่พบ';
+  st.className='pill '+(list.length?'warn':'ok');
+  if(!list.length){ $('uoBox').innerHTML='<div class="hint">ไม่พบแถวที่ราคาต่างกันผิดปกติในหน่วยเดียวกัน — หน่วยในคลังดูสอดคล้องกันดี</div>'; return; }
+  $('uoBox').innerHTML='<div class="tw" style="max-height:340px"><table><thead><tr>'
+    +'<th>รายการวัสดุ</th><th>หน่วยที่บันทึกไว้</th><th class="num">ต่ำสุด</th><th>แหล่งที่ต่ำสุด</th>'
+    +'<th class="num">สูงสุด</th><th>แหล่งที่สูงสุด</th><th class="num">ต่างกัน</th></tr></thead><tbody>'
+    +list.map(o=>`<tr style="cursor:pointer" data-mi="${o.mi}" title="กดเพื่อไปดูกราฟของรายการนี้">
+      <td>${esc(o.mat)}</td><td>${esc(o.unit)}</td>
+      <td class="num">${fmt(o.lo.p)}</td><td>${esc(P.srcs[o.lo.si]||'(ไม่ระบุ)')}</td>
+      <td class="num">${fmt(o.hi.p)}</td><td>${esc(P.srcs[o.hi.si]||'(ไม่ระบุ)')}</td>
+      <td class="num up">${Math.round(o.ratio)} เท่า</td></tr>`).join('')
+    +'</tbody></table></div>'
+    +'<div class="hint" style="margin-top:6px">วิธีแก้: เปิดแท็บ PRICES ในชีท หาแถวของแหล่งที่ผิด แล้วแก้คอลัมน์ "หน่วย" ให้ถูก '
+    +'· แก้แล้วกดรีเฟรชคลังข้อมูล ตัวเลขจะแยกเป็นคนละเส้นทันที</div>';
+  $('uoBox').querySelectorAll('tr[data-mi]').forEach(tr=>tr.onclick=()=>gotoStat(+tr.dataset.mi,-1));
+}
 /* ── หน่วยของรายการที่เลือก · เรียงตัวที่มีข้อมูลเยอะสุดขึ้นก่อน ── */
 function statUnits(){
   const cnt={};
@@ -3640,7 +3693,13 @@ function drawStat(){
         }}},
     scales:{y:{grid:{color:'#e1e0d9'},ticks:{font:{family:'Sarabun'}}},x:{grid:{display:false},ticks:{font:{family:'Sarabun'}}}}}});
   const unit=unitTxt?('บาท/'+unitTxt):'';
-  $('sCap').textContent=ss.length?`${ss.length} แหล่ง · หน่วย ${unit} · ช่องว่างของเส้น = เดือนที่ไม่มีข้อมูล`:'ไม่พบข้อมูล';
+  /* รายการที่กำลังดูอยู่ มีแถวที่หน่วยน่าจะผิดปนอยู่ไหม — เตือนตรงนี้เลย ไม่ต้องรอไปเจอเองข้างล่าง */
+  const uo=(typeof unitOutliers==='function'?unitOutliers():[])
+    .find(o=>o.mi===sSel.mat && o.unit===(unitTxt||'(ไม่ระบุ)'));
+  $('sCap').innerHTML=(ss.length?`${ss.length} แหล่ง · หน่วย ${esc(unit)} · ช่องว่างของเส้น = เดือนที่ไม่มีข้อมูล`:'ไม่พบข้อมูล')
+    +(uo?`<div style="margin-top:5px"><span class="pill warn">หน่วยน่าจะผิด</span> ในหน่วย <b>${esc(uo.unit)}</b> เดียวกันนี้
+       ราคาต่างกันถึง <b>${Math.round(uo.ratio)} เท่า</b> (${esc(P.srcs[uo.lo.si]||'-')} ${fmt(uo.lo.p)}
+       ↔ ${esc(P.srcs[uo.hi.si]||'-')} ${fmt(uo.hi.p)}) — น่าจะมีแถวที่กรอกหน่วยผิด ดูรายการทั้งหมดที่การ์ดล่างสุดของหน้านี้</div>`:'');
   fillSeriesTable(ss);
 }
 function fillSeriesTable(ss){
