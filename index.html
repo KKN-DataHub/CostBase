@@ -370,7 +370,9 @@ h2 .ic{color:var(--teal)}
    ไม่งั้นคอลัมน์สุดท้ายจะโผล่ออกนอกกรอบการ์ด */
 .frow.ymc{grid-template-columns:minmax(70px,96px) minmax(94px,150px) minmax(110px,1fr)}
 .frow.cm{grid-template-columns:minmax(110px,.8fr) minmax(150px,2fr)}
-.frow.up{grid-template-columns:minmax(78px,120px) minmax(110px,1fr)}
+.frow.up{grid-template-columns:minmax(78px,110px) minmax(120px,190px);justify-content:start}
+.frow.up input#mPrice{text-align:right}
+#mGeoBox input{max-width:360px}
 .frow.src{grid-template-columns:minmax(0,1fr)}
 .frow.src.two{grid-template-columns:minmax(150px,1fr) minmax(140px,1fr)}
 .frow.cl{grid-template-columns:minmax(160px,1.1fr) minmax(130px,1fr)}
@@ -612,14 +614,10 @@ canvas{max-width:100%}
     <div class="chips"><span class="chip" id="bLatest">—</span><span class="chip" id="bVer">v—</span></div>
     <button class="instbtn" id="installBtn" style="display:none" title="เพิ่ม CostBase ลงหน้าจอโฮม เปิดใช้เหมือนแอป">⤓ ติดตั้งลงหน้าจอโฮม</button>
   </div>
-  <nav class="nav" id="nav">
-    <button data-p="sum" class="active"><span class="ico">▦</span>หน้าสรุป</button>
-    <button data-p="dist"><span class="ico">⇄</span>คำนวณระยะขนส่ง</button>
-    <button data-p="stat"><span class="ico">📈</span>สถิติราคา</button>
-    <button data-p="imp"><span class="ico">⬇</span>นำเข้าข้อมูล</button>
-    <button data-p="exp"><span class="ico">⬆</span>ส่งออกข้อมูล</button>
-    <button data-p="sys"><span class="ico">⚙</span>ระบบ</button>
-  </nav>
+  <!-- ⚠ ปุ่มเมนูไม่ได้พิมพ์ไว้ตรงนี้แล้ว — สร้างจากทะเบียน PAGES ตอนเปิดไฟล์ (กฎ R13)
+       ของเดิมรายชื่อหน้าถูกพิมพ์ไว้สองที่ (ตรงนี้ + PAGES) ลำดับจึงเพี้ยนกันได้โดยไม่มีใครฟ้อง
+       ด่านตรวจเช็คแค่ "มีครบไหม" ไม่ได้เช็ค "เรียงตรงกันไหม" -->
+  <nav class="nav" id="nav"></nav>
   <div class="side-foot">ข้อมูล ณ <span id="fLatest">—</span><br>พัฒนาโดย กลุ่มวิชาการ ขทช.ขอนแก่น</div>
 </aside>
 
@@ -674,6 +672,96 @@ canvas{max-width:100%}
   </div>
   <h2 class="sec" data-ic="grid" id="secTypes">ภาพรวมตามประเภท</h2>
   <div class="card"><div class="tw" style="max-height:420px"><table id="tblTypes"></table></div></div>
+</section>
+
+<!-- ================= สถิติราคา ================= -->
+<section class="page" id="pg-stat">
+  <div class="pghead"><div class="ph-ico" data-ic="chart"></div>
+    <div><h1>สถิติราคา</h1>
+      <div class="ph-sub">เทรนด์ราคารายเดือน · ตารางราคารายการที่เลือก · ความครบถ้วนของข้อมูล</div>
+      <div class="ph-chips" id="hcStat"></div>
+    </div>
+  </div>
+  <div class="card no-print">
+    <h2 data-ic="filter">เลือกดูสถิติ</h2>
+    <div class="grid3">
+      <div><label class="f">ประเภท</label><select id="sType"></select></div>
+      <div><label class="f">รายการวัสดุ (พิมพ์ค้นหาได้)</label><select id="sMat"></select></div>
+      <div><label class="f">แหล่ง</label><div class="chips" id="sSrcs" style="margin-top:2px"></div></div>
+      <div id="sUnits" class="chips" style="margin-top:4px"></div>
+    </div>
+  </div>
+  <div class="card" style="margin-top:12px">
+    <h2 data-ic="chart" id="sTitle">เทรนด์ราคา</h2>
+    <div class="chartbox"><canvas id="sChart"></canvas></div>
+    <div class="cap" id="sCap"></div>
+  </div>
+  <div class="card" style="margin-top:12px">
+    <h2 data-ic="table">ตารางราคาของรายการที่เลือก (ทุกแหล่ง ทุกเดือน)</h2>
+    <div class="tw" style="max-height:420px"><table id="tblSeries"></table></div>
+  </div>
+
+  <h2 class="sec" data-ic="check" id="secCov">ความครบถ้วนของข้อมูล — รายการไหน เดือนไหน ยังไม่ได้เอาเข้า</h2>
+  <div class="card">
+    <div class="cap" style="margin:-2px 0 10px">คำนิยามที่ใช้ทั้งหน้านี้ —
+      <b>รายการ</b> = ชื่อวัสดุ 1 ชื่อ (ตามบัญชีคุม) ·
+      <b>คู่ราคา</b> = วัสดุ 1 รายการ คู่กับแหล่ง 1 แหล่ง
+      วัสดุตัวเดียวที่ซื้อได้ 3 แหล่ง = 3 คู่ราคา ตัวเลขคู่ราคาจึงมากกว่าจำนวนรายการเสมอ</div>
+    <div id="covChain" class="cap" style="margin:0 0 10px"></div>
+    <div id="covKpi" class="kcards" style="margin-bottom:12px"></div>
+    <div class="tabbar no-print" id="covTabs">
+      <button class="btn ghost on" data-cv="chan">ตามช่องทางที่มา</button>
+      <button class="btn ghost" data-cv="cat">ตามหมวดวัสดุ</button>
+      <button class="btn ghost" data-cv="mat">ตามรายการวัสดุ</button>
+    </div>
+
+    <div id="covPaneChan">
+      <div class="cap" style="margin:10px 0 6px"><b>ตารางนี้มี 3 หน่วยนับปนกัน อ่านให้ตรง:</b>
+        ช่องรายเดือน = <b>จำนวนแถวราคา</b>ที่บันทึกในเดือนนั้น ·
+        รวมแถวทุกเดือน = เอาช่องรายเดือนมาบวกกัน (จึงเป็นเลขหลักหมื่นได้) ·
+        รายการวัสดุ (ไม่ซ้ำ) = <b>จำนวนชื่อวัสดุ</b>ที่ช่องทางนี้เคยส่งเข้ามา นับชื่อเดียวครั้งเดียว<br>
+        ⚠ คอลัมน์ "รายการวัสดุ" ของทุกช่องทางบวกกันแล้ว<b>มากกว่า</b>จำนวนรายการทั้งคลังได้
+        เพราะวัสดุตัวเดียวกันเข้ามาได้หลายช่องทาง (ตัวที่ซ้ำถูกนับทั้งสองฝั่ง)<br>
+        แต่ละช่องทางเอาราคาเข้าคลังเดือนไหนไปแล้วบ้าง
+        · ช่องเทา = เดือนนั้นยังไม่ได้เอาข้อมูลของช่องทางนี้เข้า · เอาเมาส์ชี้ที่ตัวเลขเพื่อดูเลขที่หนังสือ/ใบเสนอราคาที่ใช้</div>
+      <div class="tw"><table id="tblCovChan"></table></div>
+    </div>
+
+    <div id="covPaneCat" style="display:none">
+      <div class="cap" style="margin:10px 0 6px">แต่ละหมวดวัสดุมีราคาครบถึงเดือนไหน — ตัวเลข = จำนวนคู่ราคา (วัสดุ×แหล่ง) ที่มีข้อมูลในเดือนนั้น</div>
+      <div class="tw" style="max-height:420px"><table id="tblCovCat"></table></div>
+    </div>
+
+    <div id="covPaneMat" style="display:none">
+      <div class="grid3 no-print" style="margin-top:10px">
+        <div><label class="f">หมวด</label><select id="covCat"></select></div>
+        <div><label class="f">ค้นชื่อรายการ</label><input type="text" id="covQ" placeholder="พิมพ์บางส่วนของชื่อ เช่น หินคลุก"></div>
+        <div><label class="f">แสดง</label><select id="covMode">
+          <option value="all" selected>ทั้งหมด</option>
+          <option value="miss">เฉพาะที่ยังไม่ครบ (ขาดอย่างน้อย 1 เดือน)</option>
+          <option value="missLast">เฉพาะที่ยังไม่มีราคาเดือนล่าสุด</option></select></div>
+      </div>
+      <div class="cap" style="margin-top:8px">ตัวเลขในช่อง = จำนวนแหล่งที่มีราคาในเดือนนั้น (จากทั้งหมดที่เคยมีราคาของรายการนั้น)
+        · <span class="covc full">เขียว</span> ครบทุกแหล่ง · <span class="covc part">เหลือง</span> มีบางแหล่ง · <span class="covc none">เทา</span> เดือนนั้นไม่มีเลย
+        · กดชื่อรายการเพื่อเปิดกราฟแนวโน้ม</div>
+      <div class="tw" style="max-height:420px;margin-top:8px"><table id="tblCov"></table></div>
+    </div>
+
+    <div class="statusline no-print" style="margin-top:12px">
+      <button class="btn ghost" id="covXlsx">⬇ ดาวน์โหลดตารางความครบถ้วน (.xlsx — ครบทั้ง 3 มุมมอง)</button>
+      <span class="hint" id="covStat"></span>
+    </div>
+  </div>
+
+  <div class="card">
+    <h2 data-ic="check">แถวที่น่าจะบันทึกหน่วยผิด <span class="pill warn" id="uoStat">—</span></h2>
+    <div class="hint" style="margin-bottom:8px">
+      วัสดุตัวเดียวกัน หน่วยเดียวกัน แต่ราคาต่างกันหลายสิบเท่า = เกือบทุกครั้งคือมีแถวที่กรอกหน่วยผิด
+      <br>เช่น สายไฟราคาต่อ <b>เมตร</b> แต่ถูกบันทึกว่าเป็นต่อ <b>ม้วน</b> — กราฟกับราคากลางจะเพี้ยนทันที
+      <br>ระบบเทียบเฉพาะ "หน่วยเดียวกัน" เท่านั้น ต่างหน่วยกันไม่นับว่าผิด
+    </div>
+    <div id="uoBox"></div>
+  </div>
 </section>
 
 <!-- ================= คำนวณระยะขนส่ง ================= -->
@@ -791,96 +879,6 @@ canvas{max-width:100%}
   <div class="calcsheet" id="calcSheet"></div>
 </section>
 
-<!-- ================= สถิติราคา ================= -->
-<section class="page" id="pg-stat">
-  <div class="pghead"><div class="ph-ico" data-ic="chart"></div>
-    <div><h1>สถิติราคา</h1>
-      <div class="ph-sub">เทรนด์ราคารายเดือน · ตารางราคารายการที่เลือก · ความครบถ้วนของข้อมูล</div>
-      <div class="ph-chips" id="hcStat"></div>
-    </div>
-  </div>
-  <div class="card no-print">
-    <h2 data-ic="filter">เลือกดูสถิติ</h2>
-    <div class="grid3">
-      <div><label class="f">ประเภท</label><select id="sType"></select></div>
-      <div><label class="f">รายการวัสดุ (พิมพ์ค้นหาได้)</label><select id="sMat"></select></div>
-      <div><label class="f">แหล่ง</label><div class="chips" id="sSrcs" style="margin-top:2px"></div></div>
-      <div id="sUnits" class="chips" style="margin-top:4px"></div>
-    </div>
-  </div>
-  <div class="card" style="margin-top:12px">
-    <h2 data-ic="chart" id="sTitle">เทรนด์ราคา</h2>
-    <div class="chartbox"><canvas id="sChart"></canvas></div>
-    <div class="cap" id="sCap"></div>
-  </div>
-  <div class="card" style="margin-top:12px">
-    <h2 data-ic="table">ตารางราคาของรายการที่เลือก (ทุกแหล่ง ทุกเดือน)</h2>
-    <div class="tw" style="max-height:420px"><table id="tblSeries"></table></div>
-  </div>
-
-  <h2 class="sec" data-ic="check" id="secCov">ความครบถ้วนของข้อมูล — รายการไหน เดือนไหน ยังไม่ได้เอาเข้า</h2>
-  <div class="card">
-    <div class="cap" style="margin:-2px 0 10px">คำนิยามที่ใช้ทั้งหน้านี้ —
-      <b>รายการ</b> = ชื่อวัสดุ 1 ชื่อ (ตามบัญชีคุม) ·
-      <b>คู่ราคา</b> = วัสดุ 1 รายการ คู่กับแหล่ง 1 แหล่ง
-      วัสดุตัวเดียวที่ซื้อได้ 3 แหล่ง = 3 คู่ราคา ตัวเลขคู่ราคาจึงมากกว่าจำนวนรายการเสมอ</div>
-    <div id="covChain" class="cap" style="margin:0 0 10px"></div>
-    <div id="covKpi" class="kcards" style="margin-bottom:12px"></div>
-    <div class="tabbar no-print" id="covTabs">
-      <button class="btn ghost on" data-cv="chan">ตามช่องทางที่มา</button>
-      <button class="btn ghost" data-cv="cat">ตามหมวดวัสดุ</button>
-      <button class="btn ghost" data-cv="mat">ตามรายการวัสดุ</button>
-    </div>
-
-    <div id="covPaneChan">
-      <div class="cap" style="margin:10px 0 6px"><b>ตารางนี้มี 3 หน่วยนับปนกัน อ่านให้ตรง:</b>
-        ช่องรายเดือน = <b>จำนวนแถวราคา</b>ที่บันทึกในเดือนนั้น ·
-        รวมแถวทุกเดือน = เอาช่องรายเดือนมาบวกกัน (จึงเป็นเลขหลักหมื่นได้) ·
-        รายการวัสดุ (ไม่ซ้ำ) = <b>จำนวนชื่อวัสดุ</b>ที่ช่องทางนี้เคยส่งเข้ามา นับชื่อเดียวครั้งเดียว<br>
-        ⚠ คอลัมน์ "รายการวัสดุ" ของทุกช่องทางบวกกันแล้ว<b>มากกว่า</b>จำนวนรายการทั้งคลังได้
-        เพราะวัสดุตัวเดียวกันเข้ามาได้หลายช่องทาง (ตัวที่ซ้ำถูกนับทั้งสองฝั่ง)<br>
-        แต่ละช่องทางเอาราคาเข้าคลังเดือนไหนไปแล้วบ้าง
-        · ช่องเทา = เดือนนั้นยังไม่ได้เอาข้อมูลของช่องทางนี้เข้า · เอาเมาส์ชี้ที่ตัวเลขเพื่อดูเลขที่หนังสือ/ใบเสนอราคาที่ใช้</div>
-      <div class="tw"><table id="tblCovChan"></table></div>
-    </div>
-
-    <div id="covPaneCat" style="display:none">
-      <div class="cap" style="margin:10px 0 6px">แต่ละหมวดวัสดุมีราคาครบถึงเดือนไหน — ตัวเลข = จำนวนคู่ราคา (วัสดุ×แหล่ง) ที่มีข้อมูลในเดือนนั้น</div>
-      <div class="tw" style="max-height:420px"><table id="tblCovCat"></table></div>
-    </div>
-
-    <div id="covPaneMat" style="display:none">
-      <div class="grid3 no-print" style="margin-top:10px">
-        <div><label class="f">หมวด</label><select id="covCat"></select></div>
-        <div><label class="f">ค้นชื่อรายการ</label><input type="text" id="covQ" placeholder="พิมพ์บางส่วนของชื่อ เช่น หินคลุก"></div>
-        <div><label class="f">แสดง</label><select id="covMode">
-          <option value="all" selected>ทั้งหมด</option>
-          <option value="miss">เฉพาะที่ยังไม่ครบ (ขาดอย่างน้อย 1 เดือน)</option>
-          <option value="missLast">เฉพาะที่ยังไม่มีราคาเดือนล่าสุด</option></select></div>
-      </div>
-      <div class="cap" style="margin-top:8px">ตัวเลขในช่อง = จำนวนแหล่งที่มีราคาในเดือนนั้น (จากทั้งหมดที่เคยมีราคาของรายการนั้น)
-        · <span class="covc full">เขียว</span> ครบทุกแหล่ง · <span class="covc part">เหลือง</span> มีบางแหล่ง · <span class="covc none">เทา</span> เดือนนั้นไม่มีเลย
-        · กดชื่อรายการเพื่อเปิดกราฟแนวโน้ม</div>
-      <div class="tw" style="max-height:420px;margin-top:8px"><table id="tblCov"></table></div>
-    </div>
-
-    <div class="statusline no-print" style="margin-top:12px">
-      <button class="btn ghost" id="covXlsx">⬇ ดาวน์โหลดตารางความครบถ้วน (.xlsx — ครบทั้ง 3 มุมมอง)</button>
-      <span class="hint" id="covStat"></span>
-    </div>
-  </div>
-
-  <div class="card">
-    <h2 data-ic="check">แถวที่น่าจะบันทึกหน่วยผิด <span class="pill warn" id="uoStat">—</span></h2>
-    <div class="hint" style="margin-bottom:8px">
-      วัสดุตัวเดียวกัน หน่วยเดียวกัน แต่ราคาต่างกันหลายสิบเท่า = เกือบทุกครั้งคือมีแถวที่กรอกหน่วยผิด
-      <br>เช่น สายไฟราคาต่อ <b>เมตร</b> แต่ถูกบันทึกว่าเป็นต่อ <b>ม้วน</b> — กราฟกับราคากลางจะเพี้ยนทันที
-      <br>ระบบเทียบเฉพาะ "หน่วยเดียวกัน" เท่านั้น ต่างหน่วยกันไม่นับว่าผิด
-    </div>
-    <div id="uoBox"></div>
-  </div>
-</section>
-
 <!-- ================= นำเข้าข้อมูล ================= -->
 <section class="page" id="pg-imp">
   <div class="pghead"><div class="ph-ico" data-ic="cloud"></div>
@@ -949,6 +947,15 @@ canvas{max-width:100%}
       <div class="frow src" id="mSrcRow">
         <div><label class="f">แหล่ง / ผู้ให้ราคา <span class="req">*</span></label><select id="mSrcSel"></select></div>
         <div id="mSrcNewBox" style="display:none"><label class="f">ชื่อแหล่งใหม่ <span class="req">*</span></label><input type="text" id="mSrc" placeholder="พิมพ์ชื่อแหล่ง/บริษัท"></div>
+      </div>
+      <!-- พิกัดแหล่ง — โผล่เมื่อ "แหล่งที่เลือกยังไม่มีหมุดในคลัง" ไม่ว่าจะเป็นแหล่งใหม่หรือแหล่งเดิม (กฎ R18)
+           ไม่มีพิกัด = คำนวณระยะขนส่งไม่ได้ ต้องกลับมาเติมทีหลังที่แท็บ "พิกัดแหล่ง" ซึ่งคือการทำงานซ้ำ
+           ⚠ ไม่บังคับกรอก (กฎ R2) — ไม่รู้พิกัดตอนนี้ก็ต้องส่งราคาได้ แท็บพิกัดแหล่งยังเป็นตาข่ายรับอยู่ -->
+      <div id="mGeoBox" style="display:none;margin-top:10px">
+        <label class="f">พิกัดแหล่ง <span class="hint" style="font-weight:400">(ไม่บังคับ)</span></label>
+        <input type="text" id="mGeo" placeholder="วางพิกัดหรือลิงก์ Google Maps">
+        <div class="hint" id="mGeoHint"></div>
+        <div class="hint" style="margin-top:2px">วิธีเอาพิกัด: เปิด Google Maps → คลิกขวาที่ตำแหน่งแหล่ง → กดตัวเลขชุดแรกเพื่อคัดลอก → วางลงช่องนี้ · วางลิงก์แผนที่ทั้งเส้นก็ได้ ระบบดึงตัวเลขออกให้เอง</div>
       </div>
       <div id="mUrlBox" style="display:none">
         <label class="f">ลิงก์หน้าสินค้า (URL เว็บที่สืบราคา)</label>
@@ -1251,7 +1258,7 @@ const SELFCHK={missing:new Set(),ok:false};
 const $ = id => { const el=document.getElementById(id);
   if(!el) SELFCHK.missing.add(id);
   return el; };
-const APPVER='8.17';        /* เลขรุ่นที่เดียว — ที่อื่นดึงจากตัวนี้ */
+const APPVER='8.19';        /* เลขรุ่นที่เดียว — ที่อื่นดึงจากตัวนี้ */
 const APPDATE='25 ส.ค. 2569';   /* วันที่ของรุ่นนี้ ที่เดียวเหมือนกัน */
 /* ⚠ ป้ายรุ่นบนแถบข้างเคยเป็นข้อความตายตัวใน HTML (v6.2) พอขึ้นรุ่นใหม่แล้วลืมแก้
    ผู้ใช้เลยเห็นเลขรุ่นเก่าทั้งที่โค้ดใหม่หมดแล้ว — ต่อไปนี้เขียนจาก APPVER เสมอ */
@@ -1973,14 +1980,20 @@ async function loadLive(){
 /* ─ ทะเบียนหน้า — ความจริงชุดเดียวของ "หน้า" ทั้งระบบ (ธรรมนูญ R13) ─
    1 หน้า = 1 แถว: ปุ่มเมนู(data-p) · section(pg-X) · ฟังก์ชันวาดใหม่ตอนคลังเปลี่ยน
    เพิ่มหน้าใหม่ = เพิ่มแถวเดียวที่นี่ + ปุ่ม + section แล้วด่านตรวจจะฟ้องเองถ้าไม่ครบ */
+/* ลำดับในอาเรย์นี้ = ลำดับปุ่มบนเมนูจริง ๆ · อยากสลับหน้า ให้สลับบรรทัดที่นี่ที่เดียว
+   (ลำดับ section ในไฟล์เรียงตามนี้ด้วย เพื่อให้ลำดับตอนพิมพ์และลำดับกด Tab ตรงกับเมนู) */
 const PAGES=[
-  {p:'sum',  ชื่อ:'หน้าสรุป',        rerender:['buildSummary','buildMovers','drawMatChips']},
-  {p:'dist', ชื่อ:'คำนวณระยะขนส่ง',  rerender:['matInit','_cmpRe']},
-  {p:'stat', ชื่อ:'สถิติราคา',       rerender:['statInit','covInit','drawUnitOutliers']},
-  {p:'imp',  ชื่อ:'นำเข้าข้อมูล',    rerender:['impInit','drawNoGeo']},
-  {p:'exp',  ชื่อ:'ส่งออกข้อมูล',    rerender:['expInit']},
-  {p:'sys',  ชื่อ:'ระบบ',           rerender:['sysInit']},
+  {p:'sum',  ชื่อ:'หน้าสรุป',        ico:'▦',  rerender:['buildSummary','buildMovers','drawMatChips']},
+  {p:'stat', ชื่อ:'สถิติราคา',       ico:'📈', rerender:['statInit','covInit','drawUnitOutliers']},
+  {p:'dist', ชื่อ:'คำนวณระยะขนส่ง',  ico:'⇄',  rerender:['matInit','_cmpRe']},
+  {p:'imp',  ชื่อ:'นำเข้าข้อมูล',    ico:'⬇',  rerender:['impInit','drawNoGeo']},
+  {p:'exp',  ชื่อ:'ส่งออกข้อมูล',    ico:'⬆',  rerender:['expInit']},
+  {p:'sys',  ชื่อ:'ระบบ',           ico:'⚙',  rerender:['sysInit']},
 ];
+/* สร้างปุ่มเมนูจากทะเบียน — ต้องรันก่อนโค้ดที่ผูกปุ่ม (ด้านล่าง) และก่อนด่านตรวจ */
+$('nav').innerHTML=PAGES.map((pg,i)=>
+  `<button data-p="${pg.p}"${i===0?' class="active"':''}><span class="ico">${pg.ico||'•'}</span>${esc(pg.ชื่อ)}</button>`
+).join('');
 function _cmpRe(){ if(matSel.length){ renderCmp(); buildCalcSheet(); } }
 function rerender(){
   try{ refreshCmpState(); }catch(e){}      /* ปรับราคา/เดือนในตารางเปรียบเทียบให้ตรงคลังใหม่ก่อนวาดอย่างอื่น */
@@ -2002,6 +2015,14 @@ function selfCheck(){
   });
   document.querySelectorAll('#nav button[data-p]').forEach(b=>{
     if(!PAGES.some(pg=>pg.p===b.dataset.p)) bad.push(`ปุ่มเมนู "${b.textContent.trim()}" (${b.dataset.p}) ยังไม่ได้ลงทะเบียนใน PAGES`); });
+  /* ⚠ ไม่ใช่แค่ "มีครบ" ต้อง "เรียงตรงกัน" ด้วยทั้งสามที่ — ทะเบียน · เมนู · section ในไฟล์
+     ของเดิมตรวจแค่ครบ ลำดับจึงเพี้ยนกันได้เงียบ ๆ (เมนูเรียงอย่าง ไฟล์เรียงอีกอย่าง
+     = ลำดับตอนสั่งพิมพ์ทั้งหน้าและลำดับกด Tab ไม่ตรงกับที่เห็นบนเมนู) */
+  const ordReg=PAGES.map(pg=>pg.p).join(' ');
+  const ordNav=[...document.querySelectorAll('#nav button[data-p]')].map(b=>b.dataset.p).join(' ');
+  const ordSec=[...document.querySelectorAll('section.page')].map(s=>s.id.replace(/^pg-/,'')).join(' ');
+  if(ordNav!==ordReg) bad.push(`ลำดับปุ่มเมนูไม่ตรงกับทะเบียน — เมนู [${ordNav}] · ทะเบียน [${ordReg}]`);
+  if(ordSec!==ordReg) bad.push(`ลำดับ section ในไฟล์ไม่ตรงกับทะเบียน — ไฟล์ [${ordSec}] · ทะเบียน [${ordReg}]`);
   SELFCHK.missing.forEach(id=>bad.push(`โค้ดขอกล่อง id="${id}" แต่ไม่มีอยู่ในหน้า (พิมพ์ชื่อผิด?)`));
   SELFCHK.ok=bad.length===0; SELFCHK.bad=bad;
   if(SELFCHK.ok) console.log(`✓ ด่านตรวจโครงสร้างผ่าน — ${PAGES.length} หน้า ครบทุกช่อง (CostBase v${APPVER})`);
@@ -4124,8 +4145,39 @@ function impInit(){
     + srcSet.map(x=>`<option ${x===prevSrc?'selected':''}>${esc(x)}</option>`).join('')
     +'<option value="__new__" '+(prevSrc==='__new__'?'selected':'')+'>+ แหล่งใหม่ (พิมพ์เอง)…</option>';
   const srcTog=()=>{ const nw=$('mSrcSel').value==='__new__';
-    $('mSrcNewBox').style.display=nw?'':'none'; $('mSrcRow').classList.toggle('two',nw); };
-  $('mSrcSel').onchange=srcTog; srcTog();
+    $('mSrcNewBox').style.display=nw?'':'none'; $('mSrcRow').classList.toggle('two',nw);
+    geoTog(); };
+  $('mSrcSel').onchange=srcTog;
+  /* แหล่งที่เลือกมีหมุดอยู่แล้วหรือยัง — แหล่งใหม่ยังไงก็ยังไม่มี */
+  function geoNeed(){
+    const v=$('mSrcSel').value;
+    if(!v) return {show:false};
+    if(v==='__new__'){ const nm=($('mSrc').value||'').trim();
+      return {show:true, name:nm, had:false}; }
+    const sc=findSrc(v);
+    return sc? {show:false, name:v, had:true} : {show:true, name:v, had:false};
+  }
+  function geoTog(){
+    const g=geoNeed();
+    $('mGeoBox').style.display=g.show?'':'none';
+    if(!g.show){ $('mGeoHint').innerHTML=''; return; }
+    const raw=($('mGeo').value||'').trim();
+    if(!raw){
+      $('mGeoHint').innerHTML=($('mSrcSel').value==='__new__')
+        ? 'แหล่งใหม่ยังไม่มีหมุดในคลัง — กรอกตรงนี้เลยจะได้ไม่ต้องกลับมาเติมทีหลังที่แท็บ "พิกัดแหล่ง"'
+        : '<span class="up">แหล่งนี้ยังไม่มีหมุดในคลัง</span> — คำนวณระยะขนส่งให้ไม่ได้จนกว่าจะมีพิกัด';
+      return;
+    }
+    /* กางให้ตรวจ: อ่านได้เท่าไร เปิดดูในแผนที่ได้เลย (กฎ R17) */
+    const ll=parseLatLon(raw);
+    $('mGeoHint').innerHTML = ll
+      ? '<span class="pill ok">อ่านพิกัดได้</span> '+ll.lat.toFixed(5)+', '+ll.lon.toFixed(5)
+        +' · <a href="https://www.google.com/maps?q='+ll.lat+','+ll.lon+'" target="_blank" rel="noopener">เปิดดูในแผนที่ ↗</a>'
+      : '<span class="up">อ่านพิกัดไม่ออก</span> — ต้องเป็นตัวเลขสองตัวคั่นด้วยจุลภาค เช่น 16.43220, 102.82360';
+  }
+  $('mGeo').oninput=geoTog;
+  $('mSrc').oninput=geoTog;
+  srcTog();
   /* ═══ ช่องทางเว็บร้านค้า → โชว์กล่องลิงก์ + ปลดเงื่อนไข "ต้องกรอกราคา" ═══
      ใส่ลิงก์แล้วไม่ต้องกรอกราคา — สคริปต์ฝั่งชีทจะวิ่งอ่านราคาจากหน้านั้นเอง
      หน่วยที่ร้านขาย (ถุง/แผ่น/ท่อน) มักไม่ตรงหน่วยบัญชีคุม (ตัน/ลบ.ม.) จึงมีตัวคูณกำกับ
@@ -4227,6 +4279,11 @@ function impInit(){
     if(!$('mCat').value)    need.push(['mCat','หมวด']);
     if(!$('mSrcSel').value) need.push(['mSrcSel','แหล่ง / ผู้ให้ราคา']);
     else if(isNew && !src)  need.push(['mSrc','ชื่อแหล่งใหม่']);
+    /* พิกัดไม่บังคับ (กฎ R2) แต่พิมพ์มาแล้วอ่านไม่ออก ต้องฟ้อง ไม่ใช่ทิ้งเงียบ
+       ทิ้งเงียบ = คนกรอกคิดว่าบันทึกพิกัดแล้ว ไปงงทีหลังว่าทำไมยังคำนวณระยะขนส่งไม่ได้ */
+    const _geoRaw=($('mGeoBox').style.display!=='none') ? ($('mGeo').value||'').trim() : '';
+    const _geo=_geoRaw?parseLatLon(_geoRaw):null;
+    if(_geoRaw && !_geo) need.push(['mGeo','พิกัดแหล่ง (อ่านไม่ออก — ต้องเป็นตัวเลขสองตัวคั่นด้วยจุลภาค)']);
     document.querySelectorAll('#impModeMan .miss').forEach(e=>e.classList.remove('miss'));
     if(need.length){
       need.forEach(([id])=>{ const el=$(id); if(el){ el.classList.add('miss');
@@ -4247,12 +4304,13 @@ function impInit(){
     const row={y:linkOnly?0:y,mo:linkOnly?0:mo,mat:std,unit,price:linkOnly?null:price,src,ref:_ref,
                typ:$('mCat').value,chan:$('mChan').value,
                url:_url,webUnit,fac,linkOnly,
+               lat:_geo?_geo.lat:null, lon:_geo?_geo.lon:null,
                raw:std!==mat?mat:'',fromFile:0,known:P.mats.includes(std)||!!regStd(mat)};
     if(at>=0){ const old=queue[at].price; queue[at]=row;
       toast(old==null?'มีคีย์นี้ในคิวแล้ว — แทนของเดิม':'มีคีย์นี้ในคิวแล้ว — แทนราคาเดิม '+fmt(old)+' → '+fmt(price)); }
     else { queue.push(row); toast((linkOnly?'จดลิงก์เข้าคิวแล้ว':'เพิ่มเข้าคิวแล้ว')+' · รวม '+queue.length+' รายการ'); }
     $('mMat').value='';$('mPrice').value='';$('mUnit').value='';$('mUrl').value='';
-    $('mWebUnit').value='';$('mFac').value=''; syncWeb();
+    $('mWebUnit').value='';$('mFac').value=''; $('mGeo').value=''; geoTog(); syncWeb();
     document.querySelectorAll('#impModeMan .miss').forEach(e=>e.classList.remove('miss'));
     renderQueue(); try{ drawNoGeo(); }catch(e){}
   };
@@ -4531,6 +4589,10 @@ function impInit(){
        ส่งคนละคำสั่ง และแยกความสำเร็จจากกัน — พังอย่างหนึ่งต้องไม่ลบอีกอย่างทิ้ง */
     const priced=queue.filter(q=>!q.linkOnly);
     const links =queue.filter(q=>/^https?:\/\//i.test(String(q.url||'')));
+    /* พิกัดที่กรอกมาพร้อมแถว — แหล่งเดียวกันกรอกซ้ำหลายแถวได้ เก็บอันแรกพอ */
+    const geoRows=[]; { const seen={};
+      queue.forEach(q=>{ if(q.lat==null||!q.src||seen[q.src]) return; seen[q.src]=1;
+        geoRows.push([q.src,q.lat,q.lon,'กรอกพร้อมราคาจากแดชบอร์ด']); }); }
     const noChan=priced.filter(q=>!String(q.chan||'').trim()).length;
     if(noChan){ st.innerHTML='<span class="up">ยังมี '+noChan+' แถวไม่ได้ระบุช่องทาง</span> — เติมที่แถบเตือนในโหมดนำเข้าไฟล์ก่อน'; return; }
     if(!url){ st.textContent='ยังไม่ตั้ง WebApp URL (ดูหน้า ระบบ)'; return; }
@@ -4538,6 +4600,7 @@ function impInit(){
     if(!by){ st.innerHTML='<span class="up">ใส่ชื่อผู้กรอกก่อนส่ง</span>'; $('mBy').focus(); return; }
     if(!confirm((priced.length?'ส่งขออนุมัติราคา '+priced.length+' รายการ\n':'')
       +(links.length?'จดลิงก์สินค้า '+links.length+' รายการ (ระบบจะดึงราคาให้เองทุกเดือน)\n':'')
+      +(geoRows.length?'บันทึกพิกัดแหล่ง '+geoRows.length+' แหล่ง (ใช้คำนวณระยะขนส่งได้ทันที)\n':'')
       +'\nราคาจะยังไม่เข้าคลัง จนกว่าผู้ดูแลจะกดอนุมัติ')) return;
     $('mPush').disabled=true; st.textContent='กำลังส่ง…';
     let okPrice=!priced.length, okLink=!links.length, out='';
@@ -4569,6 +4632,21 @@ function impInit(){
           +'เดือนหน้าระบบจะดึงราคาจากลิงก์เองแล้วเข้าคิวรออนุมัติให้';
       }catch(e){ out+=(out?'<br>':'')+'<span class="up">จดลิงก์ไม่สำเร็จ: '+esc(e.message)
         +' — ชีทอาจยังใช้ Code.gs ก่อนรุ่น 26</span>'; }
+    }
+    /* พิกัดแหล่ง — ส่งแยกจากราคา พังอย่างหนึ่งต้องไม่ลากอีกอย่างล้มตาม
+       ใช้คำสั่ง sources/upsert ตัวเดียวกับแท็บ "พิกัดแหล่ง" ไม่สร้างช่องทางที่สองให้เพี้ยนกันทีหลัง */
+    if(geoRows.length){
+      try{
+        const gr=await (await fetch(url,{method:'POST',headers:{'Content-Type':'text/plain;charset=utf-8'},
+          body:JSON.stringify({token:WTOKEN,action:'sources',mode:'upsert',rows:geoRows})})).json();
+        if(!gr.ok) throw new Error(gr.error||'บันทึกพิกัดไม่สำเร็จ');
+        out+=(out?'<br>':'')+'<span class="pill ok">บันทึกพิกัดแล้ว '+geoRows.length+' แหล่ง</span> '
+          +'ใช้คำนวณระยะขนส่งได้ทันที'
+          +'<br><span class="hint">อย่าลืมเติมพิกัดชุดนี้ลงชีต "แหล่งวัสดุ" ในไฟล์บัญชีคุมด้วย '
+          +'ไม่งั้นครั้งหน้าที่อัปโหลดบัญชีคุมทับ พิกัดจะหาย</span>';
+        try{ await loadLive(); drawNoGeo(); }catch(e){}
+      }catch(e){ out+=(out?'<br>':'')+'<span class="up">บันทึกพิกัดไม่สำเร็จ: '+esc(e.message)
+        +'</span> — ราคายังส่งได้ตามปกติ ไปเติมพิกัดที่แท็บ "พิกัดแหล่ง" ได้'; }
     }
     /* เอาออกจากคิวเฉพาะส่วนที่ส่งผ่าน — ส่วนที่พังยังอยู่ให้กดส่งซ้ำได้ */
     for(let i=queue.length-1;i>=0;i--){
@@ -5012,7 +5090,7 @@ function renderQueue(){
       : fmt(q.price)+(q.fac&&q.fac!==1?' <span class="hint">×'+q.fac+'</span>':'');
     return `<tr><td>${q.linkOnly?'<span class="hint">ทุกเดือน</span>':esc((TH_M[q.mo-1]||'')+' '+String(q.y).slice(2))}</td>
     <td>${esc(q.mat)}</td><td>${esc(q.unit)}${q.webUnit?'<div class="hint">เว็บขายเป็น '+esc(q.webUnit)+'</div>':''}</td>
-    <td class="num">${per}</td><td>${esc(q.src)}</td>
+    <td class="num">${per}</td><td>${esc(q.src)}${q.lat!=null?` <span class="pill ok" title="พิกัด ${q.lat.toFixed(5)}, ${q.lon.toFixed(5)} — จะบันทึกขึ้นแท็บ SOURCES ตอนกดส่ง">📍 มีพิกัด</span>`:''}</td>
     <td>${q.chan?esc(q.chan):'<span class="pill bad">ยังไม่ระบุ</span>'}</td><td>${esc(q.ref||'—')}</td>
     <td>${q.known?'<span class="pill ok">ตรงบัญชีคุม</span>':'<span class="pill warn">ชื่อใหม่ — รอจับคู่</span>'}</td>
     <td style="text-align:center"><button class="btn ghost qdel" data-i="${i}" title="เอาแถวนี้ออกจากคิว" style="padding:2px 9px">✕</button></td></tr>`;
@@ -5332,8 +5410,8 @@ function sysInit(){
     ไฟล์นี้เป็น HTML ไฟล์เดียว เปิดได้โดยไม่ต้องติดตั้งอะไร ใช้อินเทอร์เน็ตเฉพาะแผนที่ เส้นทาง และฟอนต์`;
   $('sysHelp').innerHTML=`
     <b>หน้าสรุป</b> — ภาพรวมคลังราคา เช็คลิสต์การอัปเดตรายประเภท ราคาวัสดุหลักที่ถูกสุดพร้อมทิศทางเทียบครั้งก่อน ข้อสังเกตอัตโนมัติ และตารางราคาที่ขยับมากสุดในเดือนล่าสุด ราคาที่เดือนนี้ยังไม่มีจะแสดงราคาล่าสุดที่มีพร้อมป้ายบอกเดือน<br>
-    <b>คำนวณระยะขนส่ง</b> — กรอกพิกัดครั้งเดียว เลือกชนิดวัสดุ ระบบวัดระยะถนนจริงทุกแหล่งพร้อมกัน แล้วคิดค่าขนส่งตาม ว 477 ทั้งตัวแปรสภาพผิวทาง (กด ▸ ในแต่ละแถว) ตัวคูณ F และตารางอัตราตามราคาน้ำมัน ผลพิมพ์เป็นเอกสารแนบได้<br>
     <b>สถิติราคา</b> — เทรนด์ราคารายเดือนของทุกวัสดุ เทียบข้ามแหล่งได้ (ทีละหน่วย) · ตารางราคารายเดือนของรายการที่เลือก · และความครบถ้วนของข้อมูลว่ารายการไหนเดือนไหนยังไม่ได้เอาเข้า<br>
+    <b>คำนวณระยะขนส่ง</b> — กรอกพิกัดครั้งเดียว เลือกชนิดวัสดุ ระบบวัดระยะถนนจริงทุกแหล่งพร้อมกัน แล้วคิดค่าขนส่งตาม ว 477 ทั้งตัวแปรสภาพผิวทาง (กด ▸ ในแต่ละแถว) ตัวคูณ F และตารางอัตราตามราคาน้ำมัน ผลพิมพ์เป็นเอกสารแนบได้<br>
     <b>นำเข้าข้อมูล</b> — ช่องทางข้อมูลทั้ง 5 ช่อง สถานะการเชื่อม และแบบฟอร์มกรอกราคาที่เทียบชื่อกับบัญชีคุมให้อัตโนมัติ<br>
     <b>เกร็ดการใช้หน้าคำนวณระยะขนส่ง</b> — เลือกวัสดุได้หลายรายการ จอแสดงทีละวัสดุ สลับจากป้ายชื่อในช่อง 3 (เอกสารพิมพ์รวมทุกวัสดุที่เลือก) · ระยะทางกรอกได้ไม่เกินค่าที่วัดจากแผนที่ · ในหน้าต่างรายละเอียดคำนวณ ช่องขอบเขียวคือช่องกรอก ช่องเทา (ที่ราบ ลาดยาง/คอนกรีต) ระบบคำนวณให้เป็นส่วนที่เหลือของระยะช่วง · ค่าขนขึ้น-ลง และค่าดัด/แปรรูป กรอกครั้งเดียวต่อวัสดุ ระบบบวกเข้าราคารวมให้ทุกแหล่ง<br>
     <b>ส่งออกข้อมูล</b> — รวมราคาทุกช่องทาง (TPSO + กรอกเอง + คลังสดบนชีท) แล้วสร้างไฟล์ราคาประจำเดือน 5 คอลัมน์ (ชีตชื่อ Sheet1) สำหรับไฟล์ประมาณราคา เลือกเปิด/ปิดการยกยอดราคาเดือนก่อนได้ รายการที่ยกยอดแนบชีต หมายเหตุยกยอด ไว้ในไฟล์ .xlsx เดียวกันโดยไม่กระทบ Sheet1<br>
