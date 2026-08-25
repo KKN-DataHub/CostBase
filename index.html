@@ -1308,7 +1308,7 @@ const SELFCHK={missing:new Set(),ok:false};
 const $ = id => { const el=document.getElementById(id);
   if(!el) SELFCHK.missing.add(id);
   return el; };
-const APPVER='8.21';        /* เลขรุ่นที่เดียว — ที่อื่นดึงจากตัวนี้ */
+const APPVER='8.22';        /* เลขรุ่นที่เดียว — ที่อื่นดึงจากตัวนี้ */
 const APPDATE='25 ส.ค. 2569';   /* วันที่ของรุ่นนี้ ที่เดียวเหมือนกัน */
 /* ⚠ ป้ายรุ่นบนแถบข้างเคยเป็นข้อความตายตัวใน HTML (v6.2) พอขึ้นรุ่นใหม่แล้วลืมแก้
    ผู้ใช้เลยเห็นเลขรุ่นเก่าทั้งที่โค้ดใหม่หมดแล้ว — ต่อไปนี้เขียนจาก APPVER เสมอ */
@@ -1574,11 +1574,23 @@ function _spMatchTok(R, C) {
     และแต่ละครั้งแตกโทเคนใหม่หมด → หน้าเว็บค้างยาวจนเหมือนแฮงก์ (เจอจริงตอนใช้งาน)
     ดัชนีนี้ถูกต้อง 100% เพราะกติกา ①②⑤ บังคับว่าโทเคนของบัญชีคุมต้องอยู่ในชื่อที่เจอ "ครบ"
     ตัวที่ไม่มีโทเคนร่วมกันสักตัว จึงไม่มีทางผ่านประตูอยู่แล้ว ตัดทิ้งได้โดยผลลัพธ์ไม่เปลี่ยน */
+/* ชื่อ "ตรงกันทุกตัวอักษร" ต้องตอบว่าตรงเป๊ะ ไม่ใช่ไปเดาจากโทเคน
+   บั๊กจริง: "เสาไฟถนนแบบกิ่งเดี่ยว สูง 9 ม. พร้อมอุปกรณ์ครบชุด" ชื่อในบัญชีคุมเหมือนกันเป๊ะ
+   แต่ชื่อนี้ไม่มีขนาด/รหัสให้ยึด เหลือแต่เลข 9 ระบบเลยตอบว่า "น่าจะใช่ · เลข 9 ตรงกัน"
+   ทั้งที่ควรตอบว่า "ตรงเป๊ะ" — KORN เห็นแล้วงงว่ากรอกตามรายการแล้วทำไมยังบอกไม่ตรง */
+function _spSame(s) {
+  return String(s == null ? '' : s)
+    .replace(/[\u00A0\u200B\u200C\u200D\uFEFF]/g, ' ')
+    .replace(/\s+/g, ' ').trim().toLowerCase();
+}
 function specIndex(list) {
-  var idx = { toks: [], std: [], name: [], by: {} };
+  var idx = { toks: [], std: [], name: [], by: {}, same: {} };
   for (var i = 0; i < list.length; i++) {
     var nm = list[i].name, T = specTok(nm), keys = [], j;
     idx.toks.push(T); idx.name.push(nm); idx.std.push(list[i].std || nm);
+    /* จำทั้ง "ชื่อเดิม" และ "ชื่อมาตรฐาน" — ชื่อที่คลังเก็บไว้คือชื่อมาตรฐานเสมอ (กฎ R6) */
+    var sm = _spSame(nm); if (sm && !(sm in idx.same)) idx.same[sm] = i;
+    var ss = _spSame(list[i].std || nm); if (ss && !(ss in idx.same)) idx.same[ss] = i;
     for (j = 0; j < T.dim.length; j++) keys.push('d' + T.dim[j]);
     for (j = 0; j < T.code.length; j++) keys.push('c' + T.code[j]);
     if (!keys.length) for (j = 0; j < T.num.length; j++) keys.push('n' + T.num[j]);
@@ -1593,6 +1605,13 @@ function specIndex(list) {
     คืน {best, hits, ambiguous} — ambiguous = ชนะเท่ากันแต่ชี้ชื่อมาตรฐานคนละตัว */
 function specBest(list, cand, idx) {
   idx = idx || specIndex(list);
+  /* ด่านแรก: ชื่อตรงกันทุกตัวอักษร = จบ ไม่ต้องเดา ไม่มีทางกำกวม */
+  var same = idx.same && idx.same[_spSame(cand)];
+  if (same !== undefined) {
+    var b = { name: idx.name[same], std: idx.std[same], score: 9999,
+              tier: 'ตรงเป๊ะ', why: 'ชื่อตรงกับบัญชีคุมทุกตัวอักษร' };
+    return { best: b, hits: [b], ambiguous: false };
+  }
   var C = specTok(cand), keys = [], pool = {}, hits = [], i, j, arr;
   for (j = 0; j < C.dim.length; j++) keys.push('d' + C.dim[j]);
   for (j = 0; j < C.code.length; j++) keys.push('c' + C.code[j]);
@@ -1850,6 +1869,18 @@ function applyRegistry(rows){
     const u=String(r[3]||'').trim(); if(u&&!REG.unit[std]) REG.unit[std]=u;
     if(c&&!REG.cat[std]){ REG.cat[std]=c; REG.ncat[rNorm(std)]=c; REG.tcat[rTight(std)]=c; }
     if(c){ const g2=rSig(old); if(g2 && !(g2 in REG.gcat)) REG.gcat[g2]=c; }
+  });
+  /* ══ ⚠ ต้นเหตุที่ KORN เจอ: "กรอกตามรายการแล้วยังบอกว่าชื่อไม่มีในบัญชีคุม" ══
+     บัญชีคุมเก็บคู่ "ชื่อเดิม → ชื่อมาตรฐาน" · ของเดิมจดไว้แค่ฝั่ง "ชื่อเดิม" เป็นชื่อที่รู้จัก
+     แต่ทั้งระบบแปลงเป็น "ชื่อมาตรฐาน" ก่อนเก็บเข้าคลังเสมอ (กฎ R6)
+     ผลคือชื่อมาตรฐานของบัญชีคุมเอง กลายเป็น "ชื่อแปลกหน้า" ที่บัญชีคุมไม่รู้จัก
+     → ทุกรายการที่ชื่อเดิม ≠ ชื่อมาตรฐาน จะเด้งเข้าคิว "ชื่อที่ยังไม่มีในบัญชีคุม" ทุกเดือนตลอดไป
+     แก้: ชื่อมาตรฐานต้องชี้กลับมาที่ตัวเองด้วยเสมอ · ทำเป็นรอบสองเพื่อไม่ให้ทับคู่ที่ประกาศไว้ตรง ๆ */
+  Object.keys(REG.map).slice().forEach(k=>{
+    const std=REG.map[k]; if(!std) return;
+    if(!(std in REG.map)) REG.map[std]=std;
+    if(!(rNorm(std) in REG.nmap)) REG.nmap[rNorm(std)]=std;
+    if(!(rTight(std) in REG.tmap)) REG.tmap[rTight(std)]=std;
   });
   REG.n=Object.keys(REG.map).length;
   if(!REG.n) return;
@@ -5211,17 +5242,34 @@ async function loadNewItems(silent){
         <th style="width:34px"></th><th>ชื่อที่พบ</th><th>เสนอให้เป็น</th><th>เพราะอะไร</th><th style="width:90px">ระดับ</th>
       </tr></thead><tbody>`
       +NIROWS.map(r=>`<tr${r.amb?' style="background:#FBF0E6"':''}>
-        <td>${r.known||!r.std?'':'<input type="checkbox" class="ni-ck" data-i="'+r.i+'"'+(r.tier==='แน่ใจ'&&!r.amb?' checked':'')+'>'}</td>
+        <td>${r.known||!r.std?'':'<input type="checkbox" class="ni-ck" data-i="'+r.i+'"'+((r.tier==='แน่ใจ'||r.tier==='ตรงเป๊ะ')&&!r.amb?' checked':'')+'>'}</td>
         <td>${esc(r.nm)}${r.unit?'<div class="hint">'+esc(r.unit)+'</div>':''}</td>
         <td>${r.std?esc(r.std):'<span class="hint">—</span>'}${r.amb?'<div class="hint">อีก '+(r.alt.length-1)+' ตัวคะแนนเท่ากัน — ต้องเลือกเอง</div>':''}</td>
         <td class="hint">${esc(r.why||'ไม่มีขนาด/รหัสให้ยึด — ต้องใส่ในบัญชีคุมเอง')}</td>
-        <td><span class="pill ${r.known?'ok':(r.tier==='แน่ใจ'&&!r.amb?'ok':(r.std?'warn':'bad'))}">${esc(r.tier)}${r.amb?' ⚠':''}</span></td>
+        <td><span class="pill ${r.known?'ok':((r.tier==='แน่ใจ'||r.tier==='ตรงเป๊ะ')&&!r.amb?'ok':(r.std?'warn':'bad'))}">${esc(r.tier)}${r.amb?' ⚠':''}</span></td>
       </tr>`).join('')+'</tbody></table></div>'
       +`<div class="ap-act" style="margin-top:8px">
         <input type="password" class="ni-pass" placeholder="รหัสผู้ดูแล" autocomplete="new-password">
         <button class="btn" id="niSend">✓ ส่งคู่ที่ติ๊กไว้เข้าบัญชีคุม</button>
+        ${done.length?`<button class="btn ghost" id="niPurge">🧹 เอา ${done.length} ชื่อที่จับคู่ได้แล้วออกจากคิว</button>`:''}
         <span class="hint" id="niSt"></span></div>`;
     $('niSend').onclick=sendNewItemMatches;
+    /* ชื่อที่บัญชีคุมรู้จักอยู่แล้ว ไม่ควรค้างอยู่ในคิวให้คนมานั่งดูซ้ำทุกเดือน (กฎ R18)
+       เดิมต้องเข้าไปกดเมนูในชีทเอง แล้วผลไปโผล่ใน Logger ที่ไม่มีใครเปิด */
+    const pg=$('niPurge');
+    if(pg) pg.onclick=async()=>{
+      const url=($('cfgUrl').value||'').trim(), st2=$('niSt');
+      if(!url){ st2.textContent='ยังไม่ตั้ง WebApp URL (ดูหน้า ระบบ)'; return; }
+      if(!confirm('เอาชื่อที่จับคู่บัญชีคุมได้แล้วออกจากคิว?\n\nชีทจะสำรองแท็บ NEW_ITEMS ไว้ก่อนเสมอ')) return;
+      pg.disabled=true; st2.textContent='กำลังเก็บกวาด…';
+      try{
+        const r=await (await fetch(url,{method:'POST',headers:{'Content-Type':'text/plain;charset=utf-8'},
+          body:JSON.stringify({token:WTOKEN,action:'newclean'})})).json();
+        if(!r.ok) throw new Error(r.error||'เก็บกวาดไม่สำเร็จ');
+        st2.innerHTML=`<span class="pill ok">เก็บกวาดแล้ว</span> เอาออก ${r.removed||0} ชื่อ · เหลือรอจับคู่จริง ${r.left||0} ชื่อ`;
+        loadNewItems();
+      }catch(e){ st2.textContent='ไม่สำเร็จ: '+e.message+' — ชีทอาจยังใช้ Code.gs ก่อนรุ่น 31'; pg.disabled=false; }
+    };
   }catch(e){ if(!silent) box.innerHTML='<div class="hint">อ่านแท็บ NEW_ITEMS ไม่ได้ — ตรวจว่าแชร์ชีทแบบอ่านได้แล้ว</div>'; }
 }
 async function sendNewItemMatches(){
