@@ -1250,7 +1250,7 @@ const SELFCHK={missing:new Set(),ok:false};
 const $ = id => { const el=document.getElementById(id);
   if(!el) SELFCHK.missing.add(id);
   return el; };
-const APPVER='8.14';        /* เลขรุ่นที่เดียว — ที่อื่นดึงจากตัวนี้ */
+const APPVER='8.16';        /* เลขรุ่นที่เดียว — ที่อื่นดึงจากตัวนี้ */
 const APPDATE='25 ส.ค. 2569';   /* วันที่ของรุ่นนี้ ที่เดียวเหมือนกัน */
 /* ⚠ ป้ายรุ่นบนแถบข้างเคยเป็นข้อความตายตัวใน HTML (v6.2) พอขึ้นรุ่นใหม่แล้วลืมแก้
    ผู้ใช้เลยเห็นเลขรุ่นเก่าทั้งที่โค้ดใหม่หมดแล้ว — ต่อไปนี้เขียนจาก APPVER เสมอ */
@@ -1334,8 +1334,20 @@ function chanBump(ch, key, doc, mat){
 const ymKey = i => P.ylist[i]*100+P.months[i];
 function chanPer(o){ const a=[]; for(let i=0;i<NM;i++) a[i]=o.ym[ymKey(i)]||0; return a; }
 function chanDocs(o,i){ const s=o.docs[ymKey(i)]; return s?[...s].filter(Boolean):[]; }
+/* ⚠⚠ ตัวนี้ "สร้างคลังใหม่ทั้งก้อน" จากแท็บ PRICES ไม่ใช่เอาไปผสมของเดิม (กฎ R24)
+   บั๊กจริงที่เจ็บที่สุด: ของเดิมชื่อ mergeLive และผสมทับภาพเก่าที่โหลดจากแคชในเครื่อง
+   ผลคือแถวที่ถูก "แก้" หรือ "ลบ" ในชีท ไม่เคยหายไปจากจอเลย มันค้างอยู่เป็นผี
+     KORN แก้หน่วยในชีทจาก ม้วน → เมตร แล้ว
+     แคชในเครื่องยังมีเส้น (NYY · ศิริชัย · ม้วน) อยู่
+     พอโหลดสด เจอ (NYY · ศิริชัย · เมตร) คีย์ไม่ตรงกับของเก่า → เพิ่มเป็นเส้นใหม่
+     เส้น ม้วน เก่าไม่มีใครลบ ค้างต่อไปเรื่อย ๆ → จอขึ้น 438 บาท/ม้วน ทั้งที่ชีทเป็นเมตร
+   ชีทคือแหล่งความจริงเดียว อ่านมาแล้วต้องแทนที่ให้หมด ห้ามผสม
+   แคชมีไว้ให้จอแรกขึ้นเร็วเท่านั้น พอของจริงมาถึงต้องถูกทิ้งทั้งก้อน */
 function mergeLive(rows){
-  const serIdx={}; P.series.forEach((s,i)=>{ serIdx[s[0]+'|'+s[1]+'|'+s[2]]=i; });
+  P.months=[]; P.ylist=[]; P.mats=[]; P.srcs=[]; P.units=[]; P.types=[];
+  P.series=[]; P.matCat={};
+  NM=0; LAST=-1;
+  const serIdx={};
   CHAN={};
   let added=0;
   rows.forEach(r=>{
@@ -1807,14 +1819,12 @@ function applyRegistry(rows){
      แล้วโชว์เลขบวมเกินจำนวนรายการทั้งคลังบนหน้าเดียวกัน (6,992 vs 4,933) */
   Object.values(CHAN).forEach(o=>{
     const s=new Set(); o.mats.forEach(m=>s.add(regStd(m)||m)); o.mats=s; });
-  /* ปรับตัวชี้ที่ผู้ใช้เลือกไว้ให้ตามดัชนีใหม่ */
-  matSel=matSel.map(i=>remap[i]??i);
-  if(matActive!=null) matActive=remap[matActive]??matActive;
-  const cs={}; Object.keys(cmpState).forEach(k=>{ cs[remap[k]??k]=cmpState[k]; }); cmpState=cs;
-  /* ค่าขนขึ้น-ลง / ค่าดัด ที่ผู้ใช้พิมพ์ไว้ ผูกกับดัชนีวัสดุ ต้องย้ายตามด้วย
-     ไม่งั้นจะไปเกาะวัสดุตัวอื่นแล้วบวกเข้าราคารวมในใบพิมพ์ */
-  const ce={}; Object.keys(cmpExtra).forEach(k=>{ ce[remap[k]??k]=cmpExtra[k]; }); cmpExtra=ce;
-  if(typeof sSel!=='undefined'&&sSel.mat>=0){ sSel.mat=remap[sSel.mat]??sSel.mat; }
+  /* ⚠ ตรงนี้เคยมีบล็อก "แปลงลำดับที่ผู้ใช้เลือกไว้ให้ตามดัชนีใหม่" 7 บรรทัด — ลบทิ้งแล้วใน v8.16
+     เหตุผล: มันเป็นยาแก้อาการของโรคที่ไม่ควรมีตั้งแต่แรก คือการเก็บ "ลำดับ" ไว้ข้ามการวาดจอ (กฎ R1)
+     และมันแก้ไม่ได้จริงด้วย — remap ที่สร้างข้างบนเป็นตารางของ "ดัชนีใหม่→ดัชนีใหม่ที่ยุบแล้ว"
+     แต่ค่าที่ผู้ใช้ถืออยู่เป็น "ดัชนีของรอบก่อน" คนละปริภูมิกัน ป้อนเข้าไปได้เลขที่ดูสมเหตุสมผลแต่ผิด
+     และไม่มีวันฟ้อง error เลย · ตั้งแต่ v8.16 ทุกตัวชี้ของผู้ใช้เก็บเป็น "ชื่อจริง" หมดแล้ว
+     (matSel · matActive · cmpState · cmpExtra · sSel.mat · sSel.srcs) จึงไม่มีอะไรให้แปลงอีก */
   REG.on=true;
 }
 function mergeSources(rows){
@@ -2386,10 +2396,10 @@ function buildSummary(){
       ['Wiremesh RB 6 @0.20 ม.', /wiremesh[\s\S]*RB ?6\b[\s\S]*0\.20 ?[x×] ?0\.20/i, /^ตร\.?ม\.?$/]]],
     ['งานไฟฟ้า', [
       ['สาย CV ขนาด 2 x 25 ตร.มม.', /\bCV\b[\s\S]*2 ?[x×] ?25\b/i, /^เมตร|^ม\.$/],
-      ['สาย NYY ขนาด 2 x 25 ตร.มม.', /NYY[\s\S]*2 ?[x×] ?25\b/i, /^ม้วน|^เมตร/],
+      ['สาย NYY ขนาด 2 x 25 ตร.มม.', /NYY[\s\S]*2 ?[x×] ?25\b/i, /^เมตร|^ม\.$/],
       /* VCT-G ยังไม่มีในบัญชีคุม (มีแต่ VCT ธรรมดา) — จับเฉพาะ VCT-G เท่านั้น
          ไม่มีก็ขึ้นว่ายังไม่มีในคลัง ไม่เอา VCT ธรรมดามาแสดงแทน จะได้ไม่เข้าใจผิด */
-      ['สาย VCT-G ขนาด 2 x 2.5 ตร.มม.', /VCT ?-? ?G\b[\s\S]*2 ?[x×] ?2\.5\b/i, /^เมตร|^ม้วน|^ม\.$/],
+      ['สาย VCT-G ขนาด 2 x 2.5 ตร.มม.', /VCT ?-? ?G\b[\s\S]*2 ?[x×] ?2\.5\b/i, /^เมตร|^ม\.$/],
       ['RCBO 2P 10A', /RCBO[\s\S]*2 ?P[\s\S]*10 ?A/i, /^ชุด|^อัน|^ตัว/],
       ['MCCB 2P 80A 30KA', /MCCB[\s\S]*2 ?P[\s\S]*80 ?A/i, /^ชุด|^อัน|^ตัว/]]],
   ];
@@ -2440,6 +2450,18 @@ function buildSummary(){
     const all = P.series.filter(s=>mi.has(s[0]));
     /* ล็อกหน่วย — ไอเท็มหน่วยไม่ตรงไม่เอามาเทียบเด็ดขาด */
     let ss = unitRe ? all.filter(s=>unitRe.test(String(P.units[s[2]]||'').trim())) : all;
+    /* ⚠ ด่านสุดท้ายของ R23 — ต่อให้ unitRe เขียนหลวมไป (เช่น /^ม้วน|^เมตร/ ซึ่งเป็นคนละหน่วยจริง ๆ)
+       ห้ามปล่อยให้หา "ถูกสุด" ข้ามหน่วยเด็ดขาด · เลือกหน่วยที่มีเส้นราคาเยอะสุดมาหน่วยเดียว
+       แล้วบอกไว้บนการ์ดว่ายังมีอีกหน่วยอยู่ในคลัง — ไม่ใช่เงียบ */
+    let mixNote='';
+    { const byU={};
+      ss.forEach(s=>{ const u=String(P.units[s[2]]||'').trim()||'(ไม่ระบุ)'; (byU[u]=byU[u]||[]).push(s); });
+      const us=Object.keys(byU);
+      if(us.length>1){
+        us.sort((a,b)=>byU[b].length-byU[a].length);
+        ss=byU[us[0]];
+        mixNote=' · <span class="up">คลังมีหลายหน่วย ('+esc(us.join(' / '))+') — การ์ดนี้คิดเฉพาะ '+esc(us[0])+'</span>';
+      } }
     if(!ss.length){
       const other = [...new Set(all.map(s=>P.units[s[2]]).filter(Boolean))];
       return `<div class="kcard empty"><div class="t">${label}</div><div class="v" style="color:var(--muted)">—</div>
@@ -2470,12 +2492,12 @@ function buildSummary(){
       const la=pts[pts.length-1];
       return `<svg class="spark" viewBox="0 0 ${W} ${H}" preserveAspectRatio="none"><path d="${path}"/><circle cx="${X(la.i).toFixed(1)}" cy="${Y(la.p).toFixed(1)}" r="2.3"/></svg>`;
     };
-    return `<div class="kcard" role="button" tabindex="0" data-mi="${best.s[0]}" data-si="${best.s[1]}"
+    return `<div class="kcard" role="button" tabindex="0" data-mi="${esc(P.mats[best.s[0]]||'')}" data-mu="${esc(P.units[best.s[2]]||'')}"
         title="กดเพื่อดูกราฟแนวโน้มของ ${esc(P.mats[best.s[0]]||label)} ในหน้าสถิติราคา">
       <div class="t">${label}</div>
       <div class="v">${fmt(best.p)} <span class="u">บาท/${esc(P.units[best.s[2]]||'-')}</span></div>
       <div class="s">ถูกสุดของ <b>${mLabI(lm)}</b>${stale?' <span class="pill warn">ยังไม่มีราคา '+mLabI(LAST)+'</span>':''}
-        · ${nsrc} แหล่ง<br>${esc(P.srcs[best.s[1]]||'(ไม่ระบุ)')}</div>
+        · ${nsrc} แหล่ง${mixNote}<br>${esc(P.srcs[best.s[1]]||'(ไม่ระบุ)')}</div>
       ${spark(best.s[4])}
       <div class="d ${cls}">${d==null?'ไม่มีฐานเทียบ':(d>0?'▲ +':d<0?'▼ ':'—  ')+Math.abs(d).toFixed(2)+'% จากครั้งก่อน'}</div>
       <div class="kgo">ดูกราฟแนวโน้ม →</div></div>`;
@@ -2492,7 +2514,7 @@ function buildSummary(){
   });
   /* กดการ์ด → เด้งไปหน้าสถิติราคา พร้อมเลือกรายการ+แหล่งที่ถูกสุดให้เลย */
   $('keyCards').querySelectorAll('.kcard[data-mi]').forEach(c=>{
-    const go=()=>gotoStat(+c.dataset.mi, -1);   /* โชว์ทุกแหล่ง จะได้เห็นว่าถูกสุดห่างจากเจ้าอื่นแค่ไหน */
+    const go=()=>gotoStat(c.dataset.mi, '', c.dataset.mu);   /* โชว์ทุกแหล่ง จะได้เห็นว่าถูกสุดห่างจากเจ้าอื่นแค่ไหน */
     c.onclick=go;
     c.onkeydown=e=>{ if(e.key==='Enter'||e.key===' '){ e.preventDefault(); go(); } };
   });
@@ -2520,6 +2542,32 @@ function buildSummary(){
 /* ============ คำนวณระยะขนส่ง ============ */
 let map=null, layerSrc=null, destMarker=null;
 let dres=[], dest=null, distCache={}, matSel=[], cmpState={}, oilMeta=null, routeCache={};
+/* ══════ ตัวตนของ "การ์ดเปรียบเทียบ" = ชื่อวัสดุ + หน่วย (กฎ R1 คู่กับ R23) ══════
+   ⚠ ห้ามใช้ "ลำดับวัสดุ" เป็นตัวชี้เด็ดขาด — ตั้งแต่ v8.15 mergeLive() สร้าง P.mats ใหม่ทั้งก้อน
+   ทุกครั้งที่อ่านคลัง (กฎ R24) ลำดับจึงเลื่อนได้ทุกเมื่อ · ของเดิมเก็บเป็นลำดับ ค่าที่ผู้ใช้พิมพ์เอง
+   (ระยะ · ช่วงรถ · ค่าขนขึ้น-ลง · ค่าดัด) จะย้ายไปเกาะวัสดุตัวอื่นเงียบ ๆ แล้วโผล่ในเอกสารราคากลาง
+   และ "หน่วย" ต้องอยู่ในตัวตนด้วย เพราะ บาท/เมตร กับ บาท/ม้วน เทียบกันไม่ได้ (กฎ R23)
+   วัสดุที่ขายสองหน่วย = การ์ดเปรียบเทียบสองใบ ไม่ใช่ใบเดียวที่เอามาปนกันแล้วติดป้าย "ถูกสุด" มั่ว */
+const CK='\u001f';
+const ckMake=(mat,unit)=>String(mat)+CK+String(unit||'');
+const ckMat=k=>String(k).split(CK)[0];
+const ckUnit=k=>String(k).split(CK)[1]||'';
+const ckLabel=k=>ckMat(k)+(ckUnit(k)?' · บาท/'+ckUnit(k):'');
+/* คู่ (วัสดุ,หน่วย) ทั้งหมดที่มีอยู่จริงในคลัง — ใช้สร้างรายการให้เลือก */
+function cmpPairs(){
+  const seen={}, out=[];
+  P.series.forEach(s=>{
+    const k=ckMake(P.mats[s[0]],P.units[s[2]]||'');
+    if(!seen[k]){ seen[k]=1; out.push(k); }
+  });
+  return out;
+}
+function unitsOfMat(mat){
+  const u=new Set();
+  const mi=P.mats.indexOf(mat); if(mi<0) return [];
+  P.series.forEach(s=>{ if(s[0]===mi) u.add(P.units[s[2]]||''); });
+  return [...u];
+}
 let mmMap=null, mmLayer=null;
 let SRCBYNAME=Object.fromEntries(SRC.map(s=>[s.name,s]));
 /* ══ ทะเบียนลำดับแหล่ง — "ตัวคุม" ══
@@ -2586,15 +2634,19 @@ function provInit(){
   $('dProv').onchange=()=>{oilMeta=null;dieselIdx();buildCalcSheet();fetchOil(true);};
 }
 function matInit(){
+  /* จัดกลุ่มเป็น "คู่ วัสดุ+หน่วย" ไม่ใช่ "วัสดุ" เฉย ๆ (กฎ R23)
+     วัสดุที่ขายสองหน่วยต้องเลือกได้ทีละหน่วย ตั้งแต่ตอนเลือก ไม่ใช่ไปปนกันในการ์ดแล้วค่อยรู้ทีหลัง */
   const groups={};
   if(REG.on){
-    P.series.forEach(s=>{ const c=(P.matCat&&P.matCat[s[0]])||'ยังไม่จัดหมวด'; (groups[c]=groups[c]||new Set()).add(s[0]); });
+    P.series.forEach(s=>{ const c=(P.matCat&&P.matCat[s[0]])||'ยังไม่จัดหมวด';
+      (groups[c]=groups[c]||new Set()).add(ckMake(P.mats[s[0]],P.units[s[2]]||'')); });
   }else{
-    P.series.forEach(s=>{ const c=P.types[s[3]]||''; if(!c) return; (groups[c]=groups[c]||new Set()).add(s[0]); });
+    P.series.forEach(s=>{ const c=P.types[s[3]]||''; if(!c) return;
+      (groups[c]=groups[c]||new Set()).add(ckMake(P.mats[s[0]],P.units[s[2]]||'')); });
   }
   const prev=$('dCat').value;
   const cats=Object.keys(groups).sort((a,b)=>a.localeCompare(b,'th'));
-  const allSet=new Set(); P.series.forEach(sr=>allSet.add(sr[0]));
+  const allSet=new Set(cmpPairs());
   groups['__all__']=allSet;
   $('dCat').innerHTML=`<option value="" ${prev?'':'selected'}>— เลือกหมวด —</option>`
     +`<option value="__all__" ${prev==='__all__'?'selected':''}>ทุกหมวด — พิมพ์ค้นหาได้ (${allSet.size.toLocaleString()})</option>`
@@ -2602,30 +2654,36 @@ function matInit(){
   const fill=()=>{
     /* ยังไม่เลือกหมวด = ยังไม่มีรายการให้เลือก ห้ามเดาให้ว่าเอาทุกหมวด (กฎ R2) */
     if(!$('dCat').value){ $('dMatPick').innerHTML='<option value="">— เลือกหมวดก่อน —</option>'; return; }
-    const mats=[...(groups[$('dCat').value]||[])].sort((a,b)=>P.mats[a].localeCompare(P.mats[b],'th'));
+    /* ชื่อที่โชว์: มีหน่วยเดียว = ชื่อเฉย ๆ · มีหลายหน่วย = ต่อท้ายด้วยหน่วย จะได้เห็นว่าเป็นคนละตัวกัน */
+    const keys=[...(groups[$('dCat').value]||[])].sort((a,b)=>ckLabel(a).localeCompare(ckLabel(b),'th'));
     $('dMatPick').innerHTML='<option value="">— เลือกรายการ —</option>'
-      +mats.map(i=>`<option value="${i}">${esc(P.mats[i])}</option>`).join('');
+      +keys.map(k=>{ const multi=unitsOfMat(ckMat(k)).length>1;
+        return `<option value="${esc(k)}">${esc(multi?ckLabel(k):ckMat(k))}</option>`; }).join('');
   };
   $('dCat').onchange=fill; fill();
   $('dMatAdd').onclick=()=>{
     const v=$('dMatPick').value;
     if(v===''){ toast('เลือกหมวดและรายการวัสดุก่อน'); return; }
-    const i=+v;
-    if(!isNaN(i)&&!matSel.includes(i)) matSel.push(i);
-    if(!isNaN(i)) matActive=i;
+    if(!matSel.includes(v)) matSel.push(v);
+    matActive=v;
     drawMatChips(); if(dest) renderAll();
   };
 }
 let matActive=null;
 function drawMatChips(){
-  $('dMatChips').innerHTML=matSel.map(i=>`<span class="matchip" data-go="${i}" style="cursor:pointer;${i===matActive?'':'background:#fff;border-color:var(--grid);color:var(--ink2);font-weight:400'}">${esc(P.mats[i])} <b data-x="${i}">✕</b></span>`).join('')||'<span class="hint">ยังไม่ได้เลือก</span>';
+  /* data-go/data-x เก็บ "ลำดับใน matSel" ไม่ใช่ลำดับใน P.mats — matSel ถูกวาดใหม่พร้อมกันทุกครั้ง
+     จึงตรงกันเสมอ ต่างจากลำดับใน P.mats ที่เลื่อนได้เองตอนอ่านคลังใหม่ (กฎ R1) */
+  $('dMatChips').innerHTML=matSel.map((k,ai)=>{
+    const multi=unitsOfMat(ckMat(k)).length>1;
+    return `<span class="matchip" data-go="${ai}" style="cursor:pointer;${k===matActive?'':'background:#fff;border-color:var(--grid);color:var(--ink2);font-weight:400'}">${esc(multi?ckLabel(k):ckMat(k))} <b data-x="${ai}">✕</b></span>`;
+  }).join('')||'<span class="hint">ยังไม่ได้เลือก</span>';
   $('dMatChips').querySelectorAll('[data-go]').forEach(c=>c.onclick=ev=>{
     if(ev.target.dataset.x!==undefined) return;
-    matActive=+c.dataset.go; drawMatChips(); renderCmp(); });
+    matActive=matSel[+c.dataset.go]??matActive; drawMatChips(); renderCmp(); });
   $('dMatChips').querySelectorAll('[data-x]').forEach(b=>b.onclick=()=>{
-    const i=+b.dataset.x;
-    matSel=matSel.filter(x=>x!==i); delete cmpState[i];
-    if(matActive===i) matActive=matSel.length?matSel[matSel.length-1]:null;
+    const k=matSel[+b.dataset.x]; if(k==null) return;
+    matSel=matSel.filter(x=>x!==k); delete cmpState[k]; delete cmpExtra[k];
+    if(matActive===k) matActive=matSel.length?matSel[matSel.length-1]:null;
     drawMatChips(); renderAll();});
   /* ป้ายบนปุ่ม Excel/พิมพ์ บอกชัดว่ารายการที่เลือกค้างไว้ = รายการที่จะออกในไฟล์เดียว */
   const bx=$('dXlsx');
@@ -2797,10 +2855,13 @@ async function measure(stEl){
 let curEdit=null;
 function toast(msg){ const x=document.getElementById('toastBox');
   x.textContent=msg; x.classList.add('on'); clearTimeout(x._h); x._h=setTimeout(()=>x.classList.remove('on'),2600); }
-function cmpRowsFor(mi){
-  if(cmpState[mi]) return cmpState[mi];
+function cmpRowsFor(k){
+  if(cmpState[k]) return cmpState[k];
   const rows=[];
-  P.series.filter(s=>s[0]===mi).forEach(s=>{
+  const mat=ckMat(k), un=ckUnit(k);
+  const mi=P.mats.indexOf(mat);
+  /* ล็อกหน่วยตั้งแต่ตรงนี้ — ต่างหน่วยกันคือคนละการ์ด ห้ามหลุดเข้ามาปนกัน (กฎ R23) */
+  P.series.filter(s=>s[0]===mi && (P.units[s[2]]||'')===un).forEach(s=>{
     const lv=latestVal(s[4]); if(!lv) return;
     const nm=P.srcs[s[1]]||'(ไม่ระบุ)';
     const unit=P.units[s[2]]||''; const tU=unit==='ลบ.ม.'?'v':unit==='ตัน'?'t':null;
@@ -2811,7 +2872,7 @@ function cmpRowsFor(mi){
       L:L0, Lmax:dc?dc.L:null, mode:dc?dc.mode:(sc?null:'manual'),
       legs:[newLeg(L0,DEF_TRUCK)]});
   });
-  cmpState[mi]=rows; return rows;
+  cmpState[k]=rows; return rows;
 }
 /* ⚠ แถวเปรียบเทียบถูกแคชไว้ใน cmpState เพราะเก็บระยะทาง/ช่วงรถที่ผู้ใช้พิมพ์เอง
    แต่ pm เป็น "เลขลำดับเดือน" ซึ่งเลื่อนได้เมื่อ ensureMonth() แทรกเดือนใหม่กลางอาเรย์
@@ -2819,9 +2880,11 @@ function cmpRowsFor(mi){
    ตัวนี้ไล่ปรับ ราคา+เดือน ให้ตรงคลังปัจจุบัน โดยไม่แตะค่าที่ผู้ใช้กรอก (L / legs / mode) */
 function refreshCmpState(){
   Object.keys(cmpState).forEach(k=>{
-    const mi=+k, rows=cmpState[k]; if(!rows) return;
+    const rows=cmpState[k]; if(!rows) return;
+    /* หาลำดับวัสดุใหม่ทุกครั้งจาก "ชื่อ" ไม่เก็บลำดับไว้ข้ามการวาดจอ (กฎ R1) */
+    const mi=P.mats.indexOf(ckMat(k));
     rows.forEach(r=>{
-      const ser=P.series.find(s=>s[0]===mi && (P.srcs[s[1]]||'(ไม่ระบุ)')===r.nm && (P.units[s[2]]||'')===r.unit);
+      const ser=mi<0?null:P.series.find(s=>s[0]===mi && (P.srcs[s[1]]||'(ไม่ระบุ)')===r.nm && (P.units[s[2]]||'')===r.unit);
       if(!ser){ /* คู่ราคานี้หายไปจากคลังแล้ว — คงเลขเดิมไว้ แต่หาเดือนใหม่ให้ถ้าทำได้ */
         const i=P.ylist.findIndex((y,j)=>y===r.py&&P.months[j]===r.pmo);
         if(i>=0) r.pm=i;
@@ -2832,7 +2895,9 @@ function refreshCmpState(){
   });
 }
 let cmpExtra={};
-function exOf(mi){ return cmpExtra[mi]||(cmpExtra[mi]={up:0,bend:0}); }
+/* ค่าขนขึ้น-ลง/ค่าดัด เป็น "บาทต่อหน่วย" — จึงต้องผูกกับคู่ วัสดุ+หน่วย ไม่ใช่วัสดุเฉย ๆ
+   ของเดิมผูกกับลำดับวัสดุ: พอคลังโหลดใหม่ ตัวเลขที่พิมพ์ไว้ย้ายไปบวกให้วัสดุตัวอื่นในใบพิมพ์ */
+function exOf(k){ return cmpExtra[k]||(cmpExtra[k]={up:0,bend:0}); }
 function cmpTotal(r,di,ex){
   ex=ex||{up:0,bend:0};
   if(!r.tU) return {cost:null,total:Math.round((r.price+(ex.up||0)+(ex.bend||0))*100)/100,k:null,noTrans:true};
@@ -2840,9 +2905,9 @@ function cmpTotal(r,di,ex){
   if(k.cost==null) return {cost:null,total:null,k};
   return {cost:k.cost,total:Math.round((r.price+k.cost+(ex.up||0)+(ex.bend||0))*100)/100,k};
 }
-function sortedCalc(mi,di){
-  const rows=cmpState[mi]||cmpRowsFor(mi);
-  const ex=exOf(mi);
+function sortedCalc(k,di){
+  const rows=cmpState[k]||cmpRowsFor(k);
+  const ex=exOf(k);
   const calc=rows.map(r=>({r,t:cmpTotal(r,di,ex)}));
   calc.sort((a,b)=>{ if(a.t.total!=null&&b.t.total!=null) return a.t.total-b.t.total;
     if(a.t.total!=null) return -1; if(b.t.total!=null) return 1; return a.r.price-b.r.price;});
@@ -2864,24 +2929,31 @@ function renderCmp(){
     $('cmpCards').innerHTML='<div class="card"><div class="hint" style="padding:8px">เลือกหมวด → เลือกวัสดุ → กด คำนวณ · ระบบจะแสดงทุกแหล่งที่มีวัสดุนั้น พร้อมราคา ระยะทาง ค่าขนส่งตาม ว 477 เรียงราคารวมถูกสุดขึ้นก่อน</div></div>'; return;
   }
   if(matActive==null||!matSel.includes(matActive)) matActive=matSel[matSel.length-1];
-  $('cmpCards').innerHTML=[matActive].map(mi=>{
-    const calc=sortedCalc(mi,di);
+  $('cmpCards').innerHTML=[matActive].map(k=>{
+    const ai=matSel.indexOf(k);
+    const calc=sortedCalc(k,di);
     const best=calc.find(x=>x.t.total!=null);
-    const unit=calc[0]?calc[0].r.unit:'-';
-    const ex=exOf(mi);
+    /* ⚠ หน่วยมาจาก "ตัวตนของการ์ด" ไม่ใช่จากแถวแรกของตาราง (กฎ R23 ห้ามหยิบหน่วยของแถวแรกมาป้ายทั้งชุด)
+       ของเดิมเขียน calc[0].r.unit ซึ่งคือหน่วยของ "แถวที่ถูกที่สุด" หลังเรียงแล้ว — ยิ่งผิดหนักกว่าแถวแรกอีก */
+    const unit=ckUnit(k)||'-';
+    const others=unitsOfMat(ckMat(k)).filter(u=>u&&u!==ckUnit(k));
+    const ex=exOf(k);
     const noGeo=calc.filter(x=>!x.r.sc).length;
-    let h=`<div class="card" style="margin-bottom:12px"><h2>${esc(P.mats[mi])} <span class="hint" style="font-weight:400">หน่วย: ${esc(unit)} · ${calc.length} แหล่ง</span></h2>
+    let h=`<div class="card" style="margin-bottom:12px"><h2>${esc(ckMat(k))} <span class="hint" style="font-weight:400">หน่วย: ${esc(unit)} · ${calc.length} แหล่ง</span></h2>
+      ${others.length?`<div class="cap no-print" style="margin:-4px 0 6px"><span class="pill warn">รายการนี้มีหลายหน่วย</span> ในคลังยังมี ${esc(others.map(u=>'บาท/'+u).join(' · '))} อยู่ด้วย — <b>เทียบข้ามหน่วยไม่ได้</b> การ์ดนี้คิดเฉพาะ บาท/${esc(unit)} · ถ้าต้องการอีกหน่วย ให้เลือกเพิ่มจากช่อง 3 อีกครั้ง</div>`:''}
       <div class="cap no-print" style="margin:-4px 0 8px">ราคาที่นำมาคิด = <b>ราคาล่าสุดของแต่ละแหล่ง</b> (แหล่งไหนอัปเดตถึงเดือนไหน ใช้ของเดือนนั้น)
         ไม่ใช่ราคาถูกสุดข้ามเดือน — เดือนเก่าใช้ดูสถิติอย่างเดียว · แถวไหนไม่ใช่เดือนล่าสุดจะมีป้ายเดือนกำกับไว้
         ${noGeo?`<br><span class="up">มี ${noGeo} แหล่งยังไม่มีพิกัด</span> — คำนวณระยะให้อัตโนมัติไม่ได้ ไปเติมพิกัดที่หน้า <b>นำเข้าข้อมูล → แหล่งที่ยังไม่มีพิกัด</b>`:''}</div>
       <div class="statusline no-print" style="margin:2px 0 8px">
-        <span style="font-size:12px">ค่าขนขึ้น-ลง <input type="number" min="0" step="0.01" value="${ex.up||''}" placeholder="0" data-exu="${mi}" style="width:96px"> บาท/${esc(unit)}</span>
-        <span style="font-size:12px">ค่าดัด/แปรรูป <input type="number" min="0" step="0.01" value="${ex.bend||''}" placeholder="0" data-exb="${mi}" style="width:96px"> บาท/${esc(unit)}</span>
+        <span style="font-size:12px">ค่าขนขึ้น-ลง <input type="number" min="0" step="0.01" value="${ex.up||''}" placeholder="0" data-exu="${ai}" style="width:96px"> บาท/${esc(unit)}</span>
+        <span style="font-size:12px">ค่าดัด/แปรรูป <input type="number" min="0" step="0.01" value="${ex.bend||''}" placeholder="0" data-exb="${ai}" style="width:96px"> บาท/${esc(unit)}</span>
       </div>
       <div class="tw"><table><thead><tr><th>แหล่ง</th><th class="num" style="width:120px">ราคาวัสดุ</th>
       <th class="num" style="width:110px">ระยะ (กม.)</th><th style="width:190px;text-align:center">รถบรรทุก</th><th class="num" style="width:120px">ค่าขนส่ง</th><th class="num" style="width:130px">ราคารวม</th><th style="width:140px"></th></tr></thead><tbody>`;
-    calc.forEach(({r,t},ri)=>{
-      const key=mi+'|'+ri;
+    calc.forEach(({r,t})=>{
+      /* ตัวชี้แถว = ลำดับการ์ดใน matSel + "ชื่อแหล่ง" — ไม่ใช่ "อันดับหลังเรียง"
+         ของเดิมใช้อันดับ พอราคาหรือน้ำมันเปลี่ยนแล้วตารางเรียงใหม่ กดแก้ระยะจะไปลงแหล่งอื่น (กฎ R1) */
+      const key=ai+'|'+r.nm;
       const isBest=best&&r===best.r;
       const summ=legSummary(r);
       h+=`<tr class="${isBest?'cheap':''}">
@@ -2903,13 +2975,13 @@ function renderCmp(){
   bindCmpInputs();
 }
 function cmpRef(key){
-  const [mi,ri]=key.split('|');
-  /* +mi สำคัญ — cmpRowsFor เทียบ s[0]===mi แบบเข้มงวด ถ้าเป็นสตริงจะได้อาเรย์ว่างเสมอ
-     และต้องกันดัชนีเกินขอบ เผื่อคลังโหลดใหม่แล้วจำนวนแหล่งลดลง */
-  const list=sortedCalc(+mi,dieselIdx());
-  const row=list[+ri];
-  return row?row.r:null;
+  const i=key.indexOf('|');
+  const ai=+key.slice(0,i), nm=key.slice(i+1);   /* ตัดที่ขีดแรกเท่านั้น — ชื่อแหล่งมีขีดในตัวได้ */
+  const k=matSel[ai]; if(k==null) return null;
+  const rows=cmpState[k]||cmpRowsFor(k);
+  return rows.find(r=>r.nm===nm)||null;
 }
+function cmpKeyOf(key){ return matSel[+key.slice(0,key.indexOf('|'))]; }
 function truckSeg(key,li,cur){
   return `<span class="tseg">${TRUCKS.map(x=>`<button class="ts ${cur===x[0]?'on':''}" data-tk="${key}" data-li="${li}" data-v="${x[0]}" title="${x[2]}">${x[1]}</button>`).join('')}</span>`;
 }
@@ -2923,22 +2995,24 @@ function bindCmpInputs(){
     r.legs[+e.dataset.li].truck=e.dataset.v; renderCmp(); buildCalcSheet();});
   document.querySelectorAll('#cmpCards [data-ed]').forEach(e=>e.onclick=()=>{const key=e.dataset.ed;
     const r=cmpRef(key); if(!r) return stale();
-    openLegModal(+key.split('|')[0], r);});
-  document.querySelectorAll('#cmpCards [data-exu]').forEach(e=>e.onchange=()=>{exOf(+e.dataset.exu).up=parseFloat(e.value)||0; renderCmp(); buildCalcSheet();});
-  document.querySelectorAll('#cmpCards [data-exb]').forEach(e=>e.onchange=()=>{exOf(+e.dataset.exb).bend=parseFloat(e.value)||0; renderCmp(); buildCalcSheet();});
+    openLegModal(cmpKeyOf(key), r);});
+  document.querySelectorAll('#cmpCards [data-exu]').forEach(e=>e.onchange=()=>{const k=matSel[+e.dataset.exu]; if(k==null) return stale();
+    exOf(k).up=parseFloat(e.value)||0; renderCmp(); buildCalcSheet();});
+  document.querySelectorAll('#cmpCards [data-exb]').forEach(e=>e.onchange=()=>{const k=matSel[+e.dataset.exb]; if(k==null) return stale();
+    exOf(k).bend=parseFloat(e.value)||0; renderCmp(); buildCalcSheet();});
 }
 /* ---------- leg editor popup ---------- */
-function openLegModal(mi,r){
-  curEdit={mi,r};
-  $('emT').textContent=`รายการคำนวณค่าขนส่ง: ${r.nm} — ${P.mats[mi]}`;
+function openLegModal(ck,r){
+  curEdit={ck,r};
+  $('emT').textContent=`รายการคำนวณค่าขนส่ง: ${r.nm} — ${ckMat(ck)} (บาท/${ckUnit(ck)})`;
   document.getElementById('editModal').classList.add('on');
   renderLegModal();
 }
 function closeLegModal(){ document.getElementById('editModal').classList.remove('on'); curEdit=null; renderCmp(); buildCalcSheet(); }
 function renderLegModal(){
   if(!curEdit) return;
-  const {mi,r}=curEdit; const di=dieselIdx();
-  const ex=exOf(mi);
+  const {ck,r}=curEdit; const di=dieselIdx();
+  const ex=exOf(ck);
   const k=calcLegs(r,di); const t=cmpTotal(r,di,ex);
   const mism=Math.abs(k.sumL-r.L)>0.05 && r.L>0;
   /* หัวโมดัลบอกเลขเดียว = ระยะที่ใช้คิดเงินจริง (ผลรวมทุกช่วง) แล้วอ้างระยะที่วัดได้ไว้ข้าง ๆ
@@ -3014,7 +3088,7 @@ function bindLegModal(){
     r.legs.push(newLeg(Math.max(0,Math.round((r.L-used)*100)/100),'6')); rr(); };
   const mp=document.getElementById('emMap2');
   if(mp){ mp.style.display=r.sc?'':'none';
-    mp.onclick=()=>{ const ctx={type:'cmp',mi,r}; document.getElementById('editModal').classList.remove('on'); openRouteModal(r.sc,ctx); }; }
+    mp.onclick=()=>{ const ctx={type:'cmp',k:ck,r}; document.getElementById('editModal').classList.remove('on'); openRouteModal(r.sc,ctx); }; }
 }
 /* ══════ ลำดับแถวของ "ระยะทางทุกแหล่ง" — ตัวเดียวใช้ร่วมกันทั้งจอ · ปุ่มคัดลอก · ไฟล์ .xlsx ══════
    ⚠ บั๊กจริง v8.0: จอเรียงตามระยะใกล้→ไกล แต่ปุ่มคัดลอกกับไฟล์เรียงตามชื่อแหล่ง
@@ -3110,8 +3184,8 @@ async function openRouteModal(src,ctx){
     จุดกึ่งกลางโครงการ: ${esc($('dDest').value)} · พิกัดแหล่ง: ${src.lat.toFixed(5)}, ${src.lon.toFixed(5)} (${TYPE_TH[src.t]||src.t})<br>
     ระยะทาง L: <b>${useL?useL.toFixed(2):'—'} กม.</b> (${modeTxt})`;
   if(ctx&&ctx.type==='cmp'&&ctx.r){
-    const r=ctx.r; const t=cmpTotal(r,di,exOf(ctx.mi));
-    sh+=`<br>วัสดุ: <b>${esc(P.mats[ctx.mi])}</b> · ราคา ณ แหล่ง ${fmt(r.price)} บาท/${esc(r.unit)} (${mLabI(r.pm)})`;
+    const r=ctx.r; const t=cmpTotal(r,di,exOf(ctx.k));
+    sh+=`<br>วัสดุ: <b>${esc(ckMat(ctx.k))}</b> · ราคา ณ แหล่ง ${fmt(r.price)} บาท/${esc(r.unit)} (${mLabI(r.pm)})`;
     if(t.k&&t.k.legs.length){
       sh+=`<table style="margin-top:6px"><thead><tr><th>ช่วง</th><th>รถ</th><th class="num">ระยะ (กม.)</th><th class="num">D</th><th class="num">F</th><th class="num">อัตรา</th><th class="num">ค่าขนส่ง</th></tr></thead><tbody>`;
       t.k.legs.forEach((x,i)=>{ sh+=`<tr><td>${i+1}</td><td>${truckFull(x.leg.truck).split(' · ')[0]}</td>
@@ -3159,10 +3233,11 @@ function buildCalcSheet(){
     ราคาน้ำมันดีเซล ${esc(prov)} — ${oilMeta&&oilMeta.ref?esc(oilMeta.ref):'ที่ อ.เมือง'}: ${dv.toFixed(2)} บาท/ลิตร ${oilMeta?`(ราคา ปตท. มีผล ${esc(oilMeta.date)})`:''} → ใช้ตารางช่วง ${25+di}.00–${25+di}.99<br>
     เกณฑ์การคำนวณ: ตารางค่าขนส่งวัสดุก่อสร้าง ตามหนังสือกรมบัญชีกลาง ด่วนที่สุด ที่ กค 0433.2/ว 477 ลว. 26 มิ.ย. 2569</div>`;
   if(matSel.length){
-    matSel.forEach(mi=>{
-      const calc=sortedCalc(mi,di);
-      const ex=exOf(mi);
-      h+=`<h3 style="font-size:13.5px;color:var(--navy);margin:14px 0 6px">${esc(P.mats[mi])} (หน่วย: ${esc(calc[0]?calc[0].r.unit:'-')})${(ex.up||ex.bend)?` — ค่าขนขึ้น-ลง ${fmt(ex.up||0)} · ค่าดัด/แปรรูป ${fmt(ex.bend||0)} บาท/หน่วย รวมในราคารวมแล้ว`:''}</h3>
+    matSel.forEach(k=>{
+      const calc=sortedCalc(k,di);
+      const ex=exOf(k);
+      /* หน่วยมาจากตัวตนของการ์ด ไม่ใช่ calc[0] — เอกสารนี้แนบไปกับราคากลาง หน่วยผิด = ราคากลางผิด (R23) */
+      h+=`<h3 style="font-size:13.5px;color:var(--navy);margin:14px 0 6px">${esc(ckMat(k))} (หน่วย: ${esc(ckUnit(k)||'-')})${(ex.up||ex.bend)?` — ค่าขนขึ้น-ลง ${fmt(ex.up||0)} · ค่าดัด/แปรรูป ${fmt(ex.bend||0)} บาท/หน่วย รวมในราคารวมแล้ว`:''}</h3>
         <table><thead><tr><th>แหล่งวัสดุ</th><th>พิกัดแหล่ง</th><th class="num">ระยะขนส่ง (กม.)</th><th>วิธีวัด</th><th>รถ / ช่วง</th>
         <th class="num">ค่าขนส่ง</th><th class="num">ราคาวัสดุ</th><th>เดือนราคา</th><th class="num">ราคารวม</th></tr></thead><tbody>`;
       calc.forEach(({r,t},i)=>{
@@ -3190,11 +3265,11 @@ function buildCalcSheet(){
     h+=`<h3 style="font-size:13.5px;color:var(--navy);margin:16px 0 6px">สรุป — แหล่งที่ใช้ (ราคารวมถึงหน้างานต่ำสุด)</h3>
       <table><thead><tr><th>รายการวัสดุ</th><th>แหล่งที่ใช้</th><th class="num">ระยะขนส่ง (กม.)</th>
       <th class="num">ราคาวัสดุ</th><th class="num">ค่าขนส่ง</th><th class="num">ราคารวมถึงหน้างาน</th><th>หน่วย</th></tr></thead><tbody>`;
-    matSel.forEach(mi=>{
-      const best=sortedCalc(mi,di).find(x=>x.t.total!=null);
-      if(!best){ h+=`<tr><td>${esc(P.mats[mi])}</td><td colspan="6">— คำนวณไม่ได้ (ยังไม่มีระยะหรือหน่วยไม่มีในตาราง ว 477) —</td></tr>`; return; }
+    matSel.forEach(k=>{
+      const best=sortedCalc(k,di).find(x=>x.t.total!=null);
+      if(!best){ h+=`<tr><td>${esc(ckMat(k))}</td><td colspan="6">— คำนวณไม่ได้ (ยังไม่มีระยะหรือหน่วยไม่มีในตาราง ว 477) —</td></tr>`; return; }
       const r=best.r, t=best.t;
-      h+=`<tr class="cheap"><td>${esc(P.mats[mi])}</td><td><b>${esc(r.nm)}</b></td>
+      h+=`<tr class="cheap"><td>${esc(ckMat(k))}</td><td><b>${esc(r.nm)}</b></td>
         <td class="num">${r.L?r.L.toFixed(2):'—'}</td>
         <td class="num">${fmt(r.price)}</td><td class="num">${t.cost!=null?fmt(t.cost):'—'}</td>
         <td class="num"><b>${fmt(t.total)}</b></td><td>${esc(r.unit)}</td></tr>`;
@@ -3424,9 +3499,9 @@ $('dCopy').onclick=()=>{
 };
 $('dCsv').onclick=()=>{
   const di=dieselIdx(); const out=[['วัสดุ','แหล่ง','ราคาวัสดุ','เดือนราคา','ระยะL_กม','รถ','ค่าขนส่ง','ขนขึ้นลง','ดัดแปรรูป','ราคารวม','หน่วย','วิธีวัด']];
-  if(matSel.length){ matSel.forEach(mi=>{ const ex=exOf(mi); sortedCalc(mi,di).forEach(({r,t})=>{
+  if(matSel.length){ matSel.forEach(k=>{ const ex=exOf(k); sortedCalc(k,di).forEach(({r,t})=>{
     const legTxt=r.legs.filter(l=>l.L>0).map(l=>truckFull(l.truck).split(' · ')[0]+' '+l.L.toFixed(1)+'กม.').join(' + ');
-    out.push([P.mats[mi],r.nm,r.price,mLabI(r.pm),r.L||'',legTxt,t.cost??'',ex.up||0,ex.bend||0,t.total??'',r.unit,r.mode==='road'?'ถนนจริง':r.mode==='est'?'ประมาณ':'กรอกเอง']);});});}
+    out.push([ckMat(k),r.nm,r.price,mLabI(r.pm),r.L||'',legTxt,t.cost??'',ex.up||0,ex.bend||0,t.total??'',r.unit,r.mode==='road'?'ถนนจริง':r.mode==='est'?'ประมาณ':'กรอกเอง']);});});}
   else dres.forEach(r=>out.push(['',r.src.name,'','',r.L.toFixed(2),'','','','',r.mode==='road'?'ถนนจริง':'ประมาณ']));
   const blob=new Blob(['\ufeff'+out.map(r=>r.join(',')).join('\n')],{type:'text/csv;charset=utf-8'});
   const a=document.createElement('a');a.href=URL.createObjectURL(blob);a.download='ค่าขนส่งวัสดุ.csv';a.click();
@@ -3438,15 +3513,15 @@ $('dXlsx').onclick=()=>{
   const di=dieselIdx();
   const HEAD=['วัสดุ','แหล่งวัสดุ','ราคาวัสดุ (ไม่รวมขนส่ง)','เดือนราคา','ระยะ L (กม.)','รถ/ช่วง','ค่าขนส่ง','ขนขึ้น-ลง','ดัด/แปรรูป','ราคารวมถึงหน้างาน','หน่วย','ถูกสุด','วิธีวัดระยะ'];
   const aoa=[HEAD]; const sum=[['วัสดุ','แหล่งที่ถูกสุด','ราคาวัสดุ','ค่าขนส่ง','ราคารวมถึงหน้างาน','หน่วย','ระยะ L (กม.)']];
-  matSel.forEach((mi,gi)=>{ const ex=exOf(mi);
-    const calc=sortedCalc(mi,di);
+  matSel.forEach((k,gi)=>{ const ex=exOf(k);
+    const calc=sortedCalc(k,di);
     if(gi>0) aoa.push([]);                               /* เว้นบรรทัดคั่นระหว่างวัสดุ อ่านง่าย */
-    aoa.push(['── '+P.mats[mi]+' ('+calc.length+' แหล่ง) ──']);
+    aoa.push(['── '+ckMat(k)+' · บาท/'+ckUnit(k)+' ('+calc.length+' แหล่ง) ──']);
     calc.forEach(({r,t},i)=>{
       const legTxt=r.legs.filter(l=>l.L>0).map(l=>truckFull(l.truck).split(' · ')[0]+' '+l.L.toFixed(1)+' กม.').join(' + ');
-      aoa.push([P.mats[mi],r.nm,r.price,mLabI(r.pm),r.L||'',legTxt,t.cost??'',ex.up||0,ex.bend||0,t.total??'',r.unit,
+      aoa.push([ckMat(k),r.nm,r.price,mLabI(r.pm),r.L||'',legTxt,t.cost??'',ex.up||0,ex.bend||0,t.total??'',r.unit,
         i===0?'★ ถูกสุด':'',r.mode==='road'?'ถนนจริง (OSRM)':r.mode==='est'?'ประมาณ':'กรอกเอง']);
-      if(i===0) sum.push([P.mats[mi],r.nm,r.price,t.cost??'',t.total??'',r.unit,r.L||'']);
+      if(i===0) sum.push([ckMat(k),r.nm,r.price,t.cost??'',t.total??'',r.unit,r.L||'']);
     });
   });
   aoa.push([]);
@@ -3497,9 +3572,9 @@ $('dDist').onclick=()=>{
   const di=dieselIdx();
   const per=[['รายการวัสดุ','แหล่งวัสดุ','หน่วย','ราคาวัสดุ','เดือนราคา',
               'ระยะที่ใช้คิด (กม.)','ชนิดรถ','ค่าขนส่ง','ขนขึ้น-ลง','ดัด/แปรรูป','ราคารวมถึงหน้างาน','ถูกสุด']];
-  matSel.forEach(mi=>{ const ex=exOf(mi);
-    sortedCalc(mi,di).forEach(({r,t},i)=>{
-      per.push([P.mats[mi], r.nm, r.unit, r.price, mLabI(r.pm),
+  matSel.forEach(k=>{ const ex=exOf(k);
+    sortedCalc(k,di).forEach(({r,t},i)=>{
+      per.push([ckMat(k), r.nm, r.unit, r.price, mLabI(r.pm),
         legSum(r)||'', r.legs.filter(l=>l.L>0).map(l=>truckFull(l.truck).split(' · ')[0]).join(' + ')||'',
         t.cost??'', ex.up||0, ex.bend||0, t.total??'', i===0?'ถูกสุด':'']);
     });
@@ -3509,7 +3584,9 @@ $('dDist').onclick=()=>{
     w:[42,28,9,12,11,15,20,12,11,11,17,9],table:1});
   sheets.push({n:'อ่านก่อนใช้',aoa:note.concat(
     per.length>1?[[''],['ชีต "ค่าขนส่งรายวัสดุ" (ชีตที่ 2)'],
-      ['คีย์ = รายการวัสดุ + แหล่งวัสดุ — ใช้ join กับ Table4 ได้ทั้งแถว'],
+      ['คีย์ = รายการวัสดุ + แหล่งวัสดุ + หน่วย (สามช่อง ห้ามตัดหน่วยทิ้ง — กฎ R5)'],
+      ['เหตุผล: วัสดุตัวเดียวกัน แหล่งเดียวกัน ขายได้สองหน่วย (สายไฟ บาท/เมตร กับ บาท/ม้วน)'],
+      ['ถ้า join แค่ วัสดุ+แหล่ง จะได้สองแถวที่คีย์ซ้ำกัน แล้ว XLOOKUP หยิบแถวแรกไปเงียบ ๆ'],
       ['มีค่าขนส่งที่คิดตามหน่วยของวัสดุนั้นจริง (สายไฟ/คอนกรีต/ยาง คนละหน่วยกัน)'],
       ['ชีตนี้เป็นของแถม คิวรีเดิมที่อ่านชีต "ระยะขนส่ง" ทำงานเหมือนเดิมทุกอย่าง'],
       ['จำนวนแถว', per.length-1]]:
@@ -3540,7 +3617,12 @@ if($('dPrint2')) $('dPrint2').onclick=()=>printScope($('dPrint2').closest('.card
 if($('dPrintPage')) $('dPrintPage').onclick=()=>{ if(map) map.invalidateSize(); setTimeout(()=>window.print(),150); };
 
 /* ============ สถิติราคา ============ */
-let sChart=null, sSel={type:'-1', mat:-1, unit:'', srcs:new Set()};
+/* ⚠ sSel เก็บ "ชื่อจริง" ทั้งหมด (กฎ R1) — mat เป็นชื่อวัสดุ · srcs เป็นชุดชื่อแหล่ง · unit เป็นชื่อหน่วย
+   ของเดิมเก็บเป็นลำดับใน P.mats/P.srcs ซึ่ง mergeLive() สร้างใหม่ทั้งก้อนทุกครั้งที่อ่านคลัง (กฎ R24)
+   อาการ: กำลังดูกราฟวัสดุ ก. อยู่ พอมีคนกดส่งราคาเข้าคิวแล้วคลังโหลดใหม่ กราฟกลายเป็นวัสดุ ข. เงียบ ๆ
+   และตัวกรองแหล่งที่ติ๊กไว้ก็ไปติ๊กร้านอื่นแทน โดยหน้าจอไม่มีสัญญาณอะไรบอกเลย */
+let sChart=null, sSel={type:'-1', mat:'', unit:'', srcs:new Set()};
+const sMatIdx=()=>P.mats.indexOf(sSel.mat);
 let sPicked=false;   /* ผู้ใช้เลือกวัสดุเองแล้วหรือยัง — ถ้าเลือกแล้ว ห้ามเด้งกลับไปตัวตั้งต้น */
 function statInit(){
   const useReg = REG.on;
@@ -3551,8 +3633,8 @@ function statInit(){
     + cats.map(c=>`<option value="${esc(c)}" ${c===prev?'selected':''}>${esc(c)}</option>`).join('');
   $('sType').onchange=()=>{ sPicked=true; sSel.type=$('sType').value; buildMatList(true); };
   $('sMat').onchange=()=>{
-    const i=+$('sMat').value;
-    if(!isNaN(i)&&i>=0){ sPicked=true; sSel.mat=i; sSel.srcs=new Set(); buildSrcChips(); drawStat(); }
+    const v=$('sMat').value;
+    if(v){ sPicked=true; sSel.mat=v; sSel.srcs=new Set(); buildSrcChips(); drawStat(); }
   };
   buildMatList(false); buildMovers();
   /* ค่าตั้งต้น = วัสดุที่ราคาขยับแรงที่สุดในเดือนล่าสุด (ไม่ใช่ชื่อวัสดุที่ hardcode ไว้)
@@ -3560,7 +3642,7 @@ function statInit(){
      เป็นวัสดุตัวแรกตามตัวอักษรไปแล้วเสมอ เงื่อนไข <0 จึงไม่เคยเป็นจริง (โค้ดตาย) */
   if(!sPicked){
     const d=topMoverMat();
-    if(d>=0){ sSel.mat=d; $('sMat').value=String(d); sSel.srcs=new Set(); }
+    if(d){ sSel.mat=d; $('sMat').value=d; sSel.srcs=new Set(); }
   }
   buildSrcChips(); drawStat();
 }
@@ -3568,18 +3650,19 @@ function statInit(){
 function buildMatList(jump){
   const t=sSel.type, set=new Set();
   P.series.forEach(sr=>{
-    if(t===-1||t==='-1'||t===undefined) { set.add(sr[0]); return; }
-    if(REG.on){ if((P.matCat||{})[sr[0]]===t) set.add(sr[0]); }
-    else if(P.types[sr[3]]===t) set.add(sr[0]);
+    const nm=P.mats[sr[0]]; if(!nm) return;
+    if(t===-1||t==='-1'||t===undefined) { set.add(nm); return; }
+    if(REG.on){ if((P.matCat||{})[sr[0]]===t) set.add(nm); }
+    else if(P.types[sr[3]]===t) set.add(nm);
   });
-  const list=[...set].sort((a,b)=>P.mats[a].localeCompare(P.mats[b],'th'));
-  $('sMat').innerHTML=list.map(i=>`<option value="${i}">${esc(P.mats[i])}</option>`).join('')
-    ||'<option value="-1">— ไม่มีรายการในประเภทนี้ —</option>';
+  const list=[...set].sort((a,b)=>a.localeCompare(b,'th'));
+  $('sMat').innerHTML=list.map(nm=>`<option value="${esc(nm)}">${esc(nm)}</option>`).join('')
+    ||'<option value="">— ไม่มีรายการในประเภทนี้ —</option>';
   if(jump||!list.includes(sSel.mat)){
-    if(list.length){ sSel.mat=list[0]; $('sMat').value=String(list[0]); sSel.srcs=new Set(); }
-    else sSel.mat=-1;
+    if(list.length){ sSel.mat=list[0]; $('sMat').value=list[0]; sSel.srcs=new Set(); }
+    else sSel.mat='';
     buildSrcChips(); drawStat();
-  } else $('sMat').value=String(sSel.mat);
+  } else $('sMat').value=sSel.mat;
   kddAll();
 }
 /* ══════ จับแถวที่น่าจะบันทึกหน่วยผิด (กฎ R23) ══════
@@ -3615,7 +3698,7 @@ function drawUnitOutliers(){
   $('uoBox').innerHTML='<div class="tw" style="max-height:340px"><table><thead><tr>'
     +'<th>รายการวัสดุ</th><th>หน่วยที่บันทึกไว้</th><th class="num">ต่ำสุด</th><th>แหล่งที่ต่ำสุด</th>'
     +'<th class="num">สูงสุด</th><th>แหล่งที่สูงสุด</th><th class="num">ต่างกัน</th></tr></thead><tbody>'
-    +list.map(o=>`<tr style="cursor:pointer" data-mi="${o.mi}" title="กดเพื่อไปดูกราฟของรายการนี้">
+    +list.map(o=>`<tr style="cursor:pointer" data-mi="${esc(o.mat)}" data-mu="${esc(o.unit)}" title="กดเพื่อไปดูกราฟของรายการนี้">
       <td>${esc(o.mat)}</td><td>${esc(o.unit)}</td>
       <td class="num">${fmt(o.lo.p)}</td><td>${esc(P.srcs[o.lo.si]||'(ไม่ระบุ)')}</td>
       <td class="num">${fmt(o.hi.p)}</td><td>${esc(P.srcs[o.hi.si]||'(ไม่ระบุ)')}</td>
@@ -3623,12 +3706,12 @@ function drawUnitOutliers(){
     +'</tbody></table></div>'
     +'<div class="hint" style="margin-top:6px">วิธีแก้: เปิดแท็บ PRICES ในชีท หาแถวของแหล่งที่ผิด แล้วแก้คอลัมน์ "หน่วย" ให้ถูก '
     +'· แก้แล้วกดรีเฟรชคลังข้อมูล ตัวเลขจะแยกเป็นคนละเส้นทันที</div>';
-  $('uoBox').querySelectorAll('tr[data-mi]').forEach(tr=>tr.onclick=()=>gotoStat(+tr.dataset.mi,-1));
+  $('uoBox').querySelectorAll('tr[data-mi]').forEach(tr=>tr.onclick=()=>gotoStat(tr.dataset.mi,'',tr.dataset.mu));
 }
 /* ── หน่วยของรายการที่เลือก · เรียงตัวที่มีข้อมูลเยอะสุดขึ้นก่อน ── */
 function statUnits(){
-  const cnt={};
-  P.series.filter(s=>s[0]===sSel.mat).forEach(s=>{
+  const cnt={}; const mi=sMatIdx();
+  P.series.filter(s=>s[0]===mi).forEach(s=>{
     const u=P.units[s[2]]||'(ไม่ระบุ)';
     cnt[u]=(cnt[u]||0)+s[4].filter(v=>v!=null).length;
   });
@@ -3637,15 +3720,16 @@ function statUnits(){
 function buildSrcChips(){
   /* ชิปแหล่งต้องอยู่ในหน่วยที่กำลังดูอยู่เท่านั้น — ไม่งั้นกดแหล่งที่เป็นอีกหน่วยแล้วกราฟว่างเปล่า
      (แหล่งเดียวกันอาจขายทั้ง บาท/เมตร และ บาท/ม้วน ซึ่งเป็นคนละเส้นกัน) */
-  const us=statUnits();
+  const us=statUnits(); const mi=sMatIdx();
   if(us.length && (!sSel.unit || us.indexOf(sSel.unit)<0)) sSel.unit=us[0];
-  const ss=P.series.filter(s=>s[0]===sSel.mat
+  const ss=P.series.filter(s=>s[0]===mi
     && (us.length<=1 || (P.units[s[2]]||'(ไม่ระบุ)')===sSel.unit));
   $('sSrcs').innerHTML=ss.map(s=>{
-    const on = sSel.srcs.size===0 || sSel.srcs.has(s[1]);
-    return `<span class="chip selchip ${on?'on':''}" data-s="${s[1]}">${esc(P.srcs[s[1]]||'(ไม่ระบุ)')}</span>`;}).join('') || '<span class="hint">เลือกวัสดุก่อน</span>';
+    const nm=P.srcs[s[1]]||'(ไม่ระบุ)';
+    const on = sSel.srcs.size===0 || sSel.srcs.has(nm);
+    return `<span class="chip selchip ${on?'on':''}" data-s="${esc(nm)}">${esc(nm)}</span>`;}).join('') || '<span class="hint">เลือกวัสดุก่อน</span>';
   $('sSrcs').querySelectorAll('.selchip').forEach(c=>c.onclick=()=>{
-    const v=+c.dataset.s;
+    const v=c.dataset.s;
     if(sSel.srcs.has(v)) sSel.srcs.delete(v); else sSel.srcs.add(v);
     buildSrcChips(); drawStat();});
 }
@@ -3655,12 +3739,12 @@ function drawStat(){
      ของเดิมกรองแค่ชื่อวัสดุ แล้วหยิบหน่วยของ "เส้นแรก" มาป้ายทุกเส้น
      กราฟจึงเอา 438 กับ 42,520 มาไว้แกนเดียวกัน แล้วเขียนว่า บาท/ม้วน ทั้งแผง
      = อ่านแล้วเข้าใจผิดว่าราคาต่างกัน 100 เท่า ทั้งที่เป็นคนละหน่วยกัน */
-  const units=statUnits();
+  const units=statUnits(); const mi=sMatIdx();
   if(units.length && (!sSel.unit || units.indexOf(sSel.unit)<0)) sSel.unit=units[0];
-  const ss=P.series.filter(s=>s[0]===sSel.mat
+  const ss=P.series.filter(s=>s[0]===mi
     && (units.length<=1 || (P.units[s[2]]||'(ไม่ระบุ)')===sSel.unit)
-    && (sSel.srcs.size===0||sSel.srcs.has(s[1])));
-  $('sTitle').textContent='เทรนด์ราคา: '+(P.mats[sSel.mat]||'—')
+    && (sSel.srcs.size===0||sSel.srcs.has(P.srcs[s[1]]||'(ไม่ระบุ)')));
+  $('sTitle').textContent='เทรนด์ราคา: '+(sSel.mat||'—')
     +(units.length>1?' · หน่วย '+sSel.unit:'');
   /* มีหลายหน่วย = ต้องให้เลือกทีละหน่วย และบอกให้รู้ตัวว่าเทียบข้ามหน่วยไม่ได้ */
   const ub=$('sUnits');
@@ -3695,7 +3779,7 @@ function drawStat(){
   const unit=unitTxt?('บาท/'+unitTxt):'';
   /* รายการที่กำลังดูอยู่ มีแถวที่หน่วยน่าจะผิดปนอยู่ไหม — เตือนตรงนี้เลย ไม่ต้องรอไปเจอเองข้างล่าง */
   const uo=(typeof unitOutliers==='function'?unitOutliers():[])
-    .find(o=>o.mi===sSel.mat && o.unit===(unitTxt||'(ไม่ระบุ)'));
+    .find(o=>o.mat===sSel.mat && o.unit===(unitTxt||'(ไม่ระบุ)'));
   $('sCap').innerHTML=(ss.length?`${ss.length} แหล่ง · หน่วย ${esc(unit)} · ช่องว่างของเส้น = เดือนที่ไม่มีข้อมูล`:'ไม่พบข้อมูล')
     +(uo?`<div style="margin-top:5px"><span class="pill warn">หน่วยน่าจะผิด</span> ในหน่วย <b>${esc(uo.unit)}</b> เดียวกันนี้
        ราคาต่างกันถึง <b>${Math.round(uo.ratio)} เท่า</b> (${esc(P.srcs[uo.lo.si]||'-')} ${fmt(uo.lo.p)}
@@ -3784,7 +3868,7 @@ function drawCov(){
        + P.months.map((_,i)=>`<th class="cen">${mLabI(i)}</th>`).join('')
        + '<th class="num">ขาด</th></tr></thead><tbody>';
   shown.forEach(r=>{
-    h+=`<tr><td class="nm" data-mi="${r.mi}">${esc(r.nm)}</td><td class="num">${r.tot}</td>`
+    h+=`<tr><td class="nm" data-mi="${esc(r.nm)}">${esc(r.nm)}</td><td class="num">${r.tot}</td>`
       + r.per.map(n=>{
           const cls=n===0?'none':n>=r.tot?'full':'part';
           return `<td class="cov"><span class="covc ${cls}">${n===0?'—':n+'/'+r.tot}</span></td>`;
@@ -3792,7 +3876,7 @@ function drawCov(){
       + `<td class="num ${r.missMonths.length?'up':'dn'}">${r.missMonths.length}</td></tr>`;
   });
   $('tblCov').innerHTML=h+'</tbody>';
-  $('tblCov').querySelectorAll('td.nm').forEach(td=>td.onclick=()=>gotoStat(+td.dataset.mi,-1));
+  $('tblCov').querySelectorAll('td.nm').forEach(td=>td.onclick=()=>gotoStat(td.dataset.mi,''));
 }
 /* ── มุมมองที่ 1: ช่องทางที่มา × เดือน — ตอบคำถาม "พาณิชย์/ยาง/เว็บ แอดเข้าเดือนไหนแล้วบ้าง" ── */
 function drawCovChan(){
@@ -3976,16 +4060,17 @@ function countUpAll(root){
 
 /* เด้งไปหน้าสถิติราคา พร้อมตั้งรายการ (และแหล่ง ถ้าระบุ) ให้เรียบร้อย
    ใช้ร่วมกันระหว่างการ์ด KPI หน้าสรุป กับตารางรายการที่ราคาขยับ */
-function gotoStat(mi, si){
-  if(!(mi>=0)) return;
+function gotoStat(mat, src, unit){
+  if(!mat) return;
   sPicked=true;                       /* คลิกมาจากตารางอื่น = ผู้ใช้เลือกเอง ห้ามเด้งกลับตัวตั้งต้น */
-  sSel.type='-1'; sSel.mat=mi;
-  sSel.srcs = (si>=0)? new Set([si]) : new Set();
+  sSel.type='-1'; sSel.mat=mat;
+  if(unit) sSel.unit=unit;            /* มาจากตารางหน่วยน่าสงสัย = ต้องลงที่หน่วยนั้นเป๊ะ (กฎ R23) */
+  sSel.srcs = src? new Set([src]) : new Set();
   const b=document.querySelector('#nav button[data-p=stat]'); if(b) b.click();
   setTimeout(()=>{
     if($('sType')) $('sType').value='-1';
     buildMatList(false);
-    if($('sMat')) $('sMat').value=String(mi);
+    if($('sMat')) $('sMat').value=mat;
     kddAll(); buildSrcChips(); drawStat();
     const el=$('sTitle'); if(el&&el.scrollIntoView) el.scrollIntoView({behavior:'smooth',block:'center'});
   },70);
@@ -4005,20 +4090,20 @@ function moversList(){
 }
 function topMoverMat(){
   const mv=moversList();
-  if(mv.length) return mv[0].s[0];
+  if(mv.length) return P.mats[mv[0].s[0]]||'';
   /* เดือนล่าสุดยังไม่มีใครขยับเลย — เอาวัสดุตัวแรกที่มีราคาจริง ไม่ปล่อยหน้าว่าง */
   const s=P.series.find(x=>x[4].some(v=>v!=null));
-  return s?s[0]:-1;
+  return s?(P.mats[s[0]]||''):'';
 }
 function buildMovers(){
   const mv=moversList();
   let h='<thead><tr><th>รายการ</th><th>แหล่ง</th><th class="num">เดิม</th><th class="num">ล่าสุด</th><th class="num">Δ%</th></tr></thead><tbody>';
   mv.slice(0,40).forEach(m=>{
-    h+=`<tr style="cursor:pointer" data-m="${m.s[0]}"><td>${esc(P.mats[m.s[0]])}</td><td>${esc(P.srcs[m.s[1]]||'-')}</td>
+    h+=`<tr style="cursor:pointer" data-m="${esc(P.mats[m.s[0]]||'')}" data-mu="${esc(P.units[m.s[2]]||'')}"><td>${esc(P.mats[m.s[0]])}</td><td>${esc(P.srcs[m.s[1]]||'-')}</td>
       <td class="num">${fmt(m.b)}</td><td class="num">${fmt(m.a)}</td>
       <td class="num ${m.pct>0?'up':'dn'}">${(m.pct>0?'+':'')+m.pct.toFixed(2)}%</td></tr>`;});
   $('tblMovers').innerHTML=h+'</tbody>';
-  $('tblMovers').querySelectorAll('tr[data-m]').forEach(tr=>tr.onclick=()=>gotoStat(+tr.dataset.m,-1));
+  $('tblMovers').querySelectorAll('tr[data-m]').forEach(tr=>tr.onclick=()=>gotoStat(tr.dataset.m,'',tr.dataset.mu));
 }
 
 /* ============ นำเข้าข้อมูล ============ */
@@ -4685,10 +4770,16 @@ function pendMeta(chan){
           how:(s.match(/·\s*(JSON-LD|meta|เดาจากข้อความ)\s*(?:·|$)/)||[])[1]||'',
           raw:raw?raw[1]:'', fac:raw?raw[2]:''};
 }
-/* ราคาล่าสุดที่มีอยู่จริงในคลัง สำหรับ วัสดุ+แหล่ง+หน่วย เดียวกัน — ใช้เทียบว่าดึงมาเพี้ยนไหม */
+/* ราคาล่าสุดที่มีอยู่จริงในคลัง สำหรับ วัสดุ+แหล่ง+หน่วย เดียวกัน — ใช้เทียบว่าดึงมาเพี้ยนไหม
+   ⚠ หน่วยเป็นเงื่อนไขบังคับ ห้ามผ่อนผัน (กฎ R23)
+   ของเดิมเขียน (ui<0||x[2]===ui) แปลว่า "ถ้าหน่วยนี้ยังไม่เคยมีในคลัง ก็เอาหน่วยอะไรก็ได้มาเทียบ"
+   ซึ่งเป็นกรณีที่อันตรายที่สุดพอดี: ราคาตันตัวแรกของปูนที่เคยมีแต่ถุง จะถูกเทียบกับราคาถุง
+   แล้วขึ้นธง ⚠ ว่า "+1,900%" บนหน้าอนุมัติ — คนอนุมัติเห็นแล้วไม่กล้ากด ทั้งที่ราคาถูกต้อง
+   ไม่มีหน่วยเดียวกันให้เทียบ = ตอบว่า "ยังไม่เคยมี" ตรง ๆ ถูกกว่าเดาแล้วหลอกคนอนุมัติ */
 function lastKnown(mat,src,unit){
   const mi=P.mats.indexOf(mat); if(mi<0) return null;
   const si=P.srcs.indexOf(src), ui=P.units.indexOf(unit);
+  if(String(unit||'').trim() && ui<0) return null;
   const s=P.series.find(x=>x[0]===mi&&(si<0||x[1]===si)&&(ui<0||x[2]===ui));
   if(!s) return null;
   for(let i=s[4].length-1;i>=0;i--) if(s[4][i]!=null) return {p:s[4][i],at:mLabI(i)};
@@ -4782,19 +4873,19 @@ async function loadWebItems(silent){
         <td><span class="pill ${bad?'bad':(c[6]?'ok':'warn')}">${esc(c[8]||'รอดึง')}</span>
           ${c[9]?'<div class="hint">'+esc(c[9])+'</div>':''}</td>
         <td>${/^https?:\/\//i.test(String(c[4]||''))?'<a href="'+esc(c[4])+'" target="_blank" rel="noopener">เปิด ↗</a>':'—'}</td>
-        <td style="text-align:center"><button class="btn ghost wid" data-m="${esc(c[0])}" data-s="${esc(c[3])}" title="เอาลิงก์นี้ออกจากทะเบียน" style="padding:2px 9px">✕</button></td></tr>`;
+        <td style="text-align:center"><button class="btn ghost wid" data-m="${esc(c[0])}" data-s="${esc(c[3])}" data-u="${esc(c[1]||'')}" title="เอาลิงก์นี้ออกจากทะเบียน" style="padding:2px 9px">✕</button></td></tr>`;
       }).join('')+'</tbody></table></div>'
       +'<div class="hint" style="margin-top:6px">ราคาที่ดึงได้ <b>ไม่เข้าคลังเอง</b> — จะไปโผล่ที่การ์ด "รายการรออนุมัติ" ให้กดอนุมัติก่อนเสมอ</div>';
     /* ยกเลิกลิงก์ — ไม่มีปุ่มนี้ ลิงก์ที่ร้านปิดไปแล้วหรือใส่ผิดจะค้างวิ่งดึงทุกเดือนตลอดไป */
     box.querySelectorAll('.wid').forEach(b=>b.onclick=async()=>{
-      const mat=b.dataset.m, src=b.dataset.s, url=($('cfgUrl').value||'').trim();
+      const mat=b.dataset.m, src=b.dataset.s, unit=b.dataset.u||'', url=($('cfgUrl').value||'').trim();
       if(!url){ toast('ยังไม่ตั้ง WebApp URL (ดูหน้า ระบบ)'); return; }
-      if(!confirm('ยกเลิกลิงก์นี้ออกจากทะเบียน?\n\n'+mat+'\nแหล่ง '+src
+      if(!confirm('ยกเลิกลิงก์นี้ออกจากทะเบียน?\n\n'+mat+'\nหน่วย '+(unit||'(ไม่ระบุ)')+'\nแหล่ง '+src
         +'\n\nเดือนหน้าระบบจะไม่ดึงราคาของคู่นี้อีก (ราคาที่เคยอนุมัติไปแล้วยังอยู่ในคลังตามเดิม)')) return;
       b.disabled=true;
       try{
         const r=await (await fetch(url,{method:'POST',headers:{'Content-Type':'text/plain;charset=utf-8'},
-          body:JSON.stringify({token:WTOKEN,action:'weblink_del',mat,src})})).json();
+          body:JSON.stringify({token:WTOKEN,action:'weblink_del',mat,src,unit})})).json();
         if(!r.ok) throw new Error(r.error||'ยกเลิกไม่สำเร็จ');
         toast('ยกเลิกลิงก์แล้ว '+(r.removed||0)+' รายการ'); loadWebItems();
       }catch(e){ toast('ยกเลิกไม่สำเร็จ: '+e.message+' — ชีทอาจยังใช้ Code.gs ก่อนรุ่น 30'); b.disabled=false; }
