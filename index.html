@@ -573,6 +573,8 @@ th.sortable.desc::after{content:'↓';opacity:1}
 .calcsheet{display:none}
 .notebox{border-left:3px solid var(--gold);background:#FCF8EE;padding:9px 13px;border-radius:0 8px 8px 0;font-size:12px;color:#5C4813;margin-top:10px}
 .notebox.teal{border-left-color:var(--teal);background:var(--teal-soft);color:#0b5a54}
+/* หัวตารางต้องจัดตรงกับเนื้อข้างล่างเสมอ (กฎ R21) — เนื้อเป็นชิป/แถบ = กึ่งกลาง ไม่ใช่ชิดขวา */
+.cen{text-align:center}
 .tabbar{display:flex;gap:6px;margin-bottom:10px;flex-wrap:wrap}
 .tabbar .btn.ghost.on{border-color:var(--teal);color:var(--teal);font-weight:700}
 /* แท็บทั้งระบบใช้ทรงเดียว: ปุ่มกล่อง .btn.ghost · ตัวที่เลือกอยู่ขึ้นขอบเขียวด้วยคลาส .on
@@ -796,6 +798,7 @@ canvas{max-width:100%}
       <div><label class="f">ประเภท</label><select id="sType"></select></div>
       <div><label class="f">รายการวัสดุ (พิมพ์ค้นหาได้)</label><select id="sMat"></select></div>
       <div><label class="f">แหล่ง</label><div class="chips" id="sSrcs" style="margin-top:2px"></div></div>
+      <div id="sUnits" class="chips" style="margin-top:4px"></div>
     </div>
   </div>
   <div class="card" style="margin-top:12px">
@@ -970,7 +973,7 @@ canvas{max-width:100%}
     <div>
     <div class="card">
       <h2 data-ic="clock">คิวรอส่งขึ้นคลังข้อมูล <span class="pill warn" id="qStat">0 รายการ</span></h2>
-      <div class="tw" style="max-height:520px"><table id="tblQueue"><thead><tr><th>เดือน</th><th>รายการ</th><th>หน่วย</th><th class="num">ราคา</th><th>แหล่ง</th><th>ช่องทาง</th><th>อ้างอิง</th><th>สถานะชื่อ</th></tr></thead><tbody id="qRows"></tbody></table></div>
+      <div class="tw" style="max-height:520px"><table id="tblQueue"><thead><tr><th>เดือน</th><th>รายการ</th><th>หน่วย</th><th class="num">ราคา</th><th>แหล่ง</th><th>ช่องทาง</th><th>อ้างอิง</th><th>สถานะชื่อ</th><th style="width:64px;text-align:center">ยกเลิก</th></tr></thead><tbody id="qRows"></tbody></table></div>
     </div>
     </div>
   </div>
@@ -1237,8 +1240,8 @@ const SELFCHK={missing:new Set(),ok:false};
 const $ = id => { const el=document.getElementById(id);
   if(!el) SELFCHK.missing.add(id);
   return el; };
-const APPVER='8.12';        /* เลขรุ่นที่เดียว — ที่อื่นดึงจากตัวนี้ */
-const APPDATE='23 ส.ค. 2569';   /* วันที่ของรุ่นนี้ ที่เดียวเหมือนกัน */
+const APPVER='8.13';        /* เลขรุ่นที่เดียว — ที่อื่นดึงจากตัวนี้ */
+const APPDATE='25 ส.ค. 2569';   /* วันที่ของรุ่นนี้ ที่เดียวเหมือนกัน */
 /* ⚠ ป้ายรุ่นบนแถบข้างเคยเป็นข้อความตายตัวใน HTML (v6.2) พอขึ้นรุ่นใหม่แล้วลืมแก้
    ผู้ใช้เลยเห็นเลขรุ่นเก่าทั้งที่โค้ดใหม่หมดแล้ว — ต่อไปนี้เขียนจาก APPVER เสมอ */
 try{ const _bv=document.getElementById('bVer'); if(_bv) _bv.textContent='v'+APPVER;
@@ -1638,6 +1641,81 @@ function specTablePick(html, mat) {
   }
   if (best) { best.ties = ties; if (ties) best.tier = 'น่าจะใช่'; }
   return best;
+}
+/* ═══ หน้าที่ไม่ได้ใช้ <table> ═══════════════════════════════════════════
+   เว็บร้านค้าสมัยใหม่จำนวนมากจัดตารางด้วย div/ul ไม่ใช่ <table> จริง
+   ดูด้วยตาเหมือนตารางเป๊ะ แต่ specTablePick หาไม่เจอสักแถว → ขึ้น "หาราคาไม่เจอ"
+   ชั้นนี้จึงไม่สนโครงแท็บเลย: ไล่ข้อความทั้งหน้าเป็นชิ้น ๆ ตามลำดับที่ปรากฏจริง
+   ชิ้นไหนสเปกตรงกับวัสดุ → มองไปข้างหน้าอีกไม่กี่ชิ้นเพื่อหาตัวเลขที่หน้าตาเป็นราคา
+   ถ้าเจอ "ชื่อสินค้าตัวถัดไป" ก่อนเจอราคา = เลิกมอง เพราะราคาที่อยู่ถัดไปเป็นของชิ้นอื่นแล้ว */
+function _spChunks(html) {
+  var h = String(html == null ? '' : html)
+    .replace(/<script[\s\S]*?<\/script>/gi, ' ')
+    .replace(/<style[\s\S]*?<\/style>/gi, ' ')
+    .replace(/<!--[\s\S]*?-->/g, ' ');
+  var raw = h.split(/<[^>]*>/), out = [];
+  for (var i = 0; i < raw.length; i++) {
+    var t = _spText(raw[i]);
+    if (t) out.push(t);
+  }
+  return out;
+}
+/** ตัวเลขที่หน้าตาเป็นราคา ในชิ้นที่มีข้อความอื่นปนอยู่ด้วย
+    รับเฉพาะที่มีเครื่องหมายเงินกำกับ หรือเป็นเลขทศนิยมสองตำแหน่งแบบราคา
+    เข้มไว้ก่อน — ปล่อยหลวมแล้วจะไปคว้าเลขรุ่น/เลขมาตรฐานมาเป็นราคา */
+function _spPriceLoose(s) {
+  var t = String(s);
+  var m = t.match(/฿\s*([\d,]+(?:\.\d{1,2})?)/)
+       || t.match(/([\d,]+(?:\.\d{1,2})?)\s*บาท/)
+       || t.match(/(?:^|\s)([\d,]+\.\d{2})(?:\s|$|\/)/);
+  return m ? _spPrice(m[1]) : null;
+}
+function specTextPick(html, mat) {
+  if (!mat) return null;
+  var R = specTok(mat), ch = _spChunks(html), best = null, ties = 0;
+  for (var i = 0; i < ch.length; i++) {
+    if (_spPrice(ch[i]) != null) continue;              /* ชิ้นที่เป็นตัวเลขล้วน ไม่ใช่ชื่อสินค้า */
+    var m = _spMatchTok(R, specTok(ch[i]));
+    if (!m) continue;
+    for (var j = i + 1; j < ch.length && j <= i + 8; j++) {
+      var p = _spPrice(ch[j]);
+      if (p == null) p = _spPriceLoose(ch[j]);
+      if (p == null) {
+        if (_spMatchTok(R, specTok(ch[j]))) break;      /* ชนชื่อตัวถัดไปแล้ว เลิกมอง */
+        continue;
+      }
+      if (!best || m.score > best.score) {
+        best = { price: p, row: ch[i], col: '', score: m.score, tier: m.tier, why: m.why }; ties = 0;
+      } else if (m.score === best.score && best.price !== p) ties++;
+      break;
+    }
+  }
+  if (best) { best.ties = ties; if (ties) best.tier = 'น่าจะใช่'; }
+  return best;
+}
+/** ตัวเลือกหลัก: ลองตารางจริงก่อน (แม่นกว่าเพราะรู้แกน) แล้วค่อยตกมาที่ไล่ข้อความ */
+function specPagePick(html, mat) {
+  var t = specTablePick(html, mat);
+  if (t) { t.how = 'ตารางราคา'; return t; }
+  var x = specTextPick(html, mat);
+  if (x) { x.how = 'รายการในหน้า'; return x; }
+  return null;
+}
+/** หาไม่เจอแล้วต้องบอกได้ว่า "เห็นอะไรบ้าง" ไม่ใช่บอกแค่ว่าไม่เจอ (กฎ R17)
+    คืนข้อมูลพอให้ตอบได้ทันทีว่าเป็นเพราะหน้าเว็บ · เพราะชื่อในบัญชีคุม · หรือเพราะยังไม่ Deploy */
+function specWhyNot(html, mat) {
+  var R = specTok(mat), ch = _spChunks(html), near = [], n = 0;
+  for (var i = 0; i < ch.length; i++) {
+    var C = specTok(ch[i]);
+    if (!C.dim.length && !C.code.length) continue;
+    if (_spHasAll(R.dim, C.dim) || (R.code.length && _spHasAll(R.code, C.code))) {
+      n++; if (near.length < 3) near.push(ch[i].slice(0, 60));
+    }
+  }
+  return { tables: specTables(html).length, chunks: ch.length, nearN: n, near: near,
+           need: (R.dim.length ? 'ขนาด ' + R.dim.join('·') + ' ' : '')
+               + (R.code.length ? 'รหัส ' + R.code.join('·').toUpperCase() + ' ' : '')
+               + (R.num.length ? 'เลข ' + R.num.join('·') : '') };
 }
 /*<</SPECMATCH>>*/
 /* หาชื่อมาตรฐาน/หมวดของชื่อดิบ: ตรงเป๊ะ → ยุบช่องว่าง → ตัดวรรณยุกต์ */
@@ -2272,6 +2350,12 @@ function buildSummary(){
   const GROUPS = [
     ['งานทาง', [
       ['หินคลุก', /หินคลุก/, /^ลบ\.?ม/],
+      /* หิน 3/4 · 3/8 · หินฝุ่น — ต้องกันไม่ให้ชนกันเอง เพราะชื่อในคลังเขียนได้หลายแบบ
+         3/4" · 3/4 นิ้ว · เบอร์ 1 (= 3/4)  ·  3/8" · 3/8 นิ้ว · เบอร์ 2 (= 3/8)
+         หินฝุ่นต้องไม่จับ "หินคลุก" และหิน 3/4 ต้องไม่จับ 3/8 */
+      ['หิน 3/4', /หิน.*(3\s*\/\s*4|เบอร์\s*1\b)/, /^ลบ\.?ม/],
+      ['หิน 3/8', /หิน.*(3\s*\/\s*8|เบอร์\s*2\b)/, /^ลบ\.?ม/],
+      ['หินฝุ่น', /หินฝุ่น/, /^ลบ\.?ม/],
       ['ลูกรัง', /ลูกรัง/, /^ลบ\.?ม/],
       ['ดินถม', /ดินถม/, /^ลบ\.?ม/],
       ['ทรายหยาบ', /ทรายหยาบ/, /^ลบ\.?ม/]]],
@@ -2292,7 +2376,7 @@ function buildSummary(){
       ['Wiremesh RB 6 @0.20 ม.', /wiremesh[\s\S]*RB ?6\b[\s\S]*0\.20 ?[x×] ?0\.20/i, /^ตร\.?ม\.?$/]]],
     ['งานไฟฟ้า', [
       ['สาย CV ขนาด 2 x 25 ตร.มม.', /\bCV\b[\s\S]*2 ?[x×] ?25\b/i, /^เมตร|^ม\.$/],
-      ['สาย NYY ขนาด 2 x 25 ตร.มม.', /NYY[\s\S]*2 ?[x×] ?25\b/i, /^เมตร|^ม้วน|^ม\.$/],
+      ['สาย NYY ขนาด 2 x 25 ตร.มม.', /NYY[\s\S]*2 ?[x×] ?25\b/i, /^ม้วน|^เมตร/],
       /* VCT-G ยังไม่มีในบัญชีคุม (มีแต่ VCT ธรรมดา) — จับเฉพาะ VCT-G เท่านั้น
          ไม่มีก็ขึ้นว่ายังไม่มีในคลัง ไม่เอา VCT ธรรมดามาแสดงแทน จะได้ไม่เข้าใจผิด */
       ['สาย VCT-G ขนาด 2 x 2.5 ตร.มม.', /VCT ?-? ?G\b[\s\S]*2 ?[x×] ?2\.5\b/i, /^เมตร|^ม้วน|^ม\.$/],
@@ -3446,7 +3530,7 @@ if($('dPrint2')) $('dPrint2').onclick=()=>printScope($('dPrint2').closest('.card
 if($('dPrintPage')) $('dPrintPage').onclick=()=>{ if(map) map.invalidateSize(); setTimeout(()=>window.print(),150); };
 
 /* ============ สถิติราคา ============ */
-let sChart=null, sSel={type:'-1', mat:-1, srcs:new Set()};
+let sChart=null, sSel={type:'-1', mat:-1, unit:'', srcs:new Set()};
 let sPicked=false;   /* ผู้ใช้เลือกวัสดุเองแล้วหรือยัง — ถ้าเลือกแล้ว ห้ามเด้งกลับไปตัวตั้งต้น */
 function statInit(){
   const useReg = REG.on;
@@ -3488,8 +3572,22 @@ function buildMatList(jump){
   } else $('sMat').value=String(sSel.mat);
   kddAll();
 }
+/* ── หน่วยของรายการที่เลือก · เรียงตัวที่มีข้อมูลเยอะสุดขึ้นก่อน ── */
+function statUnits(){
+  const cnt={};
+  P.series.filter(s=>s[0]===sSel.mat).forEach(s=>{
+    const u=P.units[s[2]]||'(ไม่ระบุ)';
+    cnt[u]=(cnt[u]||0)+s[4].filter(v=>v!=null).length;
+  });
+  return Object.keys(cnt).sort((a,b)=>cnt[b]-cnt[a]);
+}
 function buildSrcChips(){
-  const ss=P.series.filter(s=>s[0]===sSel.mat);
+  /* ชิปแหล่งต้องอยู่ในหน่วยที่กำลังดูอยู่เท่านั้น — ไม่งั้นกดแหล่งที่เป็นอีกหน่วยแล้วกราฟว่างเปล่า
+     (แหล่งเดียวกันอาจขายทั้ง บาท/เมตร และ บาท/ม้วน ซึ่งเป็นคนละเส้นกัน) */
+  const us=statUnits();
+  if(us.length && (!sSel.unit || us.indexOf(sSel.unit)<0)) sSel.unit=us[0];
+  const ss=P.series.filter(s=>s[0]===sSel.mat
+    && (us.length<=1 || (P.units[s[2]]||'(ไม่ระบุ)')===sSel.unit));
   $('sSrcs').innerHTML=ss.map(s=>{
     const on = sSel.srcs.size===0 || sSel.srcs.has(s[1]);
     return `<span class="chip selchip ${on?'on':''}" data-s="${s[1]}">${esc(P.srcs[s[1]]||'(ไม่ระบุ)')}</span>`;}).join('') || '<span class="hint">เลือกวัสดุก่อน</span>';
@@ -3499,13 +3597,33 @@ function buildSrcChips(){
     buildSrcChips(); drawStat();});
 }
 function drawStat(){
-  const ss=P.series.filter(s=>s[0]===sSel.mat && (sSel.srcs.size===0||sSel.srcs.has(s[1])));
-  $('sTitle').textContent='เทรนด์ราคา: '+(P.mats[sSel.mat]||'—');
+  /* ⚠ ห้ามเอาคนละหน่วยมาวาดกราฟเดียวกันเด็ดขาด (กฎ R23)
+     บั๊กจริง: "สาย NYY 2x25" มีทั้ง บาท/เมตร (438) และ บาท/ม้วน (42,520)
+     ของเดิมกรองแค่ชื่อวัสดุ แล้วหยิบหน่วยของ "เส้นแรก" มาป้ายทุกเส้น
+     กราฟจึงเอา 438 กับ 42,520 มาไว้แกนเดียวกัน แล้วเขียนว่า บาท/ม้วน ทั้งแผง
+     = อ่านแล้วเข้าใจผิดว่าราคาต่างกัน 100 เท่า ทั้งที่เป็นคนละหน่วยกัน */
+  const units=statUnits();
+  if(units.length && (!sSel.unit || units.indexOf(sSel.unit)<0)) sSel.unit=units[0];
+  const ss=P.series.filter(s=>s[0]===sSel.mat
+    && (units.length<=1 || (P.units[s[2]]||'(ไม่ระบุ)')===sSel.unit)
+    && (sSel.srcs.size===0||sSel.srcs.has(s[1])));
+  $('sTitle').textContent='เทรนด์ราคา: '+(P.mats[sSel.mat]||'—')
+    +(units.length>1?' · หน่วย '+sSel.unit:'');
+  /* มีหลายหน่วย = ต้องให้เลือกทีละหน่วย และบอกให้รู้ตัวว่าเทียบข้ามหน่วยไม่ได้ */
+  const ub=$('sUnits');
+  if(ub){
+    ub.innerHTML = units.length>1
+      ? '<span class="hint" style="margin-right:6px">รายการนี้มีหลายหน่วย — เทียบข้ามหน่วยไม่ได้ ดูทีละหน่วย:</span>'
+        +units.map(u=>`<span class="chip selchip ${u===sSel.unit?'on':''}" data-u="${esc(u)}">บาท/${esc(u)}</span>`).join('')
+      : '';
+    ub.querySelectorAll('.selchip').forEach(c=>c.onclick=()=>{
+      sSel.unit=c.dataset.u; sSel.srcs.clear(); buildSrcChips(); drawStat(); });
+  }
   const labels=P.months.map((_,i)=>mLabI(i));
   const data={labels,datasets:ss.map((s,i)=>({label:P.srcs[s[1]]||'(ไม่ระบุ)',data:s[4],borderColor:PALETTE[i%PALETTE.length],backgroundColor:PALETTE[i%PALETTE.length],spanGaps:true,tension:.25,pointRadius:3}))};
   if(typeof Chart==='undefined'){ $('sCap').textContent='กราฟต้องต่ออินเทอร์เน็ตเพื่อโหลดตัววาดครั้งแรก · ตารางด้านล่างใช้ได้ตามปกติ'; fillSeriesTable(ss); return; }
   if(sChart) sChart.destroy();
-  const unitTxt=ss.length?(P.units[ss[0][2]]||''):'';
+  const unitTxt=(units.length>1?sSel.unit:(ss.length?(P.units[ss[0][2]]||''):''))||'';
   sChart=new Chart($('sChart'),{type:'line',data,options:{
     responsive:true, maintainAspectRatio:false,
     /* nearest = ชี้ตรงไหนบอกเส้นนั้นเส้นเดียว (เดิม index = เหมารวมทุกเส้นในเดือนนั้น อ่านยาก) */
@@ -3521,7 +3639,7 @@ function drawStat(){
                     {minimumFractionDigits:2,maximumFractionDigits:2})+(unitTxt?' บาท/'+unitTxt:'')
         }}},
     scales:{y:{grid:{color:'#e1e0d9'},ticks:{font:{family:'Sarabun'}}},x:{grid:{display:false},ticks:{font:{family:'Sarabun'}}}}}});
-  const unit=ss.length?('บาท/'+(P.units[ss[0][2]]||'-')):'';
+  const unit=unitTxt?('บาท/'+unitTxt):'';
   $('sCap').textContent=ss.length?`${ss.length} แหล่ง · หน่วย ${unit} · ช่องว่างของเส้น = เดือนที่ไม่มีข้อมูล`:'ไม่พบข้อมูล';
   fillSeriesTable(ss);
 }
@@ -3604,7 +3722,7 @@ function drawCov(){
     ? 'พบ '+fmtInt(rows.length)+' รายการ'+(rows.length>COV_CAP?' — แสดง '+COV_CAP+' แถวแรก (ไฟล์ .xlsx ได้ครบทุกแถว)':'')
     : 'ไม่มีรายการตามเงื่อนไขที่เลือก';
   let h='<thead><tr><th>รายการวัสดุ</th><th class="num">แหล่ง</th>'
-       + P.months.map((_,i)=>`<th class="num">${mLabI(i)}</th>`).join('')
+       + P.months.map((_,i)=>`<th class="cen">${mLabI(i)}</th>`).join('')
        + '<th class="num">ขาด</th></tr></thead><tbody>';
   shown.forEach(r=>{
     h+=`<tr><td class="nm" data-mi="${r.mi}">${esc(r.nm)}</td><td class="num">${r.tot}</td>`
@@ -3627,7 +3745,7 @@ function drawCovChan(){
     return;
   }
   let h='<thead><tr><th>ช่องทางที่มา</th>'
-      + P.months.map((_,i)=>`<th class="num">${mLabI(i)}</th>`).join('')
+      + P.months.map((_,i)=>`<th class="cen">${mLabI(i)}</th>`).join('')
       + '<th class="num">รวมแถวทุกเดือน</th><th class="num">รายการวัสดุ (ไม่ซ้ำ)</th><th>ล่าสุด</th></tr></thead><tbody>';
   names.forEach(n=>{
     const o=CHAN[n], per=chanPer(o);
@@ -3660,7 +3778,7 @@ function drawCovCat(){
   if(!$('tblCovCat')) return;
   const rows=covCatRows();
   let h='<thead><tr><th>หมวดวัสดุ</th><th class="num">รายการ</th><th class="num">คู่ราคา</th>'
-      + P.months.map((_,i)=>`<th class="num">${mLabI(i)}</th>`).join('')
+      + P.months.map((_,i)=>`<th class="cen">${mLabI(i)}</th>`).join('')
       + '<th>ล่าสุด</th></tr></thead><tbody>';
   rows.forEach(r=>{
     let last=-1; for(let i=NM-1;i>=0;i--) if(r.per[i]){ last=i; break; }
@@ -4344,6 +4462,16 @@ function impInit(){
         h+='<div class="hint" style="margin-top:4px">เติมราคาให้ในช่องแล้ว — ตรวจแล้วกด "เพิ่มเข้าคิว" ได้เลย</div>';
       } else {
         h+='<span class="pill bad">อ่านราคาไม่ได้</span> '+esc(d.note||'');
+        /* ⚠ ห้ามจบแค่ "อ่านไม่ได้" — ต้องบอกว่าเห็นอะไร ไม่งั้นแยกไม่ออกว่าเป็นเพราะ
+           หน้าเว็บ · ชื่อในบัญชีคุม · หรือชีทยังไม่ได้ Deploy รุ่นใหม่ (กฎ R17) */
+        const w=d.why||{};
+        h+='<div class="hint" style="margin-top:4px">ชีทตอบกลับจาก <b>Code.gs รุ่น '+esc(String(d.ver||'?'))+'</b>'
+          +' · เจอตาราง '+(w.tables|0)+' · ข้อความ '+(w.chunks|0)+' ชิ้น'
+          +(w.need?' · สเปกที่ต้องเจอ <b>'+esc(w.need)+'</b>':'')+'</div>';
+        if(w.nearN) h+='<div class="hint">เจอชื่อใกล้เคียง '+w.nearN+' ชิ้น เช่น '
+          +w.near.map(x=>'<b>'+esc(x)+'</b>').join(' · ')
+          +'<br>= หน้าเว็บอ่านได้ แต่สเปกไม่ตรง — ตรวจว่าชื่อในบัญชีคุมเขียนขนาด/รหัสตรงกับที่ร้านเขียนไหม</div>';
+        else if(w.chunks) h+='<div class="hint">ไม่เจอชื่อใกล้เคียงเลยในหน้านี้ — ลิงก์อาจไม่ใช่หน้าที่มีสินค้าตัวนี้</div>';
       }
       /* ราคามาจากตารางแบบแถว×คอลัมน์ ต้องบอกให้ครบว่าหยิบช่องไหน ไม่งั้นตรวจย้อนไม่ได้เลย */
       if(d.cell) h+='<div class="hint" style="margin-top:4px">หยิบจากตาราง: แถว <b>'+esc(d.cell.row)
@@ -4584,6 +4712,7 @@ async function loadWebItems(silent){
     box.innerHTML=`<div class="tw" style="max-height:230px"><table><thead><tr>
       <th>รายการวัสดุ</th><th>หน่วย</th><th class="num">ตัวคูณ</th><th>แหล่ง</th>
       <th class="num">ราคาบนเว็บ</th><th class="num">ต่อหน่วยมาตรฐาน</th><th>ดึงล่าสุด</th><th>สถานะ</th><th>ลิงก์</th>
+      <th style="width:64px;text-align:center">ยกเลิก</th>
       </tr></thead><tbody>`
       +rows.map(c=>{
         const bad=/ไม่ได้|ไม่เจอ/.test(String(c[8]||''));
@@ -4593,9 +4722,24 @@ async function loadWebItems(silent){
         <td>${esc(c[7]||'ยังไม่เคยดึง')}</td>
         <td><span class="pill ${bad?'bad':(c[6]?'ok':'warn')}">${esc(c[8]||'รอดึง')}</span>
           ${c[9]?'<div class="hint">'+esc(c[9])+'</div>':''}</td>
-        <td>${/^https?:\/\//i.test(String(c[4]||''))?'<a href="'+esc(c[4])+'" target="_blank" rel="noopener">เปิด ↗</a>':'—'}</td></tr>`;
+        <td>${/^https?:\/\//i.test(String(c[4]||''))?'<a href="'+esc(c[4])+'" target="_blank" rel="noopener">เปิด ↗</a>':'—'}</td>
+        <td style="text-align:center"><button class="btn ghost wid" data-m="${esc(c[0])}" data-s="${esc(c[3])}" title="เอาลิงก์นี้ออกจากทะเบียน" style="padding:2px 9px">✕</button></td></tr>`;
       }).join('')+'</tbody></table></div>'
       +'<div class="hint" style="margin-top:6px">ราคาที่ดึงได้ <b>ไม่เข้าคลังเอง</b> — จะไปโผล่ที่การ์ด "รายการรออนุมัติ" ให้กดอนุมัติก่อนเสมอ</div>';
+    /* ยกเลิกลิงก์ — ไม่มีปุ่มนี้ ลิงก์ที่ร้านปิดไปแล้วหรือใส่ผิดจะค้างวิ่งดึงทุกเดือนตลอดไป */
+    box.querySelectorAll('.wid').forEach(b=>b.onclick=async()=>{
+      const mat=b.dataset.m, src=b.dataset.s, url=($('cfgUrl').value||'').trim();
+      if(!url){ toast('ยังไม่ตั้ง WebApp URL (ดูหน้า ระบบ)'); return; }
+      if(!confirm('ยกเลิกลิงก์นี้ออกจากทะเบียน?\n\n'+mat+'\nแหล่ง '+src
+        +'\n\nเดือนหน้าระบบจะไม่ดึงราคาของคู่นี้อีก (ราคาที่เคยอนุมัติไปแล้วยังอยู่ในคลังตามเดิม)')) return;
+      b.disabled=true;
+      try{
+        const r=await (await fetch(url,{method:'POST',headers:{'Content-Type':'text/plain;charset=utf-8'},
+          body:JSON.stringify({token:WTOKEN,action:'weblink_del',mat,src})})).json();
+        if(!r.ok) throw new Error(r.error||'ยกเลิกไม่สำเร็จ');
+        toast('ยกเลิกลิงก์แล้ว '+(r.removed||0)+' รายการ'); loadWebItems();
+      }catch(e){ toast('ยกเลิกไม่สำเร็จ: '+e.message+' — ชีทอาจยังใช้ Code.gs ก่อนรุ่น 30'); b.disabled=false; }
+    });
   }catch(e){ if(!silent) box.innerHTML='<div class="hint">อ่านทะเบียนลิงก์ไม่ได้ — ต้องวาง Code.gs รุ่น 25 ขึ้นไป แล้วรัน ตั้งค่าแท็บให้ครบ หนึ่งครั้ง</div>'; }
 }
 
@@ -4708,7 +4852,7 @@ function impChips(){
 function renderQueue(){
   $('qStat').textContent=queue.length+' รายการ';
   const hi=$('hcImp'); if(hi) hi.innerHTML=impChips();
-  $('qRows').innerHTML=queue.map(q=>{
+  $('qRows').innerHTML=queue.map((q,i)=>{
     /* แถวจดลิงก์ไม่มีราคาและไม่ผูกกับเดือนไหน — ต้องดูออกทันทีว่าคนละชนิดกับแถวราคา */
     const per=q.linkOnly
       ? '<span class="pill">🌐 ระบบดึงราคาเอง</span>'+(q.fac&&q.fac!==1?' <span class="hint">×'+q.fac+'</span>':'')
@@ -4717,8 +4861,17 @@ function renderQueue(){
     <td>${esc(q.mat)}</td><td>${esc(q.unit)}${q.webUnit?'<div class="hint">เว็บขายเป็น '+esc(q.webUnit)+'</div>':''}</td>
     <td class="num">${per}</td><td>${esc(q.src)}</td>
     <td>${q.chan?esc(q.chan):'<span class="pill bad">ยังไม่ระบุ</span>'}</td><td>${esc(q.ref||'—')}</td>
-    <td>${q.known?'<span class="pill ok">ตรงบัญชีคุม</span>':'<span class="pill warn">ชื่อใหม่ — รอจับคู่</span>'}</td></tr>`;
+    <td>${q.known?'<span class="pill ok">ตรงบัญชีคุม</span>':'<span class="pill warn">ชื่อใหม่ — รอจับคู่</span>'}</td>
+    <td style="text-align:center"><button class="btn ghost qdel" data-i="${i}" title="เอาแถวนี้ออกจากคิว" style="padding:2px 9px">✕</button></td></tr>`;
   }).join('');
+  /* ยกเลิกทีละแถว — เดิมเผลอเพิ่มผิดแล้วเอาออกไม่ได้เลย ต้องรีเฟรชทิ้งทั้งคิว
+     ⚠ ผูกด้วยตำแหน่งในอาร์เรย์ จึงต้องวาดใหม่ทุกครั้งหลังลบ ไม่งั้นเลขเลื่อนแล้วลบผิดแถว */
+  $('qRows').querySelectorAll('.qdel').forEach(b=>b.onclick=()=>{
+    const i=+b.dataset.i, q=queue[i]; if(!q) return;
+    queue.splice(i,1);
+    toast('เอาออกจากคิวแล้ว: '+(q.mat||'').slice(0,40)+' · เหลือ '+queue.length+' รายการ');
+    renderQueue();
+  });
 }
 
 const CHAN_OPTS=['ใบเสนอราคา','หน่วยงานราชการ','เว็บร้านค้า','TPSO','กรอกเอง'];
