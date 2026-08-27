@@ -405,6 +405,13 @@ h2 .ic{color:var(--teal)}
 .mr-l>.mr-price{flex:none;width:104px;text-align:right}
 .mr-l>.mr-url{flex:1 1 130px;width:auto}
 .mr-l>.mr-fac{flex:none;width:64px;text-align:right}
+/* กล่องล็อกการเชื่อมต่อ */
+.cfglock{margin-top:10px;font-size:12.5px;line-height:1.7;display:flex;gap:8px;align-items:flex-start;flex-wrap:wrap}
+.cfglock .cfgtxt{flex:1 1 260px;min-width:0;color:var(--ink2)}
+.cfglock.on{padding:8px 11px;border-radius:9px;border:1px solid var(--line);background:var(--paper2)}
+.cfglock.drift{border:1px solid var(--bad);background:rgba(190,60,60,.07)}
+input.cfglocked{background:var(--paper2);color:var(--ink2);cursor:not-allowed}
+.chip.warn{background:rgba(190,60,60,.12);border-color:var(--bad);color:var(--bad);font-weight:700}
 .mr-l>.mr-cv{flex:none;width:34px;padding:0;font-size:15px;line-height:1}
 /* แถบแปลงหน่วย — โผล่เฉพาะแถวที่กำลังแปลง ปกติแถวยังเป็น 2 บรรทัดตามที่ KORN สั่งไว้ */
 .mr-cvbar{display:flex;gap:6px;align-items:center;flex-wrap:wrap;margin-top:6px;
@@ -670,7 +677,7 @@ canvas{max-width:100%}
   <div class="brand">
     <h1><span class="blogo" aria-hidden="true"></span>CostBase</h1>
     <div class="sub">ฐานข้อมูลราคาวัสดุ · แขวงทางหลวงชนบทขอนแก่น</div>
-    <div class="chips"><span class="chip" id="bLatest">—</span><span class="chip" id="bVer">v—</span></div>
+    <div class="chips"><span class="chip" id="bLatest">—</span><span class="chip" id="bVer">v—</span><span class="chip warn" id="bCfg" style="display:none"></span></div>
     <button class="instbtn" id="installBtn" style="display:none" title="เพิ่ม CostBase ลงหน้าจอโฮม เปิดใช้เหมือนแอป">⤓ ติดตั้งลงหน้าจอโฮม</button>
   </div>
   <!-- ⚠ ปุ่มเมนูไม่ได้พิมพ์ไว้ตรงนี้แล้ว — สร้างจากทะเบียน PAGES ตอนเปิดไฟล์ (กฎ R13)
@@ -1221,6 +1228,7 @@ canvas{max-width:100%}
       <div><label class="f">Google Sheet ID (01.0 คลังข้อมูลวัสดุก่อสร้าง)</label><input type="text" id="cfgSheet" value="1jhyW18mC-0MlpG96vd2qevIWNPSA6GIWStfZzm0FYZo"></div>
       <div><label class="f">Apps Script WebApp URL (ตัวรับข้อมูล)</label><input type="text" id="cfgUrl" value="https://script.google.com/macros/s/AKfycbwvthYmoWcY6UUrm_rAzn7bJf7jw_jurSDSCWZOJjjACdPPTzk6MYjds52DEjOs8oQI/exec"></div>
     </div>
+    <div id="cfgLockBar" class="cfglock"></div>
     <div class="statusline" style="margin-top:10px">
       <button class="btn ghost" id="liveBtn">อ่านคลังใหม่เดี๋ยวนี้</button>
       <span class="hint" id="liveStat">—</span>
@@ -1323,10 +1331,11 @@ const SELFCHK={missing:new Set(),ok:false};
 const $ = id => { const el=document.getElementById(id);
   if(!el) SELFCHK.missing.add(id);
   return el; };
-const APPVER='8.25';        /* เลขรุ่นที่เดียว — ที่อื่นดึงจากตัวนี้ */
-const APPDATE='25 ส.ค. 2569';   /* วันที่ของรุ่นนี้ ที่เดียวเหมือนกัน */
+const APPVER='8.26';        /* เลขรุ่นที่เดียว — ที่อื่นดึงจากตัวนี้ */
+const APPDATE='27 ส.ค. 2569';   /* วันที่ของรุ่นนี้ ที่เดียวเหมือนกัน */
 /* ⚠ ป้ายรุ่นบนแถบข้างเคยเป็นข้อความตายตัวใน HTML (v6.2) พอขึ้นรุ่นใหม่แล้วลืมแก้
    ผู้ใช้เลยเห็นเลขรุ่นเก่าทั้งที่โค้ดใหม่หมดแล้ว — ต่อไปนี้เขียนจาก APPVER เสมอ */
+try{ setTimeout(()=>{ try{ drawCfgChip(); }catch(e){} },0); }catch(e){}
 try{ const _bv=document.getElementById('bVer'); if(_bv) _bv.textContent='v'+APPVER;
      document.title='CostBase v'+APPVER+' — ฐานข้อมูลราคาวัสดุ ขทช.ขอนแก่น'; }catch(e){}
 /* ต้อง escape ทั้ง " และ ' ด้วย — ชื่อวัสดุในบัญชีคุมมีเครื่องหมายนิ้ว (") 1,687 ชื่อ และฟุต (') 71 ชื่อ
@@ -1845,6 +1854,78 @@ function regCat(name){
   return REG.cat[raw] || REG.ncat[rNorm(raw)] || REG.tcat[rTight(raw)] || (sg?REG.gcat[sg]:null) || null;
 }
 let OILH=[];   /* ประวัติราคาน้ำมันจากแท็บ OIL — [{d,pv,p,ref,ym,day}] เรียงตามวันที่ */
+/* ══════════ ล็อกการเชื่อมต่อคลังข้อมูล ══════════
+   KORN: "ล็อคการเชื่อมต่อข้อมูลให้ที เผื่อมีคนแก้"
+
+   ⚠ พูดกันตรง ๆ ก่อนว่าอันนี้กันอะไรได้จริง — ไฟล์นี้เป็น HTML ไฟล์เดียว รันในเบราว์เซอร์ของคนใช้
+   ใครเปิด DevTools หรือแก้ไฟล์เองก็เปลี่ยนได้อยู่ดี "ล็อก" ตรงนี้จึงคือกันมือลั่น ไม่ใช่ระบบความปลอดภัย
+   ด่านจริงที่กันคนตั้งใจได้มีสองชั้น และอยู่ฝั่งอื่นทั้งคู่:
+     ① ADMIN_PASS ฝั่ง Apps Script — คำสั่งที่เขียนทับ/ล้างข้อมูลต้องใช้รหัส (กฎ R8)
+     ② สิทธิ์แชร์ของ Google Sheet เอง — คนที่ไม่มีสิทธิ์เขียน ก็เขียนไม่ได้ต่อให้แก้ URL
+   ป้ายบนหน้าจอต้องเขียนแบบนี้ ห้ามเขียนให้เข้าใจว่า "ล็อกแล้วปลอดภัย" (กฎ R17 — ห้ามให้คนเข้าใจผิด)
+
+   สิ่งที่ทำได้จริงและมีค่าที่สุดคือ "จับได้ว่าค่าถูกเปลี่ยน" —
+   ค่าที่ถูกต้องฝังอยู่ใน value= ของไฟล์ ใช้เป็นความจริงชุดเดียว (กฎ R3)
+   ต่างจากไฟล์เมื่อไร ขึ้นเตือนทุกหน้าทันที พร้อมปุ่มคืนค่า (กฎ R22 — มีปุ่มถอยเสมอ)
+   เพราะส่งข้อมูลเข้าชีทผิดตัว = ความเสียหายที่ตามเก็บไม่ได้ (ลำดับศักดิ์ขั้น 1) */
+const CFGF={};                    /* ค่าที่ฝังมากับไฟล์ — อ่านครั้งเดียวตอนบูต ก่อนใครแตะได้ */
+['cfgSheet','cfgUrl'].forEach(k=>{ const el=document.getElementById(k);
+  if(el) CFGF[k]=el.getAttribute('value')||''; });
+let CFGOPEN=false;                /* ปลดล็อกอยู่หรือเปล่า — เริ่มที่ล็อกเสมอ ไม่จำข้ามการเปิดหน้า (กฎ R2) */
+const cfgNow=k=>((document.getElementById(k)||{}).value||'').trim();
+const cfgDrift=()=>['cfgSheet','cfgUrl'].filter(k=>cfgNow(k)!==(CFGF[k]||'').trim());
+function drawCfgLock(){
+  const bar=document.getElementById('cfgLockBar'); if(!bar) return;
+  const d=cfgDrift();
+  ['cfgSheet','cfgUrl'].forEach(k=>{ const el=document.getElementById(k); if(!el) return;
+    el.readOnly=!CFGOPEN; el.classList.toggle('cfglocked',!CFGOPEN);
+    el.title=CFGOPEN?'ปลดล็อกอยู่ — แก้ได้':'ล็อกอยู่ · กดปุ่มปลดล็อกก่อนถึงจะแก้ได้'; });
+  const label={cfgSheet:'Google Sheet ID', cfgUrl:'Apps Script WebApp URL'};
+  bar.className='cfglock on'+(d.length?' drift':'');
+  bar.innerHTML =
+    (d.length
+      ? `<span class="pill bad">ค่าถูกแก้ไป ${d.length} ช่อง</span>
+         <span class="cfgtxt"><b>${d.map(k=>esc(label[k])).join(' · ')}</b> ไม่ตรงกับค่าที่ตั้งไว้ในไฟล์ —
+         ถ้าไม่ได้ตั้งใจ กดคืนค่าเดิมก่อนส่งข้อมูลใด ๆ ขึ้นคลัง</span>`
+      : `<span class="pill ok">${CFGOPEN?'ปลดล็อกอยู่':'ล็อกอยู่'}</span>
+         <span class="cfgtxt">ค่าตรงกับที่ตั้งไว้ในไฟล์ ·
+         ${CFGOPEN?'<b>แก้ได้ตอนนี้</b> — เปลี่ยนหน้าแล้วจะล็อกกลับเอง'
+                  :'ช่องด้านบนแก้ไม่ได้ กันเผลอพิมพ์ทับ'}
+         <br><span class="hint">ล็อกนี้กันมือลั่นเท่านั้น ไม่ใช่ระบบความปลอดภัย —
+         คนที่ตั้งใจแก้ยังเปิดซอร์สแก้ได้ · ด่านจริงคือ <b>รหัสผู้ดูแล</b> ฝั่ง Apps Script
+         กับ <b>สิทธิ์แชร์ของ Google Sheet</b></span></span>`)
+    + `<span style="display:flex;gap:6px;flex-wrap:wrap">
+        <button class="btn ghost" id="cfgLockBtn">${CFGOPEN?'🔒 ล็อกกลับ':'🔓 ปลดล็อกเพื่อแก้'}</button>
+        ${d.length?'<button class="btn" id="cfgRestore">คืนค่าเดิมจากไฟล์</button>':''}
+       </span>`;
+  const lb=document.getElementById('cfgLockBtn');
+  if(lb) lb.onclick=()=>{
+    if(CFGOPEN){ CFGOPEN=false; drawCfgLock(); return; }
+    /* ปลดล็อกต้องเป็นการกระทำที่ "ตั้งใจ" ไม่ใช่กดพลาด — ให้พิมพ์คำยืนยัน
+       ไม่ใช้รหัสผ่านเก็บในไฟล์ เพราะรหัสที่อยู่ในไฟล์ที่คนเปิดอ่านได้ ไม่ใช่รหัส (กฎ R17) */
+    const w=prompt('การแก้สองช่องนี้ทำให้ทั้งระบบชี้ไปคลังอื่น\n'
+      +'ราคาที่ส่งขึ้นไปหลังจากนี้จะไม่เข้าคลังเดิม\n\n'
+      +'ถ้าตั้งใจจริง พิมพ์คำว่า  ปลดล็อก  แล้วกดตกลง');
+    if(String(w||'').trim()!=='ปลดล็อก'){ if(w!==null) toast('พิมพ์ไม่ตรง — ยังล็อกอยู่ตามเดิม'); return; }
+    CFGOPEN=true; drawCfgLock(); toast('ปลดล็อกแล้ว — เปลี่ยนหน้าเมื่อไรจะล็อกกลับเอง');
+  };
+  const rb=document.getElementById('cfgRestore');
+  if(rb) rb.onclick=()=>{
+    d.forEach(k=>{ const el=document.getElementById(k); if(el) el.value=(CFGF[k]||'').trim(); });
+    CFGOPEN=false; drawCfgLock(); drawCfgChip();
+    toast('คืนค่าการเชื่อมต่อตามไฟล์แล้ว'); try{ loadLive(); }catch(e){}
+  };
+  drawCfgChip();
+}
+/* ป้ายบนหัวเว็บ — ต้องเห็นได้ทุกหน้า ไม่ใช่เห็นเฉพาะตอนเปิดหน้าระบบ
+   คนที่กำลังจะกด "ส่งขึ้นคลัง" อยู่หน้านำเข้าข้อมูล ต้องรู้ก่อนกด */
+function drawCfgChip(){
+  const c=document.getElementById('bCfg'); if(!c) return;
+  const d=cfgDrift();
+  c.style.display=d.length?'':'none';
+  c.textContent=d.length?'⚠ การเชื่อมต่อถูกแก้ — ตรวจหน้าระบบก่อนส่งข้อมูล':'';
+  c.title=d.length?d.map(k=>k+': '+cfgNow(k)).join('\n'):'';
+}
 let CONN={sheet:null, web:null, ver:0, prices:0, reg:0, src:0, oil:null, at:''};
 function drawConn(){
   const el=$('tblConn'); if(!el) return;
@@ -2344,6 +2425,9 @@ document.querySelectorAll('#nav button').forEach(b=>b.onclick=()=>{
   const pg=$('pg-'+b.dataset.p); pg.classList.add('active'); stagger(pg);
   if(b.dataset.p==='dist' && map) setTimeout(()=>map.invalidateSize(),60);
   try{ bumpPage(b.dataset.p); }catch(e){}
+  /* เปลี่ยนหน้าเมื่อไร ล็อกการเชื่อมต่อกลับเสมอ — ปลดล็อกทิ้งไว้แล้วเดินไปทำอย่างอื่น
+     คนถัดไปที่มานั่งต่อจะเจอช่องที่แก้ได้โดยไม่รู้ว่ามีใครปลดไว้ (กฎ R2 — ไม่จำสถานะข้ามงาน) */
+  try{ if(typeof CFGOPEN!=='undefined' && CFGOPEN){ CFGOPEN=false; drawCfgLock(); } }catch(e){}
   window.scrollTo({top:0});
 });
 
@@ -5935,6 +6019,9 @@ function expInit(){
 
 /* ============ ระบบ ============ */
 function sysInit(){
+  drawCfgLock();
+  ['cfgSheet','cfgUrl'].forEach(k=>{ const el=$(k); if(el&&!el.dataset.cfgw){ el.dataset.cfgw='1';
+    el.oninput=()=>{ drawCfgLock(); }; } });
   const srcs=[
     ['ราคาวัสดุ (คลังบน Google Sheet)','แท็บ PRICES ในชีท 01.0 คลังข้อมูลวัสดุก่อสร้าง — รวมทุกช่องทาง (TPSO · หน่วยงานราชการ · เว็บร้านค้า · กรอกเอง) · ไฟล์แดชบอร์ดไม่เก็บราคาไว้เอง อ่านสดจากคลังทุกครั้งที่เปิด · ราคาทุกรายการไม่รวมค่าขนส่ง'],
     ['ตารางค่าขนส่งวัสดุก่อสร้าง (ว 477)','หนังสือกรมบัญชีกลาง ด่วนที่สุด ที่ กค 0433.2/ว 477 ลว. 26 มิ.ย. 2569 — ฝังครบทุกค่าในระบบ ดูรายละเอียดที่การ์ดหลักเกณฑ์ หน้าสรุป'],
