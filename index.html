@@ -405,6 +405,19 @@ h2 .ic{color:var(--teal)}
 .mr-l>.mr-price{flex:none;width:104px;text-align:right}
 .mr-l>.mr-url{flex:1 1 130px;width:auto}
 .mr-l>.mr-fac{flex:none;width:64px;text-align:right}
+.mr-l>.mr-cv{flex:none;width:34px;padding:0;font-size:15px;line-height:1}
+/* แถบแปลงหน่วย — โผล่เฉพาะแถวที่กำลังแปลง ปกติแถวยังเป็น 2 บรรทัดตามที่ KORN สั่งไว้ */
+.mr-cvbar{display:flex;gap:6px;align-items:center;flex-wrap:wrap;margin-top:6px;
+  padding:7px 9px;border:1px dashed var(--line);border-radius:9px;background:var(--paper2)}
+.mr-cvbar .mr-cvl{font-size:13px;color:var(--ink2);white-space:nowrap}
+.mr-cvbar>input.mr-cvn{flex:none;width:92px;text-align:right}
+.mr-cvbar>input.mr-cvu{flex:none;width:120px}
+.mr-cvbar .kdd.mr-cvu{flex:none;width:120px}
+.mr-cvbar .mr-cvr{flex:1 1 190px;min-width:0;font-size:13px;color:var(--ink2)}
+.mr-cvbar .mr-cvgo{flex:none}
+.mr-cvdone{margin-top:6px;font-size:12.5px;color:var(--ink2);
+  padding:5px 9px;border-left:3px solid var(--gold);background:var(--paper2);border-radius:0 7px 7px 0}
+@media(max-width:520px){ .mr-cvbar>input.mr-cvn,.mr-cvbar>input.mr-cvu,.mr-cvbar .kdd.mr-cvu{flex:1 1 110px;width:auto} }
 .mr-l>.mr-probe,.mrow>.mr-x{flex:none;padding:5px 10px}
 /* ป้ายสถานะลิงก์ — ยอมให้ย่อได้ ห้ามดันแถวจนล้น (กฎ R10) รายละเอียดเต็มอยู่ในทูลทิป */
 .mr-l>.mr-st{flex:0 1 auto;min-width:0;max-width:118px;overflow:hidden;font-size:11.5px}
@@ -417,6 +430,7 @@ h2 .ic{color:var(--teal)}
 @media(max-width:520px){
   .mr-l{flex-wrap:wrap}
   .mr-l>.mr-cat,.mr-l>.mr-unit,.mr-l>.mr-price,.mr-l>.mr-fac,.mr-l>.mr-mat,.mr-l>.mr-url{flex:1 1 130px;width:auto}
+  .mr-l>.mr-cv{flex:none;width:34px}
 }
 .frow.src{grid-template-columns:minmax(0,1fr)}
 .frow.src.two{grid-template-columns:minmax(150px,1fr) minmax(140px,1fr)}
@@ -1309,7 +1323,7 @@ const SELFCHK={missing:new Set(),ok:false};
 const $ = id => { const el=document.getElementById(id);
   if(!el) SELFCHK.missing.add(id);
   return el; };
-const APPVER='8.24';        /* เลขรุ่นที่เดียว — ที่อื่นดึงจากตัวนี้ */
+const APPVER='8.25';        /* เลขรุ่นที่เดียว — ที่อื่นดึงจากตัวนี้ */
 const APPDATE='25 ส.ค. 2569';   /* วันที่ของรุ่นนี้ ที่เดียวเหมือนกัน */
 /* ⚠ ป้ายรุ่นบนแถบข้างเคยเป็นข้อความตายตัวใน HTML (v6.2) พอขึ้นรุ่นใหม่แล้วลืมแก้
    ผู้ใช้เลยเห็นเลขรุ่นเก่าทั้งที่โค้ดใหม่หมดแล้ว — ต่อไปนี้เขียนจาก APPVER เสมอ */
@@ -1853,7 +1867,7 @@ function drawConn(){
 }
 function applyRegistry(rows){
   /* rows: [ลำดับ, ชื่อเดิม, หมวด, หน่วย, ชื่อมาตรฐาน] — ชื่อมาตรฐานว่าง = ใช้ชื่อเดิม */
-  REG.map={}; REG.cat={}; REG.nmap={}; REG.tmap={}; REG.ncat={}; REG.tcat={}; REG.gmap={}; REG.gcat={}; REG.unit={};
+  REG.map={}; REG.cat={}; REG.nmap={}; REG.tmap={}; REG.ncat={}; REG.tcat={}; REG.gmap={}; REG.gcat={}; REG.unit={}; REG.units={};
   rows.forEach(r=>{
     const old=String(r[1]||'').trim(); if(!old) return;
     const std=String(r[4]||'').trim()||old;
@@ -1867,7 +1881,12 @@ function applyRegistry(rows){
            else if(REG.gmap[g]!==std) REG.gmap[g]=null; }
     const c=String(r[2]||'').trim();
     /* หน่วยตามบัญชีคุม — เอาไว้เตือนตอนกรอกหน่วยไม่ตรง (คนละหน่วย = คนละเส้นราคา คนละแถวในคลัง) */
-    const u=String(r[3]||'').trim(); if(u&&!REG.unit[std]) REG.unit[std]=u;
+    /* ⚠ วัสดุชื่อเดียวมีได้หลายหน่วยจริง ๆ — สายไฟขายทั้ง "เมตร" และ "ม้วน" ราคาต่างกันร้อยเท่า (กฎ R23)
+       ของเดิมเก็บหน่วยแรกที่เจอตัวเดียว หน่วยที่สองหายไปเงียบ ๆ แล้วพอคนกรอกหน่วยที่ถูก
+       ระบบดันเตือนว่า "หน่วยไม่ตรงบัญชีคุม" ทั้งที่คนกรอกถูก ระบบเองที่จำไม่ครบ */
+    const u=String(r[3]||'').trim();
+    if(u){ if(!REG.unit[std]) REG.unit[std]=u;                       /* ตัวแรก — ใช้เป็นค่าเริ่มเมื่อมีหน่วยเดียว */
+           (REG.units[std]=REG.units[std]||[]).indexOf(u)<0 && REG.units[std].push(u); }
     if(c&&!REG.cat[std]){ REG.cat[std]=c; REG.ncat[rNorm(std)]=c; REG.tcat[rTight(std)]=c; }
     if(c){ const g2=rSig(old); if(g2 && !(g2 in REG.gcat)) REG.gcat[g2]=c; }
   });
@@ -2672,6 +2691,17 @@ function unitsOfMat(mat){
   P.series.forEach(s=>{ if(s[0]===mi) u.add(P.units[s[2]]||''); });
   return [...u];
 }
+/* ทุกหน่วยที่ "ชื่อนี้" เคยมีจริง — จากบัญชีคุม (คนประกาศ) + จากคลัง (เคยมีราคาจริง)
+   ใช้เป็นตัวเลือกหน่วยในฟอร์มกรอก แทนการยัดหน่วยเดียวให้แล้วเตือนว่าผิดทีหลัง (กฎ R23 · R2) */
+function unitsForMat(mat){
+  const raw=String(mat||'').trim(); if(!raw) return [];
+  const std=regStd(raw)||raw;
+  const s=new Set();
+  ((REG.units||{})[std]||[]).forEach(u=>{ if(u) s.add(u); });
+  unitsOfMat(std).forEach(u=>{ if(u) s.add(u); });
+  return [...s];
+}
+
 let mmMap=null, mmLayer=null;
 let SRCBYNAME=Object.fromEntries(SRC.map(s=>[s.name,s]));
 /* ══ ทะเบียนลำดับแหล่ง — "ตัวคุม" ══
@@ -4241,7 +4271,11 @@ const urlKey=u=>String(u||'').trim().replace(/[#?].*$/,'').replace(/\/+$/,'').to
 function witemOf(url){ const k=urlKey(url); if(!k) return null;
   return WITEMS.find(c=>urlKey(c[4])===k)||null; }
 const MR_MAX=20;
-const mrBlank=()=>({cat:'',mat:'',unit:'',price:'',url:'',fac:''});
+const mrBlank=()=>({cat:'',mat:'',unit:'',price:'',url:'',fac:'',conv:null,_cv:null});
+/* conv = หลักฐานว่าราคาช่องนี้ได้มาจากการแปลงหน่วย (เก็บ ราคาเดิม·หน่วยเดิม·ตัวคูณ)
+   _cv  = สถานะแถบแปลงที่กำลังเปิดอยู่ ไม่ใช่ข้อมูล ไม่ส่งไปไหน
+   ⚠ ตัวคูณ "ไม่จำข้ามแถว ไม่จำข้ามครั้ง" ตามที่ KORN สั่ง — ม้วนสายไฟแต่ละร้านยาวไม่เท่ากัน
+      (100 ม. บ้าง 90 ม. บ้าง 500 ม. บ้าง) ระบบไม่มีทางรู้ เดาไม่ได้เด็ดขาด (กฎ R2 · R17) */
 let MROWS=[mrBlank(),mrBlank(),mrBlank()];
 /* ══ กลไกของ "แถววัสดุ" — อยู่ระดับบนสุด ไม่ได้ซ่อนอยู่ใน impInit ══
    impInit ถูกเรียกซ้ำทุกครั้งที่คลังโหลดใหม่ ถ้าฟังก์ชันพวกนี้อยู่ข้างใน
@@ -4319,6 +4353,11 @@ fillMat('');
    เพราะ impInit ถูกเรียกซ้ำทุกครั้งที่คลังโหลดใหม่ (กด "ส่งขึ้นคลัง" · อนุมัติ · รีเฟรช)
    ถ้าเก็บค่าไว้ในช่องอย่างเดียว สิ่งที่พิมพ์ค้างไว้จะหายทั้งชุดโดยไม่มีอะไรเตือน (กฎ R24)
    ⚠ เก็บ "ชื่อวัสดุ" ไม่ใช่ลำดับใน P.mats (กฎ R1) — ลำดับเลื่อนได้ทุกครั้งที่อ่านคลังใหม่ */
+function mrEl2(i,k){ return document.querySelector(`#mRows [data-i="${i}"][data-cv="${k}"]`); }
+/* ⚠ ทุกปุ่มในแถวผูกกับ "ตำแหน่งในอาร์เรย์" (data-i) · ลบแถวกลาง ๆ ทิ้งแล้ววาดใหม่
+   ปุ่มเก่าที่หลุดออกจากหน้าจอไปแล้วยังยิง handler ได้อยู่ พร้อม data-i ที่เกินขอบ (กฎ R22 × R1)
+   ตัวนี้คือด่านเดียวที่กันไว้ทุกปุ่ม — จับได้ตอน t_arch เดินกดทุกปุ่มทั้งระบบ */
+const mrAt=i=>(i>=0&&i<MROWS.length)?MROWS[i]:null;
 function mrEl(i,f){ return document.querySelector(`#mRows [data-i="${i}"][data-f="${f}"]`); }
 /* ป้ายบอกสถานะของลิงก์เส้นนั้น — ตอบว่า "ลิงก์นี้ดึงราคาได้หรือไม่ได้" โดยไม่ต้องกดลองดึงเอง
    อ่านจากทะเบียน WEBITEMS ที่ชีทเขียนไว้ทุกครั้งที่วิ่งดึงอัตโนมัติ (กฎ R17 · กางให้ตรวจ) */
@@ -4352,6 +4391,61 @@ function mrStat(){
   $('mrCap').textContent=`${MROWS.length} บรรทัด (สูงสุด ${MR_MAX}) · กรอกได้หลายรายการในแหล่งเดียวกัน แล้วกดเพิ่มเข้าคิวทีเดียว`;
   $('mrAdd').disabled=MROWS.length>=MR_MAX;
 }
+/* ── ตัวเลือกหน่วยของแถวนี้ ──
+   หน่วยที่ "ชื่อนี้เคยมีจริง" ขึ้นก่อนเสมอ แล้วค่อยตามด้วยหน่วยอื่นทั้งระบบ
+   ไม่ตัดหน่วยอื่นทิ้ง เพราะวัสดุอาจมีหน่วยใหม่ที่ยังไม่เคยเจอ (กฎ R2 — ไม่ปิดทางคน) */
+function mrUnitOpts(i){
+  const r=mrAt(i); if(!r) return '';
+  const known=unitsForMat(r.mat);
+  const rest=P.units.filter(u=>u&&!known.includes(u));
+  return known.map(u=>`<option value="${esc(u)}">หน่วยที่เคยมีของรายการนี้</option>`).join('')
+       + rest.map(u=>`<option value="${esc(u)}">`).join('');
+}
+function mrUnitTip(i){
+  const r=mrAt(i); if(!r) return 'หน่วย';
+  const k=unitsForMat(r.mat);
+  if(!k.length) return 'หน่วย';
+  if(k.length===1) return 'รายการนี้เคยมีหน่วยเดียว: '+k[0];
+  return 'รายการนี้มี '+k.length+' หน่วย: '+k.join(' · ')+' — คนละหน่วย = คนละราคา ต้องเลือกเอง';
+}
+/* ── แถบแปลงหน่วย ──
+   KORN เลือกแบบ "แปลงทับ เก็บหน่วยปลายทางอย่างเดียว" (ไม่เก็บสองแถว)
+   จึงต้องกางเลขให้เห็นครบก่อน แล้วให้คนกดเองเสมอ — ห้ามแปลงให้อัตโนมัติ (กฎ R17)
+   และที่มาต้องติดไปกับแถว ไม่งั้นราคาในคลังจะชี้กลับไปที่ใบเสนอราคาไม่ได้ (ลำดับศักดิ์ขั้น 1) */
+function mrConvBar(i){
+  const r=mrAt(i); if(!r) return '';
+  const cv=r._cv||{};
+  const from=String(r.unit||'').trim(), to=String(cv.to||'').trim();
+  const n=parseFloat(cv.n), p=parseFloat(r.price);
+  const ok=(n>0)&&!!to&&!!from&&(p>0)&&to!==from;
+  const res=ok?(p/n):null;
+  const units=[...new Set([...unitsForMat(r.mat),...P.units.filter(Boolean)])].filter(u=>u!==from);
+  return `<div class="mr-cvbar">
+    <span class="mr-cvl">1 <b>${esc(from||'—')}</b> =</span>
+    <input class="mr-cvn" type="number" step="any" min="0" data-i="${i}" data-cv="n" value="${esc(cv.n||'')}" placeholder="เท่าไร">
+    <input class="mr-cvu" data-i="${i}" data-cv="to" list="mCVU${i}" value="${esc(to)}" placeholder="หน่วยปลายทาง">
+    <datalist id="mCVU${i}">${units.map(u=>`<option value="${esc(u)}">`).join('')}</datalist>
+    <span class="mr-cvr">${ ok
+      ? `${fmt(p)} ÷ ${n} = <b>${res.toFixed(4).replace(/0+$/,'').replace(/\.$/,'')}</b> บาท/${esc(to)}`
+      : (!from?'ใส่หน่วยเดิมของราคาก่อน':(!(p>0)?'ใส่ราคาก่อน':(to&&to===from?'หน่วยปลายทางซ้ำกับหน่วยเดิม':'กรอกตัวคูณกับหน่วยปลายทาง'))) }</span>
+    <button class="btn mr-cvgo" data-i="${i}" ${ok?'':'disabled'}>ใช้ค่านี้</button>
+    <button class="btn ghost mr-cvx" data-i="${i}">ปิด</button>
+  </div>`;
+}
+function mrConvApply(i){
+  const r=mrAt(i); if(!r) return;
+  const cv=r._cv||{};
+  const from=String(r.unit||'').trim(), to=String(cv.to||'').trim();
+  const n=parseFloat(cv.n), p=parseFloat(r.price);
+  if(!(n>0)||!to||!from||!(p>0)||to===from) return;
+  const np=p/n;
+  r.conv={from,to,fac:n,raw:p};
+  r.unit=to;
+  r.price=String(+np.toFixed(6));
+  r._cv=null;
+  renderMRows();
+  toast(`บรรทัด ${i+1}: ${fmt(p)} บาท/${from} ÷ ${n} = ${np.toFixed(4)} บาท/${to}`);
+}
 function renderMRows(){
   const web=webOn();
   $('mRows').innerHTML=MROWS.map((r,i)=>`
@@ -4367,13 +4461,19 @@ function renderMRows(){
                  placeholder="รายการวัสดุ — พิมพ์ค้นหา / เลือกจากบัญชีคุม">
         </div>
         <div class="mr-l">
-          <input class="mr-unit" data-i="${i}" data-f="unit" list="mUnitList" value="${esc(r.unit)}" placeholder="หน่วย">
+          <input class="mr-unit" data-i="${i}" data-f="unit" list="mUL${i}" value="${esc(r.unit)}" placeholder="หน่วย"
+                 title="${mrUnitTip(i)}">
+          <datalist id="mUL${i}">${mrUnitOpts(i)}</datalist>
           <input class="mr-price" type="number" step="0.01" data-i="${i}" data-f="price" value="${esc(r.price)}" placeholder="ราคา">
+          <button class="btn ghost mr-cv" data-i="${i}" title="แปลงหน่วย เช่น ราคาต่อม้วน → ราคาต่อเมตร">⇄</button>
           ${web?`<input class="mr-url" type="url" data-i="${i}" data-f="url" value="${esc(r.url)}" placeholder="ลิงก์หน้าสินค้า (วางแล้วไม่ต้องกรอกราคา)">
           <input class="mr-fac" type="number" step="0.0001" min="0" data-i="${i}" data-f="fac" value="${esc(r.fac)}" placeholder="×1" title="ราคาบนเว็บ × ตัวเลขนี้ = ราคาต่อ 1 หน่วยมาตรฐาน">
           <button class="btn ghost mr-probe" data-i="${i}" title="ลองให้ชีทวิ่งอ่านลิงก์นี้เดี๋ยวนี้">🔎</button>
           <span class="mr-st" data-i="${i}">${linkBadge(r.url)}</span>`:''}
         </div>
+        ${r._cv?mrConvBar(i):''}
+        ${r.conv&&!r._cv?`<div class="mr-cvdone">แปลงหน่วยแล้ว: <b>${fmt(r.conv.raw)}</b> บาท/${esc(r.conv.from)}
+          ÷ ${esc(String(r.conv.fac))} ${esc(r.conv.to)}/${esc(r.conv.from)} — ที่มานี้จะติดไปกับแถวในช่องหมายเหตุ</div>`:''}
       </div>
       <button class="btn ghost mr-x" data-i="${i}" title="เอาบรรทัดนี้ออก">✕</button>
     </div>`).join('');
@@ -4382,7 +4482,7 @@ function renderMRows(){
      แล้วยกคลาสความกว้างขึ้นไปที่ตัวห่อ ไม่งั้นตัวห่อกว้าง 100% แล้วแถวแตกเกิน 2 บรรทัด */
   try{ kddAll(); kfreeAll(); }catch(e){}
   $('mRows').querySelectorAll('.kdd').forEach(w=>{
-    const c=w.querySelector('[data-f]'); if(!c) return;
+    const c=w.querySelector('[data-f],[data-cv]'); if(!c) return;
     [...c.classList].filter(x=>/^mr-/.test(x)).forEach(x=>w.classList.add(x));
   });
   mrStat();
@@ -4390,10 +4490,17 @@ function renderMRows(){
 function bindMRows(){
   $('mRows').querySelectorAll('[data-f]').forEach(el=>{
     const i=+el.dataset.i, f=el.dataset.f;
-    const set=()=>{ MROWS[i][f]=el.value; mrStat(); };
+    const set=()=>{ const r=mrAt(i); if(!r) return; r[f]=el.value; mrStat(); };
     if(f==='cat'){ el.onchange=()=>{ set(); el.dataset.auto=''; fillMat(el.value); $('mCatHint').textContent=CATHINT; }; }
-    else if(f==='mat'){ el.onfocus=()=>fillMat(MROWS[i].cat); el.oninput=el.onchange=()=>{ set(); matPick(i); }; }
-    else if(f==='unit'){ el.onfocus=()=>fillMat(MROWS[i].cat); el.oninput=()=>{ set(); matPick(i); }; }
+    else if(f==='mat'){ el.onfocus=()=>fillMat((mrAt(i)||{}).cat); el.oninput=el.onchange=()=>{ set(); matPick(i); }; }
+    /* แก้หน่วยหรือราคาเองหลังแปลงแล้ว = ป้ายที่มาเดิมไม่ตรงกับเลขอีกต่อไป ต้องทิ้ง ห้ามให้ติดไปกับแถว
+       ไม่งั้นจะได้หมายเหตุที่ "อธิบายเลขคนละตัว" ซึ่งแย่กว่าไม่มีหมายเหตุเลย */
+    else if(f==='unit'){ el.onfocus=()=>fillMat((mrAt(i)||{}).cat);
+      el.oninput=()=>{ const r=mrAt(i); if(!r) return; const had=!!r.conv; set();
+        if(had){ r.conv=null; renderMRows(); return; } matPick(i); }; }
+    else if(f==='price'){ el.oninput=()=>{ const r=mrAt(i); if(!r) return; const had=!!r.conv; set();
+      if(had){ r.conv=null; renderMRows(); return; }
+      if(r._cv) renderMRows(); }; }
     else if(f==='url'){ el.oninput=()=>{ set(); linkBadgeSync(i); }; }
     else el.oninput=set;
   });
@@ -4403,18 +4510,52 @@ function bindMRows(){
     if(MROWS.length<=1) MROWS[0]=mrBlank(); else MROWS.splice(i,1);
     renderMRows();
   });
-  $('mRows').querySelectorAll('.mr-probe').forEach(b=>b.onclick=()=>probeRow(+b.dataset.i));
+  $('mRows').querySelectorAll('.mr-probe').forEach(b=>b.onclick=()=>{
+    if(mrAt(+b.dataset.i)) probeRow(+b.dataset.i); });
+  /* ── แถบแปลงหน่วย ── */
+  $('mRows').querySelectorAll('.mr-cv').forEach(b=>b.onclick=()=>{
+    const i=+b.dataset.i, r=mrAt(i); if(!r) return;
+    r._cv = r._cv?null:{n:'',to:''}; renderMRows();
+    const el=mrEl2(i,'n'); if(el) el.focus();
+  });
+  $('mRows').querySelectorAll('[data-cv]').forEach(el=>{
+    const i=+el.dataset.i, k=el.dataset.cv;
+    el.oninput=()=>{ const r=mrAt(i); if(!r) return;
+      r._cv=r._cv||{n:'',to:''}; r._cv[k]=el.value;
+      /* วาดเฉพาะป้ายผลลัพธ์กับปุ่ม ไม่วาดทั้งแถว จะได้ไม่หลุดโฟกัสที่กำลังพิมพ์ */
+      const bar=el.closest('.mr-cvbar'); if(!bar) return;
+      const tmp=document.createElement('div'); tmp.innerHTML=mrConvBar(i);
+      bar.querySelector('.mr-cvr').innerHTML=tmp.querySelector('.mr-cvr').innerHTML;
+      bar.querySelector('.mr-cvgo').disabled=tmp.querySelector('.mr-cvgo').disabled;
+    };
+  });
+  $('mRows').querySelectorAll('.mr-cvgo').forEach(b=>b.onclick=()=>mrConvApply(+b.dataset.i));
+  $('mRows').querySelectorAll('.mr-cvx').forEach(b=>b.onclick=()=>{
+    const r=mrAt(+b.dataset.i); if(!r) return; r._cv=null; renderMRows(); });
 }
 /* เลือกวัสดุแล้วเติมหน่วย+หมวดตามบัญชีคุมให้เลย — หน่วยผิด = ได้แถวใหม่ในคลังแทนการอัปเดตแถวเดิม
    (ไม่ใช่การ "เลือกให้ล่วงหน้า" ตามกฎ R2 เพราะมันมาจากของที่ผู้ใช้เลือกเองแล้ว) */
 function matPick(i){
-  const r=MROWS[i];
+  const r=mrAt(i); if(!r) return;
   const std=regStd(String(r.mat).trim())||String(r.mat).trim();
-  const u=REG.unit[std], uEl=mrEl(i,'unit');
-  if(u && !String(r.unit).trim()){ r.unit=u; if(uEl) uEl.value=u; }
-  $('mUnitHint').innerHTML = u ? (String(r.unit).trim()&&String(r.unit).trim()!==u
-      ? '<span class="pill warn">หน่วยไม่ตรงบัญชีคุม</span> บัญชีคุมระบุ <b>'+esc(u)+'</b>'
-      : 'หน่วยตามบัญชีคุม: <b>'+esc(u)+'</b>') : '';
+  const uEl=mrEl(i,'unit');
+  /* ⚠ วัสดุที่มีมากกว่าหนึ่งหน่วย ห้ามเติมให้ (กฎ R23 · R2)
+     สายไฟเส้นเดียวกันขายทั้ง "เมตร" และ "ม้วน" ราคาต่างกันร้อยเท่า เดาผิดทีเดียวราคากลางพัง
+     มีหน่วยเดียวถึงเติมให้ได้ เพราะนั่นคือของที่ระบบ "รู้จริง" ไม่ใช่ของที่เดา */
+  const us=unitsForMat(std);
+  if(us.length===1 && !String(r.unit).trim()){ r.unit=us[0]; if(uEl) uEl.value=us[0]; }
+  const typed=String(r.unit).trim();
+  const n=i+1;
+  /* ป้ายนี้เป็นกล่องเดียวใช้ร่วมกันทั้ง 20 บรรทัด — ต้องบอกเลขบรรทัดเสมอ (กฎ R21)
+     ของเดิมไม่บอก คนกรอกจึงไม่รู้ว่ามันพูดถึงบรรทัดไหน โดยเฉพาะตอนสายไฟคนละหน่วยอยู่คนละบรรทัด */
+  $('mUnitHint').innerHTML =
+      !us.length ? (typed?'บรรทัด '+n+' · รายการนี้ยังไม่เคยมีหน่วยในระบบ — หน่วยที่กรอกจะเป็นตัวตั้งต้น':'')
+    : us.length>1 ? 'บรรทัด '+n+' · รายการนี้มี <b>'+us.length+' หน่วย</b>: '+us.map(esc).join(' · ')
+        +(typed&&!us.includes(typed)?' — <span class="pill warn">'+esc(typed)+' ยังไม่เคยมี</span>':'')
+        +' · คนละหน่วย = คนละราคา ระบบไม่เดาให้ · ราคาต่างหน่วยกดปุ่ม ⇄ แปลงได้'
+    : (typed&&typed!==us[0]
+        ? 'บรรทัด '+n+' · <span class="pill warn">หน่วยไม่ตรงบัญชีคุม</span> บัญชีคุมระบุ <b>'+esc(us[0])+'</b>'
+        : 'บรรทัด '+n+' · หน่วยตามบัญชีคุม: <b>'+esc(us[0])+'</b>');
   const c=regCat(std), cEl=mrEl(i,'cat');
   if(c && mCats().includes(c)){
     if(!r.cat || (cEl&&cEl.dataset.auto==='1')){
@@ -4574,7 +4715,12 @@ function impInit(){
       const mat=String(r.mat).trim(), unit=String(r.unit).trim();
       const price=parseFloat(r.price);
       const _url=String(r.url||'').trim();
-      const _ref=(_url?_url+' · ':'')+$('mRef').value.trim();
+      /* ราคาที่ได้จากการแปลงหน่วย ต้องพกที่มาไปด้วยเสมอ (ลำดับศักดิ์ขั้น 1 — ตัวเลขที่ออกไปนอกระบบต้องตรวจย้อนได้)
+         KORN เลือกเก็บหน่วยเดียว ไม่เก็บแถวราคาต้นฉบับ · หลักฐานจึงเหลือทางเดียวคือหมายเหตุของแถวนี้
+         เงื่อนไข r.conv.to===unit กันเคสแปลงแล้วไปแก้หน่วยต่อ จนป้ายอธิบายเลขคนละตัว */
+      const _cvn=(r.conv && r.conv.to===String(r.unit).trim())
+        ? 'แปลงหน่วย: '+fmt(r.conv.raw)+' บาท/'+r.conv.from+' ÷ '+r.conv.fac+' '+r.conv.to+'/'+r.conv.from : '';
+      const _ref=[_url,_cvn,$('mRef').value.trim()].filter(Boolean).join(' · ');
       /* ใช้ชื่อมาตรฐานตามบัญชีคุม — ถ้าส่งชื่อดิบไป คลังจะได้แถวใหม่แทนการอัปเดตแถวเดิม */
       const std=regStd(mat)||mat;
       const fac=Math.max(0,parseFloat(r.fac)||1);
