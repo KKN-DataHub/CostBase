@@ -703,6 +703,7 @@ canvas{max-width:100%}
     <button class="jchip" data-jump="secNews">📰 ข่าวและประกาศ</button>
     <button class="jchip" data-jump="secCheck">✓ เช็คลิสต์อัปเดต</button>
     <button class="jchip" data-jump="secMove">📈 ราคาที่ขยับมากสุด</button>
+    <button class="jchip" data-jump="secHealth">🩺 สุขภาพช่องทาง · ราคาที่ขาด</button>
     <button class="jchip" data-jump="secLaw">⚖ หลักเกณฑ์อ้างอิง</button>
     <button class="jchip" data-jump="secTypes">▦ ภาพรวมตามประเภท</button>
   </div>
@@ -731,6 +732,26 @@ canvas{max-width:100%}
     <div class="cap" style="margin:-2px 0 8px">เทียบ "ราคาล่าสุดของแต่ละคู่ วัสดุ×แหล่ง" กับราคาครั้งก่อนหน้าของคู่เดียวกัน
       — ไม่ได้เทียบข้ามแหล่งและไม่ได้เทียบข้ามหน่วย · กดที่แถวเพื่อไปดูกราฟแนวโน้มของรายการนั้น</div>
     <div class="tw" style="max-height:340px"><table id="tblMovers"></table></div>
+  </div>
+  <div class="grid2" style="margin-top:14px" id="secHealth">
+    <div class="card">
+      <h2 data-ic="check">สุขภาพช่องทางข้อมูล</h2>
+      <div class="cap" style="margin:-2px 0 8px">ช่องทางไหนเงียบหายไปนานผิดปกติ · ระบบนี้ไม่ค่อยพังแบบมี error
+        มันพังแบบ "ไม่มีข้อมูลเข้ามาแล้วไม่มีใครสังเกต" — การ์ดนี้มีไว้จับอาการนั้น</div>
+      <div class="tw" style="max-height:300px"><table id="tblHealth"></table></div>
+      <div class="cap" id="healthCap" style="margin-top:6px"></div>
+    </div>
+    <div class="card">
+      <h2 data-ic="tag">เดือนนี้ยังขาดราคาอะไร</h2>
+      <div class="cap" style="margin:-2px 0 8px">"รายการประจำ" = วัสดุที่มีราคาอย่างน้อย
+        <b id="gapK">6</b> ใน 12 เดือนล่าสุด · ที่ขึ้นในตารางคือรายการประจำที่<b>เดือนล่าสุดยังไม่มีราคาเลย</b>
+        — รู้ก่อนจะไปเจอตอนทำราคากลาง</div>
+      <div class="tw" style="max-height:300px"><table id="tblGap"></table></div>
+      <div class="statusline" style="margin-top:8px">
+        <button class="btn ghost" id="gapXlsx">ส่งออกรายการที่ขาด (.xlsx)</button>
+        <span class="hint" id="gapCap"></span>
+      </div>
+    </div>
   </div>
   <div class="card" style="margin-top:14px" id="secLaw">
     <h2 data-ic="law">หลักเกณฑ์ราคากลางที่ระบบใช้อ้างอิง</h2>
@@ -1331,8 +1352,8 @@ const SELFCHK={missing:new Set(),ok:false};
 const $ = id => { const el=document.getElementById(id);
   if(!el) SELFCHK.missing.add(id);
   return el; };
-const APPVER='8.27';        /* เลขรุ่นที่เดียว — ที่อื่นดึงจากตัวนี้ */
-const APPDATE='27 ส.ค. 2569';   /* วันที่ของรุ่นนี้ ที่เดียวเหมือนกัน */
+const APPVER='8.29';        /* เลขรุ่นที่เดียว — ที่อื่นดึงจากตัวนี้ */
+const APPDATE='31 ส.ค. 2569';   /* วันที่ของรุ่นนี้ ที่เดียวเหมือนกัน */
 /* ⚠ ป้ายรุ่นบนแถบข้างเคยเป็นข้อความตายตัวใน HTML (v6.2) พอขึ้นรุ่นใหม่แล้วลืมแก้
    ผู้ใช้เลยเห็นเลขรุ่นเก่าทั้งที่โค้ดใหม่หมดแล้ว — ต่อไปนี้เขียนจาก APPVER เสมอ */
 try{ setTimeout(()=>{ try{ drawCfgChip(); }catch(e){} },0); }catch(e){}
@@ -2165,7 +2186,7 @@ async function loadLive(){
 /* ลำดับในอาเรย์นี้ = ลำดับปุ่มบนเมนูจริง ๆ · อยากสลับหน้า ให้สลับบรรทัดที่นี่ที่เดียว
    (ลำดับ section ในไฟล์เรียงตามนี้ด้วย เพื่อให้ลำดับตอนพิมพ์และลำดับกด Tab ตรงกับเมนู) */
 const PAGES=[
-  {p:'sum',  ชื่อ:'หน้าสรุป',        ico:'▦',  rerender:['buildSummary','buildMovers','drawMatChips']},
+  {p:'sum',  ชื่อ:'หน้าสรุป',        ico:'▦',  rerender:['buildSummary','buildMovers','drawMatChips','buildHealth','buildGap','gapInit']},
   {p:'stat', ชื่อ:'สถิติราคา',       ico:'📈', rerender:['statInit','covInit','drawUnitOutliers']},
   {p:'dist', ชื่อ:'คำนวณระยะขนส่ง',  ico:'⇄',  rerender:['matInit','_cmpRe']},
   {p:'imp',  ชื่อ:'นำเข้าข้อมูล',    ico:'⬇',  rerender:['impInit','drawNoGeo']},
@@ -2492,6 +2513,161 @@ function drawUsage(){
 }
 
 /* ============ หน้าสรุป ============ */
+/* ══════════ สุขภาพช่องทางข้อมูล ══════════
+   บทเรียนของวันที่ 27-28 ส.ค. 69: ระบบนี้ไม่ค่อยพังแบบมี error — มันพังแบบเงียบ
+     · TPSO ส่งขึ้นคลังไม่ได้ตั้งแต่ Code.gs รุ่น 17 ถึง 31 ไม่มีใครรู้
+     · พิกัดแหล่งไม่เคยขึ้นคลัง ไม่มีใครรู้
+     · ราคาถูกประทับเดือนผิด ไม่มีใครรู้
+   ทั้งสามเรื่องไม่มีหน้าจอไหนแดงสักจอ แค่ "ไม่มีข้อมูลเข้ามา"
+   การ์ดนี้ตอบคำถามเดียว: ช่องทางไหนควรมีของเข้ามาแล้วยังไม่มี (กฎ R17 — ห้ามเงียบ) */
+const CHAN_CADENCE = {      /* ควรมีข้อมูลเข้าทุกกี่เดือน · null = ไม่บังคับ แต่ยังบอกว่าเงียบไปนานแค่ไหน */
+  'TPSO': 1, 'เว็บร้านค้า': 1, 'เว็บไซต์': 1,
+  'หน่วยงานราชการ': null, 'ใบเสนอราคา': null, 'กรอกเอง': null, 'สืบราคา': null };
+function chanCadence(ch){
+  const k=Object.keys(CHAN_CADENCE).find(x=>String(ch).indexOf(x)>=0);
+  return k?CHAN_CADENCE[k]:null;
+}
+/* ห่างจากเดือนล่าสุดในคลังกี่เดือน — นับด้วยปี×12+เดือน ไม่ใช่ลำดับช่องในอาร์เรย์ (กฎ R1) */
+const ymNum = (y,m)=>y*12+m;
+/* ⚠ ตรวจทบทวนรอบสอง (v8.29) เจอเอง: การ์ดนี้อ่านจาก PRICES อย่างเดียว
+   แต่ตั้งแต่ Code.gs รุ่น 32 TPSO เข้า "คิวรออนุมัติ" ก่อน — ถ้ายังไม่กดอนุมัติ PRICES ก็ไม่มีแถวใหม่
+   การ์ดจะฟ้องว่า TPSO เงียบหาย ทั้งที่ของมาแล้วนอนอยู่ในคิว = สัญญาณหลอก (กฎ R17 คนละแบบ: ห้ามโวยวายเกินจริง)
+   จึงต้องนับของในคิวด้วย แล้วบอกให้ชัดว่า "มาแล้ว รออนุมัติ" ไม่ใช่ "ไม่มา" */
+function pendByChan(){
+  const out={};
+  (PEND||[]).forEach(c=>{
+    const ch=chanHead(c[8]); const y=+c[1], m=+c[2];
+    if(!(y>0&&m>0)) return;
+    const o=out[ch]||(out[ch]={n:0,max:0});
+    o.n++; const k=y*100+m; if(k>o.max) o.max=k;
+  });
+  return out;
+}
+function healthRows(){
+  if(!P.months.length) return [];
+  const now=ymNum(P.ylist[LAST],P.months[LAST]);
+  const pend=pendByChan();
+  const out=[];
+  const chans=new Set([...Object.keys(CHAN||{}), ...Object.keys(pend)]);
+  chans.forEach(ch=>{
+    const yms=Object.keys((CHAN[ch]||{}).ym||{}).map(Number).filter(n=>n>0);
+    const pq=pend[ch]||{n:0,max:0};
+    if(!yms.length && !pq.n) return;
+    const mx=yms.length?Math.max(...yms):0;
+    /* ของที่นอนอยู่ในคิวก็นับว่า "มาแล้ว" — เอาเดือนล่าสุดจากทั้งสองที่ */
+    const eff=Math.max(mx, pq.max);
+    const y=Math.floor(eff/100), m=eff%100;
+    const gap=now-ymNum(y,m);
+    const cad=chanCadence(ch);
+    const late = cad!=null ? gap>cad : gap>3;
+    const bad  = cad!=null ? gap>cad*2 : gap>6;
+    out.push({ch, y, m, gap, cad, late, bad,
+              n:(CHAN[ch]&&CHAN[ch].ym[mx])||0, pend:pq.n, inQueueOnly: pq.max>mx});
+  });
+  /* เงียบนานสุดขึ้นก่อน — คนเปิดหน้ามาต้องเห็นตัวที่มีปัญหาที่สุดก่อนเสมอ */
+  return out.sort((a,b)=>b.gap-a.gap || a.ch.localeCompare(b.ch,'th'));
+}
+function buildHealth(){
+  const el=$('tblHealth'); if(!el) return;
+  /* อ่านคิวรออนุมัติเงียบ ๆ ครั้งเดียว ถ้ายังไม่เคยอ่าน — แล้ววาดใหม่เมื่อได้มา
+     ไม่งั้นเปิดหน้าสรุปตอนบูต PEND ยังว่าง การ์ดจะฟ้องผิดไปหนึ่งรอบ */
+  if(!PEND.length && !buildHealth._pl && typeof loadPending==='function'){
+    buildHealth._pl=1;
+    Promise.resolve().then(()=>loadPending(true)).then(()=>{ if(PEND.length) buildHealth(); }).catch(()=>{});
+  }
+  const rows=healthRows();
+  if(!rows.length){ el.innerHTML='<thead><tr><th>ช่องทาง</th></tr></thead><tbody><tr><td class="hint">ยังไม่มีข้อมูลในคลัง</td></tr></tbody>'; 
+    $('healthCap').textContent=''; return; }
+  const lab=r=>TH_M[r.m-1]+' '+String(r.y).slice(-2);
+  el.innerHTML='<thead><tr><th>ช่องทาง</th><th>ข้อมูลล่าสุด</th><th class="num">ห่างกี่เดือน</th><th>รอบที่ควรเป็น</th><th>สถานะ</th></tr></thead><tbody>'
+    +rows.map(r=>`<tr${r.bad?' style="background:rgba(190,60,60,.07)"':(r.late?' style="background:#FBF0E6"':'')}>
+      <td>${esc(r.ch)}</td>
+      <td>${esc(lab(r))} <span class="hint">${r.n?r.n.toLocaleString()+' แถว':''}</span>
+          ${r.pend?'<span class="pill warn" title="มาแล้ว แต่ยังไม่ได้กดอนุมัติ — ไปที่หน้านำเข้าข้อมูล → รายการรออนุมัติ">รออนุมัติ '+r.pend+'</span>':''}</td>
+      <td class="num">${r.gap===0?'เดือนนี้':r.gap}</td>
+      <td>${r.cad!=null?('ทุก '+r.cad+' เดือน'):'<span class="hint">ไม่บังคับ</span>'}</td>
+      <td>${r.bad?'<span class="pill bad">เงียบหาย</span>':(r.late?'<span class="pill warn">ช้ากว่ากำหนด</span>':'<span class="pill ok">ปกติ</span>')}</td>
+    </tr>`).join('')+'</tbody>';
+  const q=rows.filter(r=>r.bad).length, w=rows.filter(r=>r.late&&!r.bad).length;
+  const pq=rows.reduce((a,r)=>a+(r.pend||0),0);
+  $('healthCap').innerHTML = (q||w
+    ? '<span class="pill '+(q?'bad':'warn')+'">ต้องตาม</span> '
+      +(q?q+' ช่องทางเงียบหาย ':'')+(w?w+' ช่องทางช้ากว่ากำหนด ':'')
+      +'— เปิดโปรแกรมของช่องทางนั้นรันดู หรือดูแท็บ LOG ในชีทว่าคำสั่งตกเพราะอะไร (ต้อง Code.gs รุ่น 32 ขึ้นไป)'
+    : 'ทุกช่องทางส่งข้อมูลตามรอบ')
+    +(pq?' · <span class="pill warn">รออนุมัติ '+pq+' รายการ</span> ของมาแล้วแต่ยังไม่เข้าคลัง — ไปกดอนุมัติที่หน้านำเข้าข้อมูล':'');
+}
+
+/* ══════════ เดือนนี้ยังขาดราคาอะไร ══════════
+   การ์ด "ความครบถ้วน" เดิมวัดเทียบกับ "ทุกรายการที่เคยมีในคลัง" ซึ่งรวมของที่ไม่ได้ใช้แล้ว
+   อันนี้วัดเทียบกับ "รายการประจำ" = วัสดุที่มีราคาอย่างน้อย K ใน 12 เดือนล่าสุด
+   นิยามนี้ได้มาจากคลังเอง ไม่ต้องให้ใครมานั่งทำบัญชีรายการที่ใช้บ่อยเพิ่ม (กฎ R18) */
+const GAP_K = 6;
+/* เกณฑ์จริงที่ใช้ — คลังที่มีข้อมูลแค่ 4 เดือน ใช้เกณฑ์ 6/12 ไม่ได้ (ไม่มีอะไรผ่านเลย แล้วการ์ดจะบอกว่า "ครบ" ทั้งที่ยังไม่ได้ดูอะไร)
+   ย่อเป็นครึ่งหนึ่งของเดือนที่มีจริง แต่ไม่เกิน GAP_K */
+function gapK(){ const w=Math.min(12, P.months.length); return Math.max(1, Math.min(GAP_K, Math.ceil(w/2))); }
+function gapRows(){
+  if(P.months.length<2) return [];
+  const K=gapK();
+  const from=Math.max(0, P.months.length-12);
+  const rows=[];
+  const byMat={};      /* คีย์ วัสดุ+หน่วย — คนละหน่วยคือคนละรายการ (กฎ R23) */
+  P.series.forEach(s=>{
+    const mat=P.mats[s[0]], unit=P.units[s[2]]||'';
+    const k=mat+'\u001f'+unit;
+    const o=byMat[k]||(byMat[k]={mat,unit,months:new Set(),last:null,lastMi:-1,srcs:new Set()});
+    for(let i=from;i<P.months.length;i++){
+      const v=s[4][i];
+      if(v!=null){ o.months.add(i); if(i>o.lastMi){ o.lastMi=i; o.last=v; } o.srcs.add(P.srcs[s[1]]); }
+    }
+  });
+  Object.values(byMat).forEach(o=>{
+    if(o.months.size<K) return;                /* ไม่ใช่รายการประจำ */
+    if(o.months.has(LAST)) return;             /* เดือนล่าสุดมีราคาแล้ว */
+    rows.push(o);
+  });
+  return rows.sort((a,b)=>b.months.size-a.months.size || a.mat.localeCompare(b.mat,'th'));
+}
+function buildGap(){
+  const el=$('tblGap'); if(!el) return;
+  if($('gapK')) $('gapK').textContent=gapK()+(gapK()<GAP_K?' (คลังมีแค่ '+Math.min(12,P.months.length)+' เดือน)':'');
+  const rows=gapRows();
+  if(!rows.length){
+    el.innerHTML='<thead><tr><th>รายการ</th></tr></thead><tbody><tr><td class="hint">'
+      +(P.months.length<2?'ข้อมูลยังไม่พอคำนวณ':'ครบทุกรายการประจำแล้ว — เดือนล่าสุดไม่มีรายการไหนขาด')
+      +'</td></tr></tbody>';
+    $('gapCap').textContent=''; if($('gapXlsx')) $('gapXlsx').disabled=!rows.length; return; }
+  el.innerHTML='<thead><tr><th>รายการวัสดุ</th><th>หน่วย</th><th class="num">มีราคา (จาก 12 เดือน)</th>'
+    +'<th class="num">ราคาล่าสุด</th><th>เมื่อ</th><th>เคยได้จากแหล่ง</th></tr></thead><tbody>'
+    +rows.map(o=>`<tr>
+      <td>${esc(o.mat)}</td><td>${esc(o.unit)}</td>
+      <td class="num">${o.months.size}</td>
+      <td class="num">${fmt(o.last)}</td>
+      <td>${esc(mLabI(o.lastMi))}</td>
+      <td class="mini">${esc([...o.srcs].slice(0,3).join(' · '))}${o.srcs.size>3?' …':''}</td>
+    </tr>`).join('')+'</tbody>';
+  $('gapCap').textContent='ขาด '+rows.length+' รายการ · เดือนล่าสุดในคลังคือ '+mLabI(LAST);
+  if($('gapXlsx')) $('gapXlsx').disabled=false;
+}
+function gapInit(){
+  const b=$('gapXlsx'); if(!b||b.dataset.wired) return; b.dataset.wired='1';
+  b.onclick=()=>{
+    const rows=gapRows();
+    if(!rows.length){ toast('ไม่มีรายการที่ขาด'); return; }
+    const aoa=[['รายการวัสดุ','หน่วย','มีราคากี่เดือนจาก 12','ราคาล่าสุด','เดือนล่าสุดที่มีราคา','เคยได้จากแหล่ง'],
+      ...rows.map(o=>[o.mat,o.unit,o.months.size,o.last,mLabI(o.lastMi),[...o.srcs].join(' · ')])];
+    const note=[['รายการที่ยังขาดราคาในเดือน '+mLabI(LAST)],
+      ['เกณฑ์','รายการประจำ = มีราคาอย่างน้อย '+gapK()+' ใน '+Math.min(12,P.months.length)+' เดือนล่าสุด'],
+      ['จำนวน', rows.length],
+      ['ส่งออกจาก','CostBase v'+APPVER],
+      [''],
+      ['เอาไฟล์นี้ไปใช้ตั้งต้นการสืบราคา — คอลัมน์ "เคยได้จากแหล่ง" บอกว่าเดือนก่อน ๆ ใครเป็นคนให้ราคา']];
+    saveBlob(xlsxBuild([{n:'ขาดราคา',aoa,w:[52,10,14,13,16,40]},{n:'อ่านก่อนใช้',aoa:note,w:[22,70]}]),
+      'รายการที่ยังขาดราคา.xlsx');
+    toast('ได้รายการที่ขาด '+rows.length+' รายการ');
+  };
+}
+
 function buildSummary(){
   const latestLabel = mLabI(LAST);
   $('bLatest').textContent = 'อัปเดตล่าสุด '+latestLabel; $('fLatest').textContent = latestLabel;
@@ -6184,7 +6360,7 @@ function clearInit(){
 }
 
 /* ============ boot ============ */
-[buildSummary, lawInit, provInit, matInit, initMap, statInit, covInit, impInit, noGeoInit, expInit, sysInit, regInit, clearInit, fullInit, distTabs, dieselIdx, drawMatChips, usageInit,
+[buildSummary, buildHealth, buildGap, gapInit, lawInit, provInit, matInit, initMap, statInit, covInit, impInit, noGeoInit, expInit, sysInit, regInit, clearInit, fullInit, distTabs, dieselIdx, drawMatChips, usageInit,
  sortableAll, countUpAll]   /* สองตัวนี้ต้องอยู่ท้ายสุด — ต้องรอให้ทุกตารางถูกวาดก่อน */
   .forEach(f=>{ try{ f(); }catch(e){ console.error('init:', f.name, e); } });
 kddAll(); kfreeAll(); paintIcons();
