@@ -672,6 +672,58 @@ canvas{max-width:100%}
 }
 #prBox{display:none}
 </style>
+<style>
+.project-notice{display:flex;align-items:center;gap:10px;background:var(--teal-soft,#e3f2f1);border:1px solid var(--grid,#ddd);border-radius:12px;padding:14px 18px;font-size:13px;line-height:1.7}
+.project-tools{display:flex;align-items:end;gap:14px;flex-wrap:wrap;margin:22px 0 16px}
+.project-search{flex:1;min-width:220px;max-width:580px;font-size:12px;color:var(--muted)}
+.project-search input{display:block;margin-top:6px;width:100%}
+.project-search input,.project-dialog input,.project-dialog textarea{border:1px solid var(--grid,#d8dcd9);border-radius:8px;padding:10px 12px;background:var(--surface,#fff);color:var(--ink,#222);font:inherit;min-height:40px;box-sizing:border-box}
+.project-search input:focus,.project-dialog input:focus,.project-dialog textarea:focus{outline:2px solid var(--teal,#0d9488);outline-offset:2px}
+.project-list{display:grid;grid-template-columns:repeat(auto-fill,minmax(min(100%,340px),1fr));gap:16px}
+.project-tile{min-width:0;display:flex;flex-direction:column;border-top:3px solid var(--teal,#0d9488);margin:0!important;padding:22px!important}
+.project-tile h2{font-size:17px;margin:10px 0;overflow-wrap:anywhere;line-height:1.6}
+.project-tile p{margin:3px 0;line-height:1.65;overflow-wrap:anywhere}
+.project-tile .project-actions{margin-top:auto;padding-top:18px}
+.project-card-top{display:flex;justify-content:space-between;gap:12px;align-items:center;font-size:12px;color:var(--muted)}
+.project-total{font-size:23px;font-weight:700;color:var(--navy);margin:18px 0 5px;font-variant-numeric:tabular-nums}
+.project-empty{grid-column:1/-1;padding:55px 24px!important;text-align:center}
+.project-empty h2{justify-content:center;margin:0 0 8px}
+.project-empty p{color:var(--muted);margin:0 0 20px}
+.project-actions{display:flex;flex-wrap:wrap;align-items:center;gap:8px;justify-content:flex-end;margin-top:22px}
+.project-error{padding:12px 16px;color:#942b25;background:#fff0ec;border:1px solid #e7bbb3;border-radius:9px;margin:14px 0;line-height:1.7;overflow-wrap:anywhere}
+.project-dialog{border:1px solid var(--grid,#ddd);border-radius:18px;width:min(620px,calc(100vw - 28px));max-height:88vh;overflow:auto;padding:26px;color:var(--ink,#222);background:var(--surface,#fff);box-shadow:0 18px 80px #14213b40}
+.project-dialog::backdrop{background:#14213b88;backdrop-filter:blur(2px)}
+.project-dialog-head{display:flex;justify-content:space-between;align-items:center;gap:16px;margin-bottom:12px}
+.project-dialog h2{margin:0;font-size:20px}
+.project-dialog p{line-height:1.7;font-size:13px}
+.project-dialog label{display:block;font-size:13px}
+.project-dialog input,.project-dialog textarea{display:block;width:100%;margin-top:7px;font:inherit}
+.project-form-grid{display:grid;grid-template-columns:1fr 1fr;gap:18px;margin-top:22px}
+.project-form-grid .wide{grid-column:1/-1}
+.project-dialog [hidden],#pg-projects [hidden]{display:none!important}
+.project-workbar{margin:12px 0 18px;padding:16px 18px;border:1px solid var(--grid,#ddd);border-left:4px solid var(--teal,#0d9488);border-radius:12px;background:var(--surface,#fff)}
+.project-workbar-top{display:flex;justify-content:space-between;align-items:center;gap:14px;flex-wrap:wrap}
+.project-workbar-title{font-weight:700;overflow-wrap:anywhere}
+.project-workbar p{font-size:12px;line-height:1.6;margin:7px 0 0;color:var(--muted)}
+.project-workbar .project-actions{margin:0;justify-content:flex-start}
+.project-workbar .project-save-state{font-weight:600;color:var(--teal,#0d9488)}
+.project-workbar.dirty .project-save-state{color:#9b6511}
+.project-revisions{margin-top:22px!important}
+.project-history-row{display:flex;gap:14px;align-items:center;justify-content:space-between;border-top:1px solid var(--grid,#ddd);padding:15px 0}
+.project-history-row>div{min-width:0;overflow-wrap:anywhere}
+.project-report{width:min(1100px,calc(100vw - 28px))}
+.project-report .tw{overflow:auto;max-height:45vh}
+.project-report table{min-width:600px}
+.project-report th,.project-report td{padding:10px;text-align:left}
+.project-report .num{text-align:right}
+.project-report-meta{display:flex;gap:12px;flex-wrap:wrap;margin:14px 0}
+.project-report-meta>div{flex:1;min-width:170px;padding:14px;border:1px solid var(--grid,#ddd);border-radius:10px}
+.project-report-meta b{display:block;font-size:22px;margin:8px 0 0}
+@media(max-width:600px){.project-notice{align-items:flex-start;flex-direction:column}.project-form-grid{grid-template-columns:1fr}.project-dialog{padding:18px}.project-tools{align-items:stretch}.project-search{max-width:none}.project-workbar .btn{flex-grow:1}.project-workbar .project-actions{width:100%}.project-history-row{align-items:flex-start;flex-direction:column}}
+@media print{.project-notice,.project-tools,.project-actions,.project-workbar{display:none!important}.project-tile{break-inside:avoid}}
+@media(max-width:480px){#esKpis .kpill{flex-direction:column;align-items:flex-start;gap:8px;padding:12px}#esKpis .k-val{font-size:22px;max-width:100%;overflow-wrap:anywhere;white-space:normal}}
+
+</style>
 </head>
 <body>
 <div class="shell">
@@ -694,7 +746,57 @@ canvas{max-width:100%}
 <main class="main">
 
 <!-- ================= หน้าสรุป ================= -->
-<section class="page active" id="pg-sum">
+<section class="page active" id="pg-projects">
+  <div class="pghead"><div class="ph-ico" data-ic="book"></div>
+    <div><h1>โครงการ</h1><div class="ph-sub">จัดทำประมาณราคา และเก็บฉบับงานไว้ตรวจย้อนหลัง</div></div>
+    <div class="ph-act"><button class="btn gold" id="projectNew">＋ สร้างโครงการ</button></div>
+  </div>
+  <div class="project-notice"><span class="pill info">พื้นที่พัฒนา</span>
+    <span>งานเก็บในเบราว์เซอร์เครื่องนี้ ยังไม่แชร์กับทีม • สำรองโครงการก่อนย้ายเครื่องหรือล้างข้อมูลเว็บไซต์</span>
+  </div>
+  <div id="projectError" class="project-error" role="alert" hidden></div>
+  <div class="project-tools no-print">
+    <label class="project-search"><span>ค้นหาโครงการ</span><input id="projectSearch" type="search" placeholder="ชื่อโครงการ สายทาง หรือผู้รับผิดชอบ"></label>
+    <button class="btn ghost" id="projectImport">นำเข้าโครงการที่สำรองไว้</button>
+    <input id="projectImportFile" type="file" accept=".json,application/json" hidden>
+    <span class="hint" id="projectCount" aria-live="polite"></span>
+  </div>
+  <div id="projectList" class="project-list" aria-live="polite"><div class="card">กำลังเปิดพื้นที่โครงการ…</div></div>
+  <div class="card project-revisions" id="projectHistory" hidden></div>
+</section>
+
+<dialog id="projectDialog" class="project-dialog">
+  <form id="projectForm">
+    <div class="project-dialog-head"><h2>สร้างโครงการ</h2><button type="button" class="btn ghost" data-project-close aria-label="ปิด">✕</button></div>
+    <p class="hint">เริ่มจากข้อมูลโครงการ แล้วกรอกรายการประมาณราคาในขั้นถัดไป</p>
+    <div class="project-form-grid">
+      <label class="wide">ชื่อโครงการ <span class="req">*</span><input id="projectName" required maxlength="200" autocomplete="off"></label>
+      <label class="wide">รหัส / ชื่อสายทาง<input id="projectRoad" maxlength="200" autocomplete="off"></label>
+      <label>ปีงบประมาณ (พ.ศ.)<input id="projectYear" inputmode="numeric" pattern="[0-9]{4}" maxlength="4"></label>
+      <label>ผู้รับผิดชอบ<input id="projectOwner" maxlength="150" autocomplete="off"></label>
+    </div>
+    <p class="project-error" id="projectFormError" role="alert" hidden></p>
+    <div class="project-actions"><button type="button" class="btn ghost" data-project-close>ยกเลิก</button><button type="submit" class="btn gold">สร้างและเริ่มประมาณราคา</button></div>
+  </form>
+</dialog>
+
+<dialog id="revisionDialog" class="project-dialog">
+  <form id="revisionForm">
+    <div class="project-dialog-head"><h2>เก็บฉบับงาน</h2><button type="button" class="btn ghost" data-revision-close aria-label="ปิด">✕</button></div>
+    <p>เก็บรายการ ราคา สูตร และผลคำนวณของขณะนี้ไว้ ฉบับที่เก็บแล้วเปิดดูได้โดยไม่เปลี่ยนตามคลัง</p>
+    <label>บันทึกประกอบฉบับงาน<textarea id="revisionNote" rows="3" maxlength="500" placeholder="ระบุสิ่งที่ปรับปรุงหรือเหตุผลที่เก็บฉบับนี้"></textarea></label>
+    <p class="hint">เป็นฉบับเก็บย้อนหลัง ยังไม่ใช่การส่งตรวจหรืออนุมัติ</p>
+    <p class="project-error" id="revisionFormError" role="alert" hidden></p>
+    <div class="project-actions"><button type="button" class="btn ghost" data-revision-close>ยกเลิก</button><button type="submit" class="btn gold">เก็บฉบับงาน</button></div>
+  </form>
+</dialog>
+
+<dialog id="revisionView" class="project-dialog project-report">
+  <div class="project-dialog-head"><h2>ฉบับงานที่เก็บไว้</h2><button type="button" class="btn ghost" id="revisionViewClose">ปิด</button></div>
+  <div id="revisionContent"></div>
+</dialog>
+
+<section class="page" id="pg-sum">
   <div class="pghead"><div class="ph-ico" data-ic="table"></div>
     <div><h1>ภาพรวมราคาวัสดุ</h1>
       <div class="ph-sub">คลังราคากลางวัสดุก่อสร้าง · ราคาทุกรายการไม่รวมค่าขนส่ง</div>
@@ -829,6 +931,7 @@ canvas{max-width:100%}
       <h2 data-ic="table">รายการงานในโครงการ</h2>
       <div class="hint" id="esPickMeta" style="margin:-4px 0 10px">ยังไม่ได้เลือกกิจกรรม</div>
       <div class="statusline no-print" style="margin-bottom:10px">
+        <button class="btn ghost" id="esCusAdd" title="งานที่หลักเกณฑ์ไม่ได้กำหนดสูตรไว้ — ตั้งชื่อและกรอกต้นทุนเอง">+ รายการนอกหลักเกณฑ์</button>
         <button class="btn ghost" id="esCsvBtn" title="ตารางถอดราคาสำหรับส่งต่อ">⬇ BOQ (.csv)</button>
         <button class="btn ghost" id="esSaveBtn" title="เก็บงานทั้งโครงการไว้เปิดต่อ">บันทึกไฟล์งาน</button>
         <button class="btn ghost" id="esOpenBtn" title="เปิดไฟล์งานที่บันทึกไว้กลับเข้ามา">เปิดไฟล์งานเดิม</button>
@@ -1559,8 +1662,8 @@ const SELFCHK={missing:new Set(),ok:false};
 const $ = id => { const el=document.getElementById(id);
   if(!el) SELFCHK.missing.add(id);
   return el; };
-const APPVER='8.38';        /* เลขรุ่นที่เดียว — ที่อื่นดึงจากตัวนี้ */
-const APPDATE='8 ก.ย. 2569';   /* วันที่ของรุ่นนี้ ที่เดียวเหมือนกัน */
+const APPVER='8.39';        /* เลขรุ่นที่เดียว — ที่อื่นดึงจากตัวนี้ */
+const APPDATE='9 ก.ย. 2569';   /* วันที่ของรุ่นนี้ ที่เดียวเหมือนกัน */
 /* ⚠ ป้ายรุ่นบนแถบข้างเคยเป็นข้อความตายตัวใน HTML (v6.2) พอขึ้นรุ่นใหม่แล้วลืมแก้
    ผู้ใช้เลยเห็นเลขรุ่นเก่าทั้งที่โค้ดใหม่หมดแล้ว — ต่อไปนี้เขียนจาก APPVER เสมอ */
 try{ setTimeout(()=>{ try{ drawCfgChip(); }catch(e){} },0); }catch(e){}
@@ -2392,6 +2495,7 @@ async function loadLive(){
 /* ลำดับในอาเรย์นี้ = ลำดับปุ่มบนเมนูจริง ๆ · อยากสลับหน้า ให้สลับบรรทัดที่นี่ที่เดียว
    (ลำดับ section ในไฟล์เรียงตามนี้ด้วย เพื่อให้ลำดับตอนพิมพ์และลำดับกด Tab ตรงกับเมนู) */
 const PAGES=[
+  {p:'projects', ชื่อ:'โครงการ', ico:'▤', rerender:['projectsInit'], onopen:'projectsInit'},
   {p:'sum',  ชื่อ:'หน้าสรุป',        ico:'▦',  rerender:['buildSummary','buildMovers','drawMatChips','buildHealth','buildGap','gapInit']},
   {p:'est',  ชื่อ:'ประมาณราคา',       ico:'▤',  rerender:['estInit'], onopen:'estInit'},
   {p:'dist', ชื่อ:'คำนวณระยะขนส่ง',  ico:'⇄',  rerender:['matInit','_cmpRe']},
@@ -2523,11 +2627,12 @@ function kdd(sel){
     act=Math.max(0,Math.min(its.length-1,n));
     its.forEach((e,k)=>e.classList.toggle('act',k===act));
     scrollTo(its[act]); };
-  const pick=(i)=>{ sel.selectedIndex=i; lab(); wrap.classList.remove('open');
+  const pick=(i)=>{ if(sel.disabled)return; sel.selectedIndex=i; lab(); wrap.classList.remove('open');
     sel.dispatchEvent(new Event('change')); inp.blur(); };
   const shut=()=>{ wrap.classList.remove('open'); lab(); };
   wrap._close=shut;
   const open=()=>{
+    if(sel.disabled)return;
     document.querySelectorAll('.kdd.open').forEach(w=>{ if(w!==wrap&&w._close) w._close(); });
     render(''); wrap.classList.add('open');
     const on=panel.querySelector('.kdd-it.on'); if(on) panel.scrollTop=Math.max(0,on.offsetTop-70);
@@ -2604,7 +2709,10 @@ document.addEventListener('mouseup',()=>{ if(KDD_HOLD){ KDD_HOLD=0;
    ใช้เมื่อโค้ดตั้งค่า sel.value= เอง (การตั้งค่าด้วยโค้ดไม่ยิงเหตุการณ์ใด ๆ)
    ถ้าไม่เรียก ป้ายจะยังเป็นค่าเก่าจนกว่าตัวจับเวลาข้างล่างจะวิ่งมาถึง = เห็นค่าไม่ตรงชั่วครู่ */
 function kddSync(sel){
-  const w=sel&&sel.closest?sel.closest('.kdd'):null; if(!w||w.classList.contains('open')) return;
+  const w=sel&&sel.closest?sel.closest('.kdd'):null; if(!w)return;
+  const control=w.querySelector('.kdd-inp');if(control)control.disabled=sel.disabled;
+  if(sel.disabled&&w.classList.contains('open'))w._close?.();
+  if(w.classList.contains('open')) return;
   const i=w.querySelector('.kdd-inp'), o=sel.options[sel.selectedIndex];
   const t=o?o.text:'';
   if(i&&document.activeElement!==i&&i.value!==t) i.value=t;
@@ -6892,6 +7000,17 @@ class Book {
     this.cache.clear();
     return this;
   }
+  /* เขียน "สูตร" ลงช่องว่าง — ใช้เฉพาะตอนลอกโครงแถวของไฟล์ต้นทางมาใช้กับแถวว่างของมันเอง
+     (รายการนอกหลักเกณฑ์) · ห้ามใช้แต่งสูตรคิดราคาขึ้นใหม่ นั่นผิด R29 */
+  setFormula(sheet, ref, f){
+    const sh=this.sheets[sheet];
+    if(!sh) throw new Error('ไม่มีชีต '+sheet);
+    const c=sh[ref];
+    if(c && ('f' in c)) throw new Error(`${sheet}!${ref} มีสูตรอยู่แล้ว — ห้ามเขียนทับ`);
+    sh[ref]={f:String(f)};
+    this.cache.clear();
+    return this;
+  }
   overrideList(){ return [...(this.overrides||new Map())].map(([k,v])=>({cell:k, why:v.why, wasFormula:!!(v.was&&v.was.f)})); }
   /* คืนช่องที่เคยเขียนทับ กลับไปเป็นของเดิมในไฟล์ต้นทาง — ทุกการเขียนทับต้องมีทางถอย (R22) */
   restore(sheet, ref){
@@ -7435,6 +7554,7 @@ async function esLoad(){
     const ds  = new DecompressionStream('gzip');
     const txt = await new Response(new Blob([bin]).stream().pipeThrough(ds)).text();
     const data = JSON.parse(txt);
+    EST.engineData = structuredClone(data);
     EST.book = new XLC.Book(data);
     EST.src  = data.source || 'DRR_KK Estimate';
     EST.actMat = data.actMaterials || {};
@@ -7487,6 +7607,22 @@ function esDiscover(){
     EST.acts.push({row:r, name, listName:esBareName(S[ESC_.name+r], name, params, r), unit, grp, params,
                    mats:(EST.actMat[r]||[])});
   }
+  /* ── แถวว่างในชีต สำหรับ "รายการนอกหลักเกณฑ์" ──
+     ไฟล์ Estimate มีแถวเปล่าเหลือไว้ท้ายรายการ · เอามาใช้ใส่งานที่หลักเกณฑ์ไม่ได้กำหนดไว้
+     ใส่ลงชีตแล้ว ยอดรวม → Factor F → ราคากลาง เดินตามสูตรของไฟล์เองทั้งเส้น
+     ไม่ต้องบวกเองใน JS จะได้ไม่มีเลขสองทาง (R11 · R29) */
+  EST.freeRows = [];
+  for(let r=EST.ROW1; r<=EST.ROW2; r++){
+    if(EST.acts.some(a=>a.row===r)) continue;
+    const c=S[ESC_.name+r];
+    if(c && (('f' in c) || String(c.v??'').trim()!=='')) continue;
+    const m=S[ESC_.cost+r];
+    if(m && ('f' in m)) continue;              /* แถวที่มีสูตรต้นทุนอยู่ = ไม่ใช่แถวว่าง */
+    EST.freeRows.push(r);
+  }
+  /* แถวต้นแบบของ "สายไฟ" (B/R/S) — ลอกของไฟล์เอง ไม่เขียนสูตรขึ้นใหม่ (R29) */
+  EST.wireTpl = (EST.acts.find(a=>['B','R','S'].every(c=>{const x=S[c+a.row]; return x&&('f' in x);}))||{}).row || null;
+
   EST.mats = [];
   for(let r=EST.ROW1; r<=EST.ROW2; r++){
     const c = S[ESC_.mat+r];
@@ -7575,21 +7711,28 @@ function esShip(km, unit){
    ราคาที่แหล่งถูกกว่าแต่อยู่ไกล อาจแพงกว่าเมื่อรวมค่าขนส่งแล้ว
    ระยะมาจากหน้า "คำนวณระยะขนส่ง" (distCache) ซึ่งวัดระยะถนนจริงต่อ "แหล่ง" ไม่ใช่ต่อวัสดุ
    R23: เทียบกันได้เฉพาะหน่วยเดียวกัน · R17: เก็บรายการที่เอามาเทียบไว้ให้กางดูได้ */
-function esPriceOf(drrName, mi){
+function esPriceCandidates(drrName, mi){
+  if(EST.priceInputs) return structuredClone(EST.priceInputs[drrName] || []);
   const cands = esFindInStore(drrName);
-  if(!cands.length) return null;
   const manualKm = (EST.matManual && EST.matManual[drrName] && EST.matManual[drrName].km);
-  const byUnit = {};
-  cands.forEach(c=>{
+  return cands.flatMap(c=>{
     const v = valAt(c.si[4], mi, true);
-    if(!v || !Number.isFinite(v.p) || v.p<=0) return;
+    if(!v || !Number.isFinite(v.p) || v.p<=0) return [];
     const dc = (typeof distCache!=='undefined' && distCache) ? distCache[c.src] : null;
     const km = dc ? dc.L : (manualKm!=null ? manualKm : null);
+    return [{name:c.name,unit:c.unit,src:c.src,how:c.how,p:v.p,ym:mLabI(v.from),carried:v.carried,
+      km,kmMode:dc ? dc.mode : (manualKm!=null ? 'manual' : null)}];
+  });
+}
+function esPriceOf(drrName, mi){
+  const cands = esPriceCandidates(drrName, mi);
+  if(!cands.length) return null;
+  const byUnit = {};
+  cands.forEach(c=>{
+    const km = c.km;
     const ship = esShip(km, c.unit);
     (byUnit[c.unit] = byUnit[c.unit] || []).push({
-      ...c, p:v.p, from:v.from, carried:v.carried,
-      km, kmMode: dc ? dc.mode : (manualKm!=null ? 'manual' : null),
-      ship, total: ship==null ? null : v.p + ship,
+      ...c, ship, total: ship==null ? null : c.p + ship,
     });
   });
   const units = Object.keys(byUnit);
@@ -7605,7 +7748,7 @@ function esPriceOf(drrName, mi){
   const best = ranked[0];
   const noKm = list.filter(x=>x.km==null).length;
   return {price:best.p, unit:u, src:best.src, name:best.name, how:best.how,
-          ym:mLabI(best.from), carried:best.carried, units:units.length,
+          ym:best.ym, carried:best.carried, units:units.length,
           km:best.km, kmMode:best.kmMode, ship:best.ship, total:best.total,
           basis: withShip.length ? 'ถึงหน้างาน' : 'ราคาที่แหล่ง',
           nSrc:list.length, noKm,
@@ -7738,6 +7881,69 @@ function esHits(){
     : '<div class="hint" style="padding:14px">ไม่พบกิจกรรมที่ตรงกับคำค้น</div>';
 }
 
+/* ══════════ รายการนอกหลักเกณฑ์ ══════════
+   งานที่หลักเกณฑ์ไม่ได้กำหนดสูตรไว้ — ผู้ใช้ตั้งชื่อเองและกรอกต้นทุนต่อหน่วยเอง
+   (e-GP เรียก "รายการอื่น ๆ ที่หลักเกณฑ์ไม่ได้กำหนดไว้")
+   ⚠ ต้นทุนของรายการพวกนี้ "ไม่ได้" ถูกพิสูจน์ด้วยไฟล์ Estimate — เป็นเลขที่คนกรอกเอง
+      จอกับใบพิมพ์จึงต้องบอกให้ชัดทุกที่ ห้ามให้ดูเหมือนของที่เครื่องคิดมา (R17) */
+const ESCUS_ = {grp:'ทาง'};
+function esWireRow(r){
+  const S=EST.book.sheets[EST.SH], t=EST.wireTpl;
+  if(!t) return false;
+  for(const col of ['B','R','S']){
+    if(S[col+r] && ('f' in S[col+r])) continue;         /* มีสายไฟอยู่แล้ว */
+    const src=S[col+t]; if(!src||!('f' in src)) return false;
+    /* ลอกสูตรของไฟล์เอง แล้วเลื่อนเลขแถวตาม — ไม่ได้พิมพ์สูตรขึ้นใหม่
+       ($ = ล็อกไว้ ห้ามเลื่อน เหมือนกติกาของ Excel) */
+    const f=src.f.replace(/(\$?)([A-Z]{1,2})(\$?)(\d+)/g,
+      (m,a,c,b,n)=> (b==='$'||+n!==t) ? m : a+c+b+r);
+    EST.book.setFormula(EST.SH, col+r, f);
+  }
+  return true;
+}
+function esCustomAdd(){
+  if(!EST.book) return;
+  const used=new Set(EST.picked.filter(p=>p.custom).map(p=>p.row));
+  const r=(EST.freeRows||[]).find(x=>!used.has(x));
+  if(r==null){ toast('ไฟล์ Estimate ไม่มีแถวว่างเหลือให้เพิ่มรายการแล้ว'); return; }
+  if(!esWireRow(r)){ toast('เพิ่มรายการไม่ได้ — ลอกโครงแถวจากไฟล์ต้นทางไม่สำเร็จ'); return; }
+  /* ทุกช่องเริ่มว่าง ยกเว้นหมวดงานที่ต้องมีค่าไม่งั้นแถวไม่ถูกนับ (R2) */
+  EST.book.setMany([[EST.SH,ESC_.name+r,''],[EST.SH,ESC_.unit+r,''],
+                    [EST.SH,ESC_.grp+r,ESCUS_.grp],[EST.SH,ESC_.qty+r,''],
+                    [EST.SH,ESC_.cost+r,''],[EST.SH,ESC_.on+r,true]]);
+  EST.picked.push({row:r, name:'', custom:true});
+  esRender();
+}
+function esCustomRow(pk,i,S){
+  const r=pk.row;
+  const g=col=>{ const c=S[col+r]; return (c&&c.v!==undefined&&c.v!==null)?c.v:''; };
+  const nm=String(g(ESC_.name)), unit=String(g(ESC_.unit));
+  const q=esNum(g(ESC_.qty)), cost=esNum(g(ESC_.cost));
+  const line=(q!==null&&cost!==null)?q*cost:null;
+  const miss=[]; if(!nm.trim()) miss.push('ชื่อรายการ'); if(cost===null) miss.push('ต้นทุน/หน่วย');
+  const grp=String(g(ESC_.grp)||ESCUS_.grp);
+  return `<tr class="escus"><td class="num">${i+1}</td>
+    <td><span class="pill warn">นอกหลักเกณฑ์</span>
+      <input class="escin n" data-crow="${r}" data-ccol="${ESC_.name}" value="${esc(nm)}" placeholder="ชื่อรายการงานก่อสร้าง">
+      <div class="espar">
+        <span class="esl">หมวด</span>
+        <select class="espsel" data-crow="${r}" data-ccol="${ESC_.grp}">
+          ${['ทาง','สะพาน'].map(x=>`<option${x===grp?' selected':''}>${x}</option>`).join('')}
+        </select>
+        <span class="esl">ต้นทุน/หน่วย</span>
+        <input class="escin c${cost===null?' empty':''}" data-crow="${r}" data-ccol="${ESC_.cost}"
+               inputmode="decimal" value="${cost===null?'':cost}" placeholder="กรอก">
+        <span class="esl">บาท</span>
+      </div>
+      ${miss.length?`<div class="esbad">ยังกรอกไม่ครบ: ${esc(miss.join(' · '))}</div>`
+        :'<div class="escnote">ต้นทุนนี้ผู้ใช้กรอกเอง ไม่ได้คิดจากสูตรในไฟล์ Estimate</div>'}</td>
+    <td><input class="escin u" data-crow="${r}" data-ccol="${ESC_.unit}" value="${esc(unit)}" placeholder="หน่วย"></td>
+    <td class="num"><input class="esqin" data-row="${r}" inputmode="decimal" value="${q===null?'':q}" placeholder="0"></td>
+    <td class="num">${cost===null?'<span class="hint">ยังไม่ได้กรอก</span>':esMoney(cost)}</td>
+    <td class="num">${line===null?'<span class="hint">ยังคิดไม่ได้</span>':esMoney(line)}</td>
+    <td class="no-print"><button class="btn ghost mini" data-esdel="${r}">ลบ</button></td></tr>`;
+}
+
 function esRows(){
   const T=$('tblEst'); if(!T) return;
   const head=`<thead><tr><th style="width:40px">ที่</th><th>รายการงานก่อสร้าง</th>
@@ -7750,6 +7956,7 @@ function esRows(){
   }
   const S=EST.book.sheets[EST.SH];
   T.innerHTML=head+'<tbody>'+EST.picked.map((pk,i)=>{
+    if(pk.custom) return esCustomRow(pk,i,S);
     const row=pk.row, a=EST.acts.find(x=>x.row===row);
     const nm=esT(EST.SH,ESC_.name+row).trim()||pk.name;
     const unit=esT(EST.SH,ESC_.unit+row).trim();
@@ -7784,8 +7991,11 @@ function esRows(){
       <td class="num">${(miss.length||cost===null)?'<span class="hint">ยังคิดไม่ได้</span>':esMoney(line)}</td>
       <td class="no-print">${EST.backup[row]?`<button class="btn ghost mini" data-esbk="${row}" title="กางที่มาของต้นทุนต่อหน่วย">แบ็คอัพ</button> `:''}<button class="btn ghost mini" data-esdel="${row}">ลบ</button></td></tr>`;
   }).join('')+'</tbody>';
+  const nCus=EST.picked.filter(p=>p.custom).length;
   $('esPickMeta').textContent = EST.picked.length
-    ? `${EST.picked.length} รายการ · ตัวเลขทุกตัวคิดจากสูตรในไฟล์ ${EST.src}` : 'ยังไม่ได้เลือกกิจกรรม';
+    ? `${EST.picked.length} รายการ · ตัวเลขคิดจากสูตรในไฟล์ ${EST.src}`
+      + (nCus?` · ในนี้เป็นรายการนอกหลักเกณฑ์ที่กรอกต้นทุนเอง ${nCus} รายการ`:'')
+    : 'ยังไม่ได้เลือกกิจกรรม';
 }
 
 function esMatTable(){
@@ -8067,6 +8277,7 @@ function esReady(){
 function esRender(){
   esPushPrices();
   esRows(); esMatTable(); esKpis(); esHits();
+  if(typeof projectDidRender==='function') projectDidRender();
   ['esOil','esRain'].forEach(id=>{ const el=$(id);
     if(el&&el.closest('.esf')) el.closest('.esf').classList.toggle('empty', !el.value); });
   const w=$('esWarn');
@@ -8118,7 +8329,11 @@ function estInit(){
   /* เดือนราคาวัสดุ — ต้องอัปเดตทุกครั้งที่คลังเปลี่ยน และต้องจำด้วย "ค่าจริง" ไม่ใช่ลำดับ (R1) */
   const sel=$('esPriceM');
   const keep = EST.priceKey;
-  sel.innerHTML = P.months.map((m,i)=>`<option value="${P.ylist[i]*100+m}">${esc(mLabI(i))}</option>`).join('');
+  sel.innerHTML = EST.priceInputs
+    ? `<option value="${EST.priceKey||''}">${esc(EST.priceLabel||'ยังไม่เลือกเดือนราคา')}</option>`
+    : P.months.map((m,i)=>`<option value="${P.ylist[i]*100+m}">${esc(mLabI(i))}</option>`).join('');
+  sel.disabled=!!EST.priceInputs;
+  kddSync(sel);
   if(keep && [...sel.options].some(o=>o.value===String(keep))) sel.value=String(keep);
   else if(sel.options.length) sel.value=sel.options[sel.options.length-1].value;
   EST.priceKey=+sel.value;
@@ -8127,7 +8342,7 @@ function estInit(){
 
   const chips=$('hcEst');
   if(chips) chips.innerHTML=`<span class="ph-chip">▤ ${EST.acts.length} กิจกรรม</span>
-    <span class="ph-chip">⛁ ราคาวัสดุ ${P.months.length?esc(mLabI(EST.priceMi)):'ยังไม่มีคลัง'}</span>
+    <span class="ph-chip">⛁ ราคาวัสดุ ${esc(esMonthLabel())}</span>
     <span class="ph-chip">🚚 ค่าขนส่ง ว 477</span><span class="ph-chip">× Factor F</span>`;
   esRender();
 }
@@ -8149,8 +8364,12 @@ function esWire(){
     const b=e.target.closest('[data-esdel]'); if(!b) return;
     const row=+b.dataset.esdel;
     const i=EST.picked.findIndex(p=>p.row===row); if(i<0) return;   /* กันปุ่มของแถวที่ถูกลบไปแล้ว (R22) */
+    const wasCustom=EST.picked[i].custom;
     EST.picked.splice(i,1);
-    EST.book.setMany([[EST.SH,ESC_.on+row,false],[EST.SH,ESC_.qty+row,'']]);
+    const w=[[EST.SH,ESC_.on+row,false],[EST.SH,ESC_.qty+row,'']];
+    /* รายการนอกหลักเกณฑ์ต้องล้างชื่อ/หน่วย/ต้นทุนออกด้วย ไม่งั้นแถวว่างจะไม่ว่างจริง */
+    if(wasCustom) w.push([EST.SH,ESC_.name+row,''],[EST.SH,ESC_.unit+row,''],[EST.SH,ESC_.cost+row,'']);
+    EST.book.setMany(w);
     esRender();
   });
   $('tblEst').addEventListener('change',e=>{
@@ -8159,6 +8378,15 @@ function esWire(){
       const raw=el.value.trim().replace(/,/g,'');
       if(raw!=='' && !Number.isFinite(+raw)){ el.value=''; return; }
       EST.book.set(EST.SH, ESC_.qty+el.dataset.row, raw===''?'':+raw); esRender();
+    } else if(el.dataset.crow){                 /* ช่องของรายการนอกหลักเกณฑ์ */
+      const col=el.dataset.ccol, r=el.dataset.crow;
+      const raw=String(el.value).trim();
+      if(col===ESC_.cost){
+        const n=+raw.replace(/,/g,'');
+        if(raw!=='' && !Number.isFinite(n)){ toast('ต้นทุนต่อหน่วยต้องเป็นตัวเลข'); esRender(); return; }
+        EST.book.set(EST.SH, col+r, raw===''?'':n);
+      } else EST.book.set(EST.SH, col+r, raw);
+      esRender();
     } else if(el.classList.contains('espsel')){
       EST.book.set(EST.SH, el.dataset.col+el.dataset.row, el.value);
       esRender();
@@ -8169,6 +8397,7 @@ function esWire(){
       esRender();
     }
   });
+  const addBtn=$('esCusAdd'); if(addBtn) addBtn.onclick=esCustomAdd;
   $('esMatAll').onclick=()=>{ EST.matAll=!EST.matAll; esMatTable(); };
   $('tblEstMat').addEventListener('click',e=>{
     const b=e.target.closest('[data-esmat]'); if(!b) return;
@@ -8203,10 +8432,16 @@ function esSave(){
     priceMonth: EST.priceKey,
     /* เก็บ "ชื่อจริง" ของกิจกรรม ไม่เก็บเลขแถว — ไฟล์ Estimate รุ่นใหม่แถวขยับได้ (R1) */
     items: EST.picked.map(pk=>{
+      const qc=S[ESC_.qty+pk.row];
+      const qty=(qc&&qc.v!==undefined&&qc.v!=='')?qc.v:null;
+      if(pk.custom){                                   /* รายการนอกหลักเกณฑ์ — เก็บทั้งชื่อ หน่วย ต้นทุน */
+        const g=col=>{ const c=S[col+pk.row]; return (c&&c.v!==undefined&&c.v!=='')?c.v:null; };
+        return { custom:true, name:g(ESC_.name)||'', unit:g(ESC_.unit)||'',
+                 grp:g(ESC_.grp)||ESCUS_.grp, cost:g(ESC_.cost), qty };
+      }
       const par={}; const a=EST.acts.find(x=>x.row===pk.row);
       (a?a.params:[]).forEach(p=>{ const c=S[p.col+pk.row]; if(c&&c.v!==undefined) par[p.col]=c.v; });
-      const qc=S[ESC_.qty+pk.row];
-      return { name:pk.name, qty:(qc&&qc.v!==undefined&&qc.v!=='')?qc.v:null, params:par };
+      return { name:pk.name, qty, params:par };
     }),
     materials: EST.matManual||{},
   };
@@ -8222,6 +8457,8 @@ async function esOpen(e){
     if(!d || d.format!==ES_FMT) throw new Error('ไม่ใช่ไฟล์งานประมาณราคาของ CostBase');
     if(d.version!==ES_VER) throw new Error('ไฟล์งานรุ่น '+d.version+' — โปรแกรมนี้อ่านได้เฉพาะรุ่น '+ES_VER);
     if(!Array.isArray(d.items)) throw new Error('โครงสร้างไฟล์งานไม่ครบ');
+    if(typeof projectMayReplace==='function' && !projectMayReplace()) return;
+    if(typeof projectDetach==='function'){ projectDetach(); projectFreshBook(); }
     esResetSheet(); EST.picked=[]; EST.matManual={};
     const p=d.project||{};
     ['esName','esRoad','esYear','esBudget','esBy'].forEach((id,i)=>{
@@ -8245,6 +8482,18 @@ async function esOpen(e){
     if(d.priceMonth) EST.priceKey=+d.priceMonth;
     const miss=[];
     d.items.forEach(it=>{
+      if(it.custom){                                     /* รายการนอกหลักเกณฑ์ — ขอแถวว่างใหม่ (R1) */
+        const used=new Set(EST.picked.filter(p=>p.custom).map(p=>p.row));
+        const r=(EST.freeRows||[]).find(x=>!used.has(x));
+        if(r==null || !esWireRow(r)){ miss.push(it.name||'(รายการนอกหลักเกณฑ์)'); return; }
+        EST.picked.push({row:r, name:it.name||'', custom:true});
+        const w=[[EST.SH,ESC_.name+r,it.name||''],[EST.SH,ESC_.unit+r,it.unit||''],
+                 [EST.SH,ESC_.grp+r,it.grp||ESCUS_.grp],[EST.SH,ESC_.on+r,true],
+                 [EST.SH,ESC_.cost+r,(it.cost!=null&&Number.isFinite(+it.cost))?+it.cost:'']];
+        if(it.qty!=null && Number.isFinite(+it.qty)) w.push([EST.SH,ESC_.qty+r,+it.qty]);
+        EST.book.setMany(w);
+        return;
+      }
       const a=EST.acts.find(x=>x.name===it.name);         /* จับกลับด้วยชื่อ ไม่ใช่เลขแถว */
       if(!a){ miss.push(it.name); return; }
       EST.picked.push({row:a.row, name:a.name});
@@ -8267,7 +8516,7 @@ function esCsv(){
     ['ประมาณราคางานทาง — คิดด้วยสูตรจากไฟล์ '+EST.src+' โดย CostBase v'+APPVER],
     ['โครงการ',$('esName').value],['สายทาง',$('esRoad').value],['ปีงบประมาณ',$('esYear').value],
     ['ราคาน้ำมัน',$('esOil').value],['Factor F',$('esRain').value],
-    ['เดือนราคาวัสดุ',P.months.length?mLabI(EST.priceMi):''],
+    ['เดือนราคาวัสดุ',esMonthLabel()],
     [],
     ['ที่','รายการงานก่อสร้าง','หน่วย','ปริมาณงาน','ต้นทุน/หน่วย','ค่างานต้นทุน'],
   ];
@@ -8291,7 +8540,436 @@ function esCsv(){
   toast('ส่งออก BOQ แล้ว');
 }
 
+
 <!--<</EST>>-->
+/* Local repository boundary. All changes to a project use one atomic transaction
+   and an expected generation, so another tab cannot silently overwrite a draft. */
+const ProjectStore = (()=>{
+  let connection;
+  const request=req=>new Promise((resolve,reject)=>{req.onsuccess=()=>resolve(req.result);req.onerror=()=>reject(req.error);});
+  function open(){
+    if(!connection) connection=new Promise((resolve,reject)=>{
+      if(!window.indexedDB){reject(new Error('เบราว์เซอร์นี้ไม่รองรับพื้นที่บันทึกโครงการ'));return;}
+      const r=indexedDB.open('costbase-projects',1);
+      r.onupgradeneeded=()=>{
+        const db=r.result;
+        db.createObjectStore('projects',{keyPath:'id'});
+        db.createObjectStore('drafts',{keyPath:'projectId'});
+        const versions=db.createObjectStore('versions',{keyPath:'id'});
+        versions.createIndex('projectId','projectId');
+        db.createObjectStore('engines',{keyPath:'id'});
+      };
+      r.onsuccess=()=>{r.result.onversionchange=()=>{r.result.close();connection=null;};resolve(r.result);};
+      r.onerror=()=>{connection=null;reject(r.error);};
+      r.onblocked=()=>{connection=null;reject(new Error('ปิดแท็บ CostBase อื่นแล้วลองเปิดพื้นที่โครงการใหม่'));};
+    });
+    return connection;
+  }
+  async function read(store,key){const db=await open();return request(db.transaction(store).objectStore(store).get(key));}
+  async function all(){const db=await open();return request(db.transaction('projects').objectStore('projects').getAll());}
+  async function history(id){const db=await open();return request(db.transaction('versions').objectStore('versions').index('projectId').getAll(id));}
+  async function load(id){
+    const db=await open(), tx=db.transaction(['projects','drafts']);
+    const [project,draft]=await Promise.all([request(tx.objectStore('projects').get(id)),request(tx.objectStore('drafts').get(id))]);
+    if(!project)throw new Error('ไม่พบโครงการนี้');
+    return {project,draft};
+  }
+  async function write(stores,run){
+    const db=await open();
+    return new Promise((resolve,reject)=>{
+      const tx=db.transaction(stores,'readwrite');let result,reason;
+      tx.oncomplete=()=>resolve(result);
+      tx.onabort=()=>reject(reason||tx.error||new Error('บันทึกไม่สำเร็จ ข้อมูลเดิมยังอยู่'));
+      tx.onerror=()=>{};
+      const fail=e=>{reason=e;tx.abort();};
+      try{run(tx,v=>{result=v;},fail);}catch(e){fail(e);}
+    });
+  }
+  function fresh(meta){const now=new Date().toISOString();return {...meta,id:crypto.randomUUID(),schema:1,createdAt:now,updatedAt:now,generation:0,revisionCount:0,ownerUserId:null,reviewerUserId:null,teamId:null,status:'draft'};}
+  async function create(meta){const p=fresh(meta);return write(['projects'],(tx,done)=>{tx.objectStore('projects').add(p);done(p);});}
+  async function save(id,expected,payload,meta,report,engine,revisionNote=null){
+    return write(['projects','drafts','versions','engines'],(tx,done,fail)=>{
+      const ps=tx.objectStore('projects');const r=ps.get(id);
+      r.onsuccess=()=>{try{
+        const old=r.result;
+        if(!old||old.generation!==expected)throw new Error('โครงการถูกบันทึกจากอีกแท็บแล้ว ข้อมูลในแท็บนี้ยังอยู่ กรุณาสำรองงานที่เปิดอยู่ก่อนเปิดโครงการใหม่');
+        const now=new Date().toISOString();
+        const p={...old,...meta,generation:old.generation+1,updatedAt:now,summary:report.totals,itemCount:report.items.length};
+        if(revisionNote!==null)p.revisionCount++;
+        ps.put(p);
+        tx.objectStore('engines').put(engine);
+        tx.objectStore('drafts').put({projectId:id,payload,engineId:engine.id,savedAt:now});
+        if(revisionNote!==null)tx.objectStore('versions').add({id:crypto.randomUUID(),projectId:id,number:p.revisionCount,createdAt:now,note:revisionNote,payload,engineId:engine.id,report});
+        done(p);
+      }catch(e){fail(e);}};
+    });
+  }
+  async function importProject(meta,draft,versions,engines){
+    const p=fresh(meta);
+    p.revisionCount=versions.length;
+    return write(['projects','drafts','versions','engines'],(tx,done)=>{
+      tx.objectStore('projects').add(p);
+      if(draft)tx.objectStore('drafts').add({...draft,projectId:p.id});
+      versions.forEach((v,i)=>tx.objectStore('versions').add({...v,id:crypto.randomUUID(),projectId:p.id,number:i+1}));
+      engines.forEach(e=>tx.objectStore('engines').put(e));done(p);
+    });
+  }
+  return {open,all,load,history,create,save,importProject,engine:id=>read('engines',id),version:id=>read('versions',id)};
+})();
+
+/* Project UI and the estimate adapter. No remote writes or identity claims.
+   Snapshots archive the workbook, actual price candidates, overrides and results.
+   Historical reports render saved values and never run against the live catalogue. */
+// The legacy cache can invoke hoisted page handlers before this block initializes.
+var PROJECTS={active:null,signature:'',dirty:false,busy:false,hydrating:false,engine:null,refresh:0};
+const projectClone=value=>structuredClone(value);
+const projectDate=value=>new Date(value).toLocaleString('th-TH',{dateStyle:'medium',timeStyle:'short'});
+const PROJECT_FIELDS={name:'esName',road:'esRoad',year:'esYear',budget:'esBudget',oil:'esOil',rain:'esRain',by:'esBy'};
+function projectMeta(){return Object.fromEntries(Object.entries(PROJECT_FIELDS).map(([key,id])=>[key,$(id).value]));}
+const PROJECT_DISTANCE_FIELDS=['dDest','dProj','dDate','dDiesel'];
+function projectDistanceState(){return {form:Object.fromEntries(PROJECT_DISTANCE_FIELDS.map(id=>[id,$(id)?.value||''])),distCache,dest,dres,matSel,cmpState,routeCache,lastMeasured};}
+function projectRestoreDistance(state){
+  distCache=projectClone(state?.distCache||{});dest=projectClone(state?.dest||null);
+  dres=projectClone(state?.dres||[]);matSel=projectClone(state?.matSel||[]);cmpState=projectClone(state?.cmpState||{});
+  routeCache=projectClone(state?.routeCache||{});lastMeasured=state?.lastMeasured||null;
+  PROJECT_DISTANCE_FIELDS.forEach(id=>{if($(id))$(id).value=state?.form?.[id]||'';});
+  renderAll();
+}
+function esMonthLabel(){return EST.priceInputs ? (EST.priceLabel||'ยังไม่เลือกเดือนราคา') : (P.months.length?mLabI(EST.priceMi):'ยังไม่มีคลัง');}
+function projectError(error,id='projectError'){
+  const e=$(id);e.hidden=false;
+  e.textContent=error?.name==='QuotaExceededError'?'พื้นที่เบราว์เซอร์เต็ม บันทึกไม่สำเร็จ ข้อมูลเดิมยังอยู่ กรุณาสำรองงานที่เปิดอยู่':(error.message||String(error));
+}
+function projectClearError(id='projectError'){$(id).hidden=true;$(id).textContent='';}
+function projectGo(page){document.querySelector(`#nav button[data-p="${page}"]`).click();}
+function projectMayReplace(){return !PROJECTS.dirty || confirm('มีงานที่ยังไม่บันทึก ต้องการออกจากงานนี้โดยไม่บันทึกหรือไม่?');}
+function projectDetach(){PROJECTS.active=null;PROJECTS.signature='';PROJECTS.dirty=false;projectDrawBar();}
+
+async function projectEngine(){
+  if(PROJECTS.engine)return PROJECTS.engine;
+  const embedded=$('estEngine').textContent.trim();
+  const text=[...document.scripts].find(s=>s.textContent.includes('const XLC = (function(){'))?.textContent;
+  if(!text)throw new Error('ไม่พบต้นฉบับตัวคิดสูตร');
+  const start=text.indexOf('const XLC = (function(){');
+  const end=text.indexOf('return {Book, evaluate, isErr, XlErr, bahttext, col2i, i2col};',start);
+  if(end<0)throw new Error('อ่านรุ่นตัวคิดสูตรไม่สำเร็จ');
+  const evaluator=text.slice(start,text.indexOf('})();',end)+5);
+  const hash=await crypto.subtle.digest('SHA-256',new TextEncoder().encode(embedded+'\n'+evaluator));
+  const id=Array.from(new Uint8Array(hash),x=>x.toString(16).padStart(2,'0')).join('');
+  PROJECTS.engine={id,embedded,evaluator,appVersion:APPVER,source:EST.src};
+  return PROJECTS.engine;
+}
+async function projectReady(){
+  if(!EST.book&&!EST.loading)await esLoad();
+  if(EST.loading)await new Promise((resolve,reject)=>{
+    const started=Date.now();const timer=setInterval(()=>{
+      if(!EST.loading){clearInterval(timer);resolve();}
+      else if(Date.now()-started>20000){clearInterval(timer);reject(new Error('เครื่องยนต์ยังไม่พร้อม ลองเปิดโครงการอีกครั้ง'));}
+    },50);
+  });
+  if(!EST.book||EST.failed)throw new Error(EST.failed||'เปิดเครื่องยนต์ไม่สำเร็จ');
+  estInit();await projectEngine();
+}
+function projectFreshBook(){
+  EST.book=new XLC.Book(projectClone(EST.engineData));
+  EST.picked=[];EST.priceInputs=null;EST.priceLabel='';EST.priceKey=null;
+  EST.matManual={};EST.matOpen=null;EST.matAll=false;
+  esDiscover();esResetSheet();
+  Object.values(PROJECT_FIELDS).forEach(id=>{$(id).value='';});
+  EST.book.setMany([[EST.SH,'B4',''],[EST.SH,'F3',''],[EST.SH,'L3',''],[EST.SH,'B2',''],[EST.SH,'E5',''],[EST.SH,'J5','']]);
+  $('esQ').value='';$('esGrp').value='';$('esRoadSub').textContent='เลือกหรือกรอกสายทางของโครงการนี้';
+  esBackupClose();
+}
+function projectSyncFields(){
+  const p=projectMeta();
+  EST.book.setMany([[EST.SH,'B4',p.name],[EST.SH,'F3',p.road],[EST.SH,'L3',p.year],[EST.SH,'B2',p.by],[EST.SH,'E5',p.oil],[EST.SH,'J5',p.rain]]);
+  return p;
+}
+function projectReport(){
+  const issues=[];
+  const p=projectMeta();
+  if(!p.oil)issues.push('ยังไม่เลือกราคาน้ำมัน');
+  if(!p.rain)issues.push('ยังไม่เลือกสภาพงาน');
+  if(!EST.picked.length)issues.push('ยังไม่มีรายการประมาณราคา');
+  const items=EST.picked.map(pk=>{
+    const a=EST.acts.find(x=>x.row===pk.row);
+    const qty=esV(EST.SH,ESC_.qty+pk.row),cost=esV(EST.SH,ESC_.cost+pk.row);
+    const params=(a?.params||[]).filter(x=>x.kind!=='lab').map(x=>({column:x.col,value:esCell(EST.SH,x.col+pk.row)}));
+    if(qty===null)issues.push('ยังไม่กรอกปริมาณ: '+pk.name);
+    if(qty!==null&&qty<0)issues.push('ปริมาณติดลบ: '+pk.name);
+    if(params.some(x=>x.value===null||x.value===''))issues.push('พารามิเตอร์ยังไม่ครบ: '+pk.name);
+    if(cost===null)issues.push('สูตรยังคิดไม่สำเร็จ: '+pk.name);
+    return {name:esT(EST.SH,ESC_.name+pk.row),unit:esT(EST.SH,ESC_.unit+pk.row),qty,cost,total:qty!==null&&cost!==null?qty*cost:null,params};
+  });
+  const materials=projectClone(Object.values(EST.matInfo||{}));
+  materials.forEach(m=>{
+    if(!m.hit)issues.push('ไม่พบราคาวัสดุ: '+m.drr);
+    else if(m.hit.km===null||m.hit.ship===null)issues.push('ค่าขนส่งยังไม่ครบ: '+m.drr);
+  });
+  const ready=esReady()&&!issues.length;
+  const totals={cost:ready?esV('5.1 Factor F','G11'):null,factor:ready?esV('5.1 Factor F','E18'):null,total:ready?esV('แบบสรุปราคา','H16'):null};
+  if(ready&&Object.values(totals).some(x=>x===null))issues.push('สูตรสรุปยังคิดไม่สำเร็จ');
+  return {project:p,items,materials,totals,issues,priceLabel:esMonthLabel(),source:EST.src,appVersion:APPVER};
+}
+function projectSignature(){
+  if(!EST.book)return '';
+  const overrides=[...(EST.book.overrides||new Map())].map(([key,o])=>{
+    const at=key.lastIndexOf('!');return [key,o,EST.book.sheets[key.slice(0,at)]?.[key.slice(at+1)]];
+  });
+  return JSON.stringify({meta:projectMeta(),picked:EST.picked,rows:EST.picked.map(p=>EST.book.sheets[EST.SH][ESC_.qty+p.row]),params:EST.picked.map(p=>ESP_.map(c=>EST.book.sheets[EST.SH][c+p.row])),overrides,materials:EST.matInfo,priceKey:EST.priceKey,distance:projectDistanceState()});
+}
+function projectDidRender(){
+  if(typeof PROJECTS==='undefined'||PROJECTS.hydrating||PROJECTS.busy)return;
+  const sig=projectSignature();
+  PROJECTS.dirty=PROJECTS.active ? sig!==PROJECTS.signature : !!EST.picked.length;
+  projectDrawBar();
+}
+function projectDrawBar(){
+  const bar=$('projectWorkbar');if(!bar)return;
+  bar.classList.toggle('dirty',PROJECTS.dirty);
+  $('projectActiveName').textContent=PROJECTS.active ? PROJECTS.active.name : 'งานประมาณราคาที่ยังไม่ผูกโครงการ';
+  $('projectSaveState').textContent=PROJECTS.busy?'กำลังบันทึก…':PROJECTS.active?(PROJECTS.dirty?'มีการแก้ไขที่ยังไม่บันทึก':'บันทึกแล้วในเครื่องนี้'):'สร้างโครงการเพื่อบันทึกและเก็บฉบับงาน';
+  $('projectSave').textContent=PROJECTS.active?'บันทึกงาน':'บันทึกเป็นโครงการ';
+  $('projectKeepRevision').disabled=!PROJECTS.active||PROJECTS.busy;
+  $('projectPriceMode').textContent=EST.priceInputs?'ใช้ราคาและระยะที่เก็บไว้กับงาน • กดอัปเดตเมื่อต้องการใช้ข้อมูลจากคลังปัจจุบัน':'ใช้ราคาและระยะจากคลังปัจจุบัน • เมื่อบันทึกจะเก็บข้อมูลชุดนี้ไว้กับงาน';
+  $('projectRefreshPrices').disabled=!PROJECTS.active||PROJECTS.busy;
+}
+async function projectPack(value){
+  const text=JSON.stringify(value);
+  return new Response(new Blob([text]).stream().pipeThrough(new CompressionStream('gzip'))).blob();
+}
+async function projectUnpack(blob){
+  // Limit the inflated size too, before parsing untrusted backup files.
+  const reader=blob.stream().pipeThrough(new DecompressionStream('gzip')).getReader();
+  const parts=[];let size=0;
+  try{while(true){const {value,done}=await reader.read();if(done)break;size+=value.length;
+    if(size>80*1024*1024)throw new Error('ข้อมูลโครงการที่คลายแล้วใหญ่เกิน 80 MB');parts.push(value);}
+  }finally{await reader.cancel();}
+  return JSON.parse(await new Blob(parts).text());
+}
+async function projectCapture(){
+  const engine=await projectEngine();
+  projectSyncFields();esRender();
+  const priceLabel=esMonthLabel();
+  const priceInputs=Object.fromEntries(EST.mats.map(m=>[m.name,esPriceCandidates(m.name,EST.priceMi)]));
+  const report=projectReport();
+  const book={sheets:EST.book.sheets,names:EST.book.names,tables:EST.book.tables,dataOnly:[...EST.book.dataOnly],overrides:[...(EST.book.overrides||new Map())]};
+  const snap={schema:1,engineId:engine.id,project:projectMeta(),book,picked:EST.picked,priceInputs,priceLabel,priceKey:EST.priceKey,
+    acts:EST.acts,mats:EST.mats,matManual:EST.matManual||{},report,distanceState:projectDistanceState()};
+  const payload=await projectPack(snap);
+  return {payload,report,engine,priceInputs,priceLabel};
+}
+function projectLock(on){
+  PROJECTS.busy=on;document.querySelectorAll('.page').forEach(page=>{page.inert=on;});
+  document.querySelectorAll('#projectWorkbar button').forEach(b=>{b.disabled=on;});projectDrawBar();
+}
+async function projectSave(note=null){
+  if(PROJECTS.busy)return;
+  if(!PROJECTS.active){projectNewDialog(true);return;}
+  const meta=projectMeta();
+  if(!meta.name.trim())throw new Error('กรอกชื่อโครงการก่อนบันทึก');
+  if(meta.year&&!/^\d{4}$/.test(meta.year))throw new Error('ปีงบประมาณต้องเป็นตัวเลข 4 หลัก');
+  projectLock(true);
+  try{
+    const data=await projectCapture();
+    const p=await ProjectStore.save(PROJECTS.active.id,PROJECTS.active.generation,data.payload,
+      {name:meta.name.trim(),road:meta.road,year:meta.year,ownerName:meta.by},data.report,data.engine,note);
+    PROJECTS.active=p;
+    EST.priceInputs=data.priceInputs;EST.priceLabel=data.priceLabel;
+    PROJECTS.hydrating=true;estInit();PROJECTS.signature=projectSignature();PROJECTS.dirty=false;PROJECTS.hydrating=false;
+    toast(note===null?'บันทึกโครงการในเครื่องนี้แล้ว':'เก็บฉบับที่ '+p.revisionCount+' แล้ว');
+    projectClearError();await projectsInit();
+  }finally{projectLock(false);}
+}
+function projectRestore(snap){
+  projectFreshBook();
+  EST.book=new XLC.Book(projectClone(snap.book));
+  EST.book.overrides=new Map(projectClone(snap.book.overrides||[]));
+  EST.acts=projectClone(snap.acts);EST.mats=projectClone(snap.mats);EST.picked=projectClone(snap.picked);
+  EST.priceInputs=projectClone(snap.priceInputs);EST.priceLabel=snap.priceLabel;EST.priceKey=snap.priceKey;
+  EST.matManual=projectClone(snap.matManual||{});
+  projectRestoreDistance(snap.distanceState);
+  for(const [key,id] of Object.entries(PROJECT_FIELDS))$(id).value=snap.project[key]??'';
+  $('esRoadSub').textContent='สายทางที่บันทึกไว้กับโครงการ';
+  estInit();
+}
+async function projectOpen(id){
+  if(PROJECTS.busy||!projectMayReplace())return;
+  await projectReady();
+  const {project,draft}=await ProjectStore.load(id);
+  let snap;
+  if(draft){
+    if(draft.engineId!==(await projectEngine()).id)throw new Error('โครงการใช้เครื่องยนต์คนละรุ่น เปิดดูฉบับงานและสำรองได้ แต่ยังแก้ด้วยรุ่นนี้ไม่ได้');
+    snap=await projectUnpack(draft.payload);projectValidateSnapshot(snap);
+  }
+  PROJECTS.hydrating=true;
+  try{
+    if(snap)projectRestore(snap);
+    else{
+      projectFreshBook();projectRestoreDistance(null);
+      $('esName').value=project.name;$('esRoad').value=project.road||'';$('esYear').value=project.year||'';$('esBy').value=project.ownerName||'';
+      $('dProj').value=project.name;
+      projectSyncFields();estInit();
+    }
+    PROJECTS.active=project;PROJECTS.signature=projectSignature();PROJECTS.dirty=false;
+    projectGo('est');
+  }finally{PROJECTS.hydrating=false;projectDrawBar();}
+}
+function projectNewDialog(attach=false){
+  if(PROJECTS.busy)return;
+  const form=$('projectForm');form.reset();form.dataset.attach=attach?'yes':'no';
+  if(attach){const p=projectMeta();$('projectName').value=p.name;$('projectRoad').value=p.road;$('projectYear').value=p.year;$('projectOwner').value=p.by;}
+  projectClearError('projectFormError');$('projectDialog').showModal();$('projectName').focus();
+}
+async function projectsInit(){
+  if(typeof PROJECTS==='undefined')return;
+  const run=++PROJECTS.refresh;
+  try{
+    const records=await ProjectStore.all();if(run!==PROJECTS.refresh)return;
+    const q=$('projectSearch').value.trim().toLocaleLowerCase('th');
+    const list=records.filter(p=>[p.name,p.road,p.ownerName].join(' ').toLocaleLowerCase('th').includes(q)).sort((a,b)=>b.updatedAt.localeCompare(a.updatedAt));
+    $('projectCount').textContent=list.length+' โครงการ';
+    $('projectList').innerHTML=list.length?list.map(p=>`<article class="card project-tile">
+      <div class="project-card-top"><span class="pill">ฉบับร่าง</span><span>${p.revisionCount} ฉบับที่เก็บไว้</span></div>
+      <h2>${esc(p.name)}</h2><p>${esc(p.road||'ยังไม่ระบุสายทาง')}</p>
+      <p class="hint">ปีงบประมาณ ${esc(p.year||'—')} · ${esc(p.ownerName||'ยังไม่ระบุผู้รับผิดชอบ')}</p>
+      <div class="project-total">${esMoney(p.summary?.total)} <small style="font-size:12px">บาท</small></div>
+      <p class="hint">${p.summary?.total==null?'ประมาณราคายังไม่ครบ':(p.itemCount||0)+' รายการงาน'} · บันทึก ${esc(projectDate(p.updatedAt))}</p>
+      <div class="project-actions"><button class="btn ghost" data-project-export="${p.id}">สำรอง</button><button class="btn ghost" data-project-history="${p.id}">ฉบับงาน</button><button class="btn" data-project-open="${p.id}">เปิดทำต่อ</button></div>
+      </article>`).join(''):`<div class="card project-empty"><h2>${q?'ไม่พบโครงการที่ค้นหา':'เริ่มโครงการแรกของคุณ'}</h2><p>${q?'ลองค้นด้วยชื่อ สายทาง หรือผู้รับผิดชอบ':'สร้างโครงการ แล้วนำราคาวัสดุในคลังมาจัดทำประมาณราคา'}</p>${q?'':'<button class="btn gold" data-project-new>＋ สร้างโครงการ</button>'}</div>`;
+  }catch(e){projectError(e);$('projectList').innerHTML='';}
+}
+async function projectHistory(id){
+  const [{project},versions]=await Promise.all([ProjectStore.load(id),ProjectStore.history(id)]);
+  const box=$('projectHistory');box.hidden=false;
+  box.innerHTML=`<h2>ฉบับงาน · ${esc(project.name)}</h2><p class="hint">ฉบับที่เก็บไว้เปิดดูได้อย่างเดียว การแก้ไขจะทำต่อในฉบับร่าง</p>`+
+    (versions.length?versions.sort((a,b)=>b.number-a.number).map(v=>`<div class="project-history-row"><div><b>ฉบับที่ ${v.number}</b> · ${esc(projectDate(v.createdAt))}<p>${esc(v.note||'ไม่ได้ระบุบันทึก')}</p><span class="hint">${v.report.issues.length?'ข้อมูลประมาณราคายังไม่ครบ':esMoney(v.report.totals.total)+' บาท'}</span></div><button class="btn ghost" data-version-view="${v.id}">เปิดดูฉบับนี้</button></div>`).join(''):'<p>ยังไม่มีฉบับที่เก็บไว้ เปิดโครงการแล้วกด “เก็บฉบับงาน”</p>');
+  box.scrollIntoView({behavior:'smooth',block:'start'});
+}
+async function projectView(id){
+  const v=await ProjectStore.version(id);if(!v)throw new Error('ไม่พบฉบับงาน');
+  const r=v.report;
+  // R10 / R21: empty tables explain their state; numeric headings align with cells.
+  const itemRows=r.items.map(i=>`<tr><td>${esc(i.name)}</td><td>${esc(i.unit)}</td><td class="num">${esMoney(i.qty)}</td><td class="num">${esMoney(i.cost)}</td><td class="num">${esMoney(i.total)}</td></tr>`).join('')
+    || '<tr data-empty><td colspan="5" class="hint">ฉบับนี้ยังไม่มีรายการประมาณราคา</td></tr>';
+  const materialRows=r.materials.map(m=>`<tr><td>${esc(m.drr)}</td><td>${esc(m.hit?.src||'ไม่พบราคา')}<br>${esc(m.hit?.ym||'')}</td><td>${esc(m.hit?.unit||'')}</td><td class="num">${esMoney(m.hit?.price)}</td><td class="num">${esMoney(m.hit?.km)}</td><td class="num">${esMoney(m.hit?.ship)}</td></tr>`).join('')
+    || '<tr data-empty><td colspan="6" class="hint">ฉบับนี้ไม่มีรายการวัสดุที่บันทึกไว้</td></tr>';
+  $('revisionContent').innerHTML=`<span class="pill info">ดูอย่างเดียว · ฉบับที่ ${v.number}</span><h3>${esc(r.project.name)}</h3><p>${esc(r.project.road||'ยังไม่ระบุสายทาง')} · ปีงบประมาณ ${esc(r.project.year||'—')} · ผู้จัดทำ ${esc(r.project.by||'—')}</p>
+    <p>${esc(projectDate(v.createdAt))} · ${esc(v.note||'ไม่ได้ระบุบันทึก')}</p>
+    <div class="project-report-meta"><div>ค่างานต้นทุน<b>${esMoney(r.totals.cost)}</b></div><div>Factor F<b>${r.totals.factor==null?'—':r.totals.factor.toFixed(4)}</b></div><div>ราคากลาง (บาท)<b>${esMoney(r.totals.total)}</b></div></div>
+    ${r.issues.length?`<div class="project-error"><b>ฉบับนี้ยังมีข้อมูลไม่ครบ</b><ul>${r.issues.map(x=>`<li>${esc(x)}</li>`).join('')}</ul></div>`:''}
+    <p class="hint">เดือนราคา ${esc(r.priceLabel)} · ${esc(r.source)} · CostBase ${esc(r.appVersion)}</p>
+    <h3>รายการประมาณราคา</h3><div class="tw"><table><thead><tr><th>รายการงาน</th><th>หน่วย</th><th class="num">ปริมาณ</th><th class="num">ต้นทุน/หน่วย</th><th class="num">รวม</th></tr></thead><tbody>${itemRows}</tbody></table></div>
+    <h3>ราคาวัสดุและค่าขนส่งที่ใช้</h3><div class="tw"><table><thead><tr><th>วัสดุ</th><th>แหล่ง / เดือนราคา</th><th>หน่วย</th><th class="num">ราคา</th><th class="num">ระยะ (กม.)</th><th class="num">ค่าขนส่ง</th></tr></thead><tbody>${materialRows}</tbody></table></div>
+    <details><summary>ข้อมูลสำหรับตรวจย้อนกลับ</summary><p>เก็บต้นฉบับสูตร ตัวคิดสูตร ค่าที่แก้ในแบ็คอัพต้นทุน และราคาทุกแหล่งที่นำมาเปรียบเทียบในไฟล์สำรองโครงการ</p><p class="hint" style="overflow-wrap:anywhere">รหัสเครื่องยนต์ ${esc(v.engineId)}</p></details>`;
+  $('revisionView').showModal();
+}
+async function projectBlobText(blob){return new Promise((resolve,reject)=>{const r=new FileReader();r.onload=()=>resolve(r.result.split(',')[1]);r.onerror=()=>reject(r.error);r.readAsDataURL(blob);});}
+function projectBlob(base64){if(typeof base64!=='string'||base64.length>60*1024*1024)throw new Error('ไฟล์สำรองไม่ถูกต้องหรือใหญ่เกินไป');return new Blob([Uint8Array.from(atob(base64),c=>c.charCodeAt(0))]);}
+function projectValidateSnapshot(s){
+  if(!s||s.schema!==1||typeof s.engineId!=='string'||!s.book?.sheets?.[EST.SH]||!Array.isArray(s.book.overrides)||!s.project||!Array.isArray(s.acts)||!Array.isArray(s.mats)||!Array.isArray(s.picked)||!s.priceInputs||!s.report)throw new Error('ข้อมูลฉบับงานไม่ครบหรือเป็นรุ่นที่ยังไม่รองรับ');
+  if(s.picked.length>1000||s.acts.length>2000||s.mats.length>2000)throw new Error('จำนวนรายการในไฟล์ไม่ถูกต้อง');
+  const acts=new Map(s.acts.map(a=>[a.row,a]));
+  if(s.picked.some(p=>!acts.has(p.row)||typeof p.name!=='string'))throw new Error('รายการงานไม่ตรงกับเครื่องยนต์ในไฟล์');
+}
+async function projectExport(id,working=false){
+  if(PROJECTS.busy)return;projectLock(true);
+  try{
+    let project,draft,versions,engines;
+    if(working){
+      await projectReady();const d=await projectCapture();
+      project={...projectMeta(),name:projectMeta().name||'งานที่ยังไม่บันทึก',ownerName:projectMeta().by};
+      draft={payload:d.payload,engineId:d.engine.id,savedAt:new Date().toISOString()};versions=[];engines=[d.engine];
+    }else{
+      ({project,draft}=await ProjectStore.load(id));versions=await ProjectStore.history(id);
+      engines=await Promise.all([...new Set([draft?.engineId,...versions.map(v=>v.engineId)].filter(Boolean))].map(k=>ProjectStore.engine(k)));
+    }
+    const encode=async d=>d?{...d,payload:await projectBlobText(d.payload)}:null;
+    const bundle={format:'costbase-project',schema:1,exportedAt:new Date().toISOString(),project,draft:await encode(draft),versions:await Promise.all(versions.map(encode)),engines};
+    saveBlob(new Blob([JSON.stringify(bundle)],{type:'application/json'}),'CostBase '+String(project.name).replace(/[^0-9A-Za-z\u0E00-\u0E7F._-]+/g,'_').slice(0,70)+'.json');
+    toast('ส่งออกไฟล์สำรองโครงการแล้ว');
+  }finally{projectLock(false);}
+}
+async function projectImport(file){
+  if(!file)return;if(file.size>60*1024*1024)throw new Error('ไฟล์สำรองใหญ่เกิน 60 MB');
+  const b=JSON.parse(await file.text());
+  if(b.format!=='costbase-project'||b.schema!==1||typeof b.project?.name!=='string'||!Array.isArray(b.versions)||!Array.isArray(b.engines)||b.versions.length>500)throw new Error('ไม่ใช่ไฟล์สำรองโครงการ CostBase รุ่นที่รองรับ');
+  await projectReady();
+  const ids=new Set();
+  for(const e of b.engines){
+    if(!e||typeof e.id!=='string'||typeof e.embedded!=='string'||typeof e.evaluator!=='string')throw new Error('ต้นฉบับเครื่องยนต์ในไฟล์ไม่ครบ');
+    const digest=await crypto.subtle.digest('SHA-256',new TextEncoder().encode(e.embedded+'\n'+e.evaluator));
+    if(Array.from(new Uint8Array(digest),x=>x.toString(16).padStart(2,'0')).join('')!==e.id)throw new Error('รหัสเครื่องยนต์ในไฟล์ไม่ตรงกับเนื้อหา');
+    ids.add(e.id);
+  }
+  async function decode(d){
+    if(!ids.has(d.engineId))throw new Error('ไฟล์ไม่มีเครื่องยนต์ของฉบับงาน');
+    const payload=projectBlob(d.payload),s=await projectUnpack(payload);projectValidateSnapshot(s);
+    if(s.engineId!==d.engineId)throw new Error('ฉบับงานอ้างเครื่องยนต์ไม่ตรงกัน');
+    if(!Array.isArray(s.report.items)||!Array.isArray(s.report.materials)||!Array.isArray(s.report.issues)||!s.report.totals)throw new Error('ข้อมูลรายงานไม่ครบ');
+    return {...d,payload,report:s.report};
+  }
+  // Decode and validate everything before opening the single write transaction.
+  const draft=b.draft?await decode(b.draft):null,versions=[];
+  for(const v of b.versions)versions.push(await decode(v));
+  const p=b.project;
+  await ProjectStore.importProject({name:p.name.slice(0,200)+' (นำเข้า)',road:String(p.road||'').slice(0,200),year:String(p.year||'').slice(0,4),ownerName:String(p.ownerName||'').slice(0,150)},draft,versions,b.engines);
+  await projectsInit();toast('นำเข้าเป็นโครงการใหม่แล้ว โครงการเดิมยังอยู่');
+}
+function projectSetup(){
+  $('esKpis').insertAdjacentHTML('beforebegin',`<div id="projectWorkbar" class="project-workbar no-print"><div class="project-workbar-top"><div><div class="project-workbar-title" id="projectActiveName"></div><p id="projectSaveState" class="project-save-state" role="status"></p></div><div class="project-actions"><button class="btn ghost" id="projectBack">โครงการทั้งหมด</button><button class="btn" id="projectSave">บันทึกงาน</button><button class="btn gold" id="projectKeepRevision">เก็บฉบับงาน</button></div></div><p id="projectPriceMode"></p><div class="project-actions" style="margin-top:10px"><button class="btn ghost mini" id="projectRefreshPrices">อัปเดตราคาจากคลัง</button><button class="btn ghost mini" id="projectExportWorking">สำรองงานที่เปิดอยู่</button></div><div id="projectWorkError" class="project-error" role="alert" hidden></div></div>`);
+  const handle=(fn,id='projectError')=>async(...args)=>{try{projectClearError(id);await fn(...args);}catch(e){projectError(e,id);}};
+  $('projectNew').onclick=()=>projectNewDialog();
+  $('projectSearch').oninput=()=>projectsInit();
+  $('projectBack').onclick=()=>projectGo('projects');
+  $('projectSave').onclick=handle(()=>projectSave(),'projectWorkError');
+  $('projectExportWorking').onclick=handle(()=>projectExport(null,true),'projectWorkError');
+  $('projectKeepRevision').onclick=()=>{projectClearError('revisionFormError');$('revisionNote').value='';$('revisionDialog').showModal();};
+  $('projectRefreshPrices').onclick=handle(()=>{
+    if(!P.months.length)throw new Error('ยังไม่มีคลังราคาให้ดึง');
+    if(!confirm('อัปเดตราคาและระยะจากคลังปัจจุบัน? ยอดฉบับร่างอาจเปลี่ยน ฉบับที่เก็บไว้แล้วจะคงเดิม'))return;
+    EST.priceInputs=null;EST.priceLabel='';estInit();PROJECTS.dirty=true;projectDrawBar();
+  },'projectWorkError');
+  document.querySelectorAll('[data-project-close]').forEach(b=>b.onclick=()=>$('projectDialog').close());
+  document.querySelectorAll('[data-revision-close]').forEach(b=>b.onclick=()=>$('revisionDialog').close());
+  $('revisionViewClose').onclick=()=>$('revisionView').close();
+  $('projectForm').onsubmit=handle(async e=>{
+    e.preventDefault();if(PROJECTS.busy)return;
+    const attach=e.currentTarget.dataset.attach==='yes';
+    if(!attach&&!projectMayReplace())return;
+    const meta={name:$('projectName').value.trim(),road:$('projectRoad').value.trim(),year:$('projectYear').value.trim(),ownerName:$('projectOwner').value.trim()};
+    if(!meta.name)throw new Error('กรอกชื่อโครงการ');
+    const button=e.currentTarget.querySelector('[type=submit]');button.disabled=true;
+    try{
+      await projectReady();
+      const p=await ProjectStore.create(meta);
+      if(attach){PROJECTS.active=p;$('esName').value=meta.name;$('esRoad').value=meta.road;$('esYear').value=meta.year;$('esBy').value=meta.ownerName;await projectSave();}
+      else{PROJECTS.dirty=false;await projectOpen(p.id);}
+      $('projectDialog').close();await projectsInit();
+    }finally{button.disabled=false;}
+  },'projectFormError');
+  $('revisionForm').onsubmit=handle(async e=>{e.preventDefault();if(PROJECTS.busy)return;
+    const button=e.currentTarget.querySelector('[type=submit]');button.disabled=true;
+    try{await projectSave($('revisionNote').value.trim());$('revisionDialog').close();}finally{button.disabled=false;}
+  },'revisionFormError');
+  $('pg-projects').addEventListener('click',handle(async e=>{
+    const b=e.target.closest('button');if(!b||PROJECTS.busy)return;
+    if(b.hasAttribute('data-project-new'))projectNewDialog();
+    else if(b.dataset.projectOpen)await projectOpen(b.dataset.projectOpen);
+    else if(b.dataset.projectHistory)await projectHistory(b.dataset.projectHistory);
+    else if(b.dataset.versionView)await projectView(b.dataset.versionView);
+    else if(b.dataset.projectExport)await projectExport(b.dataset.projectExport);
+  }));
+  $('projectImport').onclick=()=>$('projectImportFile').click();
+  $('projectImportFile').onchange=handle(async e=>{const file=e.target.files[0];e.target.value='';await projectImport(file);});
+  $('pg-est').addEventListener('input',()=>{if(!PROJECTS.busy&&!PROJECTS.hydrating){PROJECTS.dirty=true;projectDrawBar();}});
+  $('pg-dist').addEventListener('input',()=>{if(PROJECTS.active&&!PROJECTS.busy&&!PROJECTS.hydrating){PROJECTS.dirty=true;projectDrawBar();}});
+  window.addEventListener('beforeunload',e=>{if(PROJECTS.dirty||PROJECTS.busy){e.preventDefault();e.returnValue='';}});
+  window.addEventListener('focus',()=>projectsInit());
+  projectDrawBar();projectsInit();
+}
+queueMicrotask(projectSetup);
+
 try{ themeInit(); }catch(e){ console.error('themeInit:',e); }
 try{ selfCheck(); }catch(e){ console.error('selfCheck:',e); }
 </script>
@@ -8701,6 +9379,19 @@ html[data-theme="indigo"] { --kpi-bd:#c2cbe8; --kpi-ring:#dee3f4 }
   display:flex;align-items:center;gap:9px}
 #pg-est .card{padding:14px 16px 16px}
 #pg-est .card > h2 + .hint{margin-top:-4px}
+
+/* ── รายการนอกหลักเกณฑ์ — ต้องดูออกทันทีว่าไม่ใช่ของที่เครื่องคิดมา ── */
+tr.escus > td{background:#fdf6e6}
+tr.escus > td:first-child{box-shadow:inset 3px 0 0 var(--gold,#b5872a)}
+.escin{font:inherit;font-size:12.5px;padding:4px 8px;border:1px solid var(--grid);
+  border-radius:7px;background:var(--surface);color:var(--ink)}
+.escin.n{width:min(100%,420px);font-weight:600;margin-top:4px}
+.escin.u{width:70px}
+.escin.c{width:96px;text-align:right;font-variant-numeric:tabular-nums}
+.escin:focus{outline:none;border-color:var(--teal);box-shadow:0 0 0 3px var(--teal-soft)}
+.escin.empty{border-style:dashed;border-color:var(--crit)}
+.escnote{font-size:10.5px;color:var(--muted);margin-top:3px}
+@media print{ .escin{border:none;padding:0;background:none;width:auto} }
 
 /* ── แถวเทียบแหล่ง (กางจากปุ่ม "n แหล่ง") ── */
 tr.escmp > td{background:var(--teal-soft);border-top:1px dashed var(--grid);font-size:12px}
