@@ -1341,7 +1341,10 @@ canvas{max-width:100%}
       <h2 data-ic="gear">ตั้งค่าการส่งออก</h2>
       <label class="f">เดือน</label><select id="eMonth"></select>
       <label class="f" style="margin-top:12px">หมวด (กรองรายการที่จะส่งออก — เลือกได้หลายหมวด)</label>
-      <div class="kdd" id="eCatBox">
+      <!-- ดรอปดาวน์ชนิดที่สาม: เลือกได้หลายค่า (ติ๊กถูก) จึงต่อสายเอง ไม่ได้ใช้ตัวห่อมาตรฐาน
+           ต้องติดป้าย data-kmulti ไว้ ไม่งั้น t_arch จะฟ้องว่ามีดรอปดาวน์ทำมือหลุดการตรวจ
+           ช่องนี้ป้ายบนจอเป็น "สรุปจำนวน" ไม่ใช่ค่าเดียว ด่านตรวจจึงตรวจคนละแบบ -->
+      <div class="kdd" id="eCatBox" data-kmulti="1">
         <input type="text" class="kdd-inp" id="eCatInp" readonly value="ทุกหมวด — ส่งออกทั้งคลัง">
         <div class="kdd-panel" id="eCatPanel" style="max-height:240px"></div>
       </div>
@@ -1648,6 +1651,9 @@ const YEAR = 2569;
 P.ylist = P.months.map(()=>YEAR);
 const mLab = m => TH_M[m-1]+' '+String(YEAR).slice(2);
 const mLabI = i => TH_M[P.months[i]-1]+' '+String(P.ylist[i]).slice(2);
+/* ค่าที่ใช้ "เรียง" ของเดือน — ป้ายบนจอ ("ส.ค. 69") เรียงตามเวลาไม่ได้ ไม่ว่าจะเรียงแบบข้อความหรือตัวเลข
+   ช่องไหนที่โชว์เดือน ต้องติด data-sort="${mKeyI(i)}" ไว้เสมอ ไม่งั้นกดหัวตารางแล้วได้ลำดับที่ไม่ใช่เวลา */
+const mKeyI = i => P.ylist[i]*100+P.months[i];
 if(!P.months.length){                       /* ยังไม่มีข้อมูล — ตั้งช่องเดือนปัจจุบันไว้รอ */
   const _d=new Date(); P.months=[_d.getMonth()+1]; P.ylist=[_d.getFullYear()+543];
 }
@@ -1662,8 +1668,8 @@ const SELFCHK={missing:new Set(),ok:false};
 const $ = id => { const el=document.getElementById(id);
   if(!el) SELFCHK.missing.add(id);
   return el; };
-const APPVER='8.39';        /* เลขรุ่นที่เดียว — ที่อื่นดึงจากตัวนี้ */
-const APPDATE='9 ก.ย. 2569';   /* วันที่ของรุ่นนี้ ที่เดียวเหมือนกัน */
+const APPVER='8.41';        /* เลขรุ่นที่เดียว — ที่อื่นดึงจากตัวนี้ */
+const APPDATE='14 ก.ย. 2569';   /* วันที่ของรุ่นนี้ ที่เดียวเหมือนกัน */
 /* ⚠ ป้ายรุ่นบนแถบข้างเคยเป็นข้อความตายตัวใน HTML (v6.2) พอขึ้นรุ่นใหม่แล้วลืมแก้
    ผู้ใช้เลยเห็นเลขรุ่นเก่าทั้งที่โค้ดใหม่หมดแล้ว — ต่อไปนี้เขียนจาก APPVER เสมอ */
 try{ setTimeout(()=>{ try{ drawCfgChip(); }catch(e){} },0); }catch(e){}
@@ -2628,7 +2634,11 @@ function kdd(sel){
     its.forEach((e,k)=>e.classList.toggle('act',k===act));
     scrollTo(its[act]); };
   const pick=(i)=>{ if(sel.disabled)return; sel.selectedIndex=i; lab(); wrap.classList.remove('open');
-    sel.dispatchEvent(new Event('change')); inp.blur(); };
+    /* ยิงทั้ง input และ change เหมือนที่เบราว์เซอร์ยิงให้ <select> ตัวจริง
+       ของเดิมยิงแค่ change — ช่องไหนดักด้วย input อย่างเดียวจะไม่มีวันรู้ว่าผู้ใช้เลือกอะไร
+       (โรคเดียวกับที่ทำให้หน้ากรอกราคาโชว์หน่วยบนจอ แต่ระบบยังว่าง · รุ่น 8.40) */
+    sel.dispatchEvent(new Event('input',{bubbles:true}));
+    sel.dispatchEvent(new Event('change',{bubbles:true})); inp.blur(); };
   const shut=()=>{ wrap.classList.remove('open'); lab(); };
   wrap._close=shut;
   const open=()=>{
@@ -2678,7 +2688,13 @@ function kfree(inp){
       : `<div class="kdd-more">${q?'ไม่พบในรายการ — พิมพ์เพื่อใช้ค่านี้เป็นค่าใหม่':'ยังไม่มีตัวเลือก — พิมพ์เพื่อกรอกเอง'}</div>`;
     panel.querySelectorAll('.kdd-it').forEach(it=>it.onmousedown=e=>{
       e.preventDefault(); inp.value=it.textContent; shut();
-      inp.dispatchEvent(new Event('change')); inp.blur(); });
+      /* ⚠ ต้องยิงทั้ง input และ change — "เลือกจากรายการ" ต้องเหมือน "คนพิมพ์เอง" ทุกประการ
+         คนพิมพ์เองเบราว์เซอร์ยิง input ทุกตัวอักษร แล้วยิง change ตอนออกจากช่อง
+         ของเดิมยิงแค่ change ช่องที่ผูกไว้ด้วย oninput จึงไม่รู้เรื่องเลย —
+         จอโชว์ค่าที่เลือก แต่ตัวแปรในระบบยังว่าง (โรค "จอกับของจริงคนละค่า")
+         เคสจริง: เลือกหน่วยในหน้ากรอกราคา จอขึ้น ลบ.ม. แต่กดเข้าคิวแล้วฟ้องว่ายังไม่ได้กรอกหน่วย */
+      inp.dispatchEvent(new Event('input',{bubbles:true}));
+      inp.dispatchEvent(new Event('change',{bubbles:true})); inp.blur(); });
   };
   const shut=()=>wrap.classList.remove('open');
   wrap._close=shut;
@@ -3063,7 +3079,7 @@ function buildSummary(){
     const cls = pct>=90?'dn':pct>0?'':'up';
     tr2 += `<tr><td>${esc(x.t)}</td><td class="num">${fmtInt(x.tot)}</td><td class="num">${fmtInt(x.cur)}</td>
       <td class="num">${fmtInt(x.tot-x.cur)}</td>
-      <td>${last<0?'—':mLabI(last)}${last>=0&&last!==LAST?' <span class="pill warn">ไม่ใช่เดือนล่าสุด</span>':''}</td>
+      <td${last<0?'':` data-sort="${mKeyI(last)}"`}>${last<0?'—':mLabI(last)}${last>=0&&last!==LAST?' <span class="pill warn">ไม่ใช่เดือนล่าสุด</span>':''}</td>
       <td><div class="bar"><i style="width:${pct}%"></i></div><span class="barlab ${cls}">${pct}%</span></td></tr>`;
   });
   $('tblTypes').innerHTML = tr2+'</tbody>';
@@ -4647,7 +4663,9 @@ function drawCov(){
     h+=`<tr><td class="nm" data-mi="${esc(r.nm)}">${esc(r.nm)}</td><td class="num">${r.tot}</td>`
       + r.per.map(n=>{
           const cls=n===0?'none':n>=r.tot?'full':'part';
-          return `<td class="cov"><span class="covc ${cls}">${n===0?'—':n+'/'+r.tot}</span></td>`;
+          /* ช่องนี้โชว์เป็นเศษส่วน "3/4" เรียงตามข้อความไม่ได้ ("10/4" จะมาก่อน "2/4")
+             จึงบอกค่าเรียงไว้ตรง ๆ = จำนวนแหล่งที่มีราคาเดือนนั้น */
+          return `<td class="cov" data-sort="${n}"><span class="covc ${cls}">${n===0?'—':n+'/'+r.tot}</span></td>`;
         }).join('')
       + `<td class="num ${r.missMonths.length?'up':'dn'}">${r.missMonths.length}</td></tr>`;
   });
@@ -4677,7 +4695,7 @@ function drawCovChan(){
           return `<td class="cov"><span class="covc ${v?'full':'none'}" title="${tip}">${v?fmtInt(v):'—'}</span></td>`;
         }).join('')
       + `<td class="num">${fmtInt(tot)}</td><td class="num">${fmtInt(o.mats.size)}</td>`
-      + `<td>${last<0?'—':mLabI(last)+(last===LAST?'':' <span class="pill warn">ไม่ใช่เดือนล่าสุด</span>')}</td></tr>`;
+      + `<td${last<0?'':` data-sort="${mKeyI(last)}"`}>${last<0?'—':mLabI(last)+(last===LAST?'':' <span class="pill warn">ไม่ใช่เดือนล่าสุด</span>')}</td></tr>`;
   });
   $('tblCovChan').innerHTML=h+'</tbody>';
 }
@@ -4706,7 +4724,7 @@ function drawCovCat(){
           const cls=n===0?'none':n>=r.tot?'full':'part';
           return `<td class="cov"><span class="covc ${cls}">${n===0?'—':fmtInt(n)}</span></td>`;
         }).join('')
-      + `<td>${last<0?'—':mLabI(last)+(last===LAST?'':' <span class="pill warn">ยกยอด</span>')}</td></tr>`;
+      + `<td${last<0?'':` data-sort="${mKeyI(last)}"`}>${last<0?'—':mLabI(last)+(last===LAST?'':' <span class="pill warn">ยกยอด</span>')}</td></tr>`;
   });
   $('tblCovCat').innerHTML=h+'</tbody>';
 }
@@ -4771,11 +4789,20 @@ const fmtInt=n=>Number(n||0).toLocaleString('th-TH');
 
 /* ══════ กดหัวตารางเพื่อเรียงลำดับ — ใช้ได้กับทุกตารางที่มี thead+tbody ══════
    ตัวเลข/เปอร์เซ็นต์เรียงแบบตัวเลข · ข้อความเรียงแบบไทย · ขีด "—" ถือเป็นค่าน้อยสุดเสมอ */
+/* ค่าที่ใช้ "เรียง" ของช่องนี้ — คืน null แปลว่าช่องนี้ไม่ใช่ตัวเลข ให้ไปเรียงแบบข้อความ
+   ① ช่องที่บอกค่าเรียงของตัวเองไว้ (data-sort) ใช้ค่านั้น — สำหรับช่องที่ข้อความไม่ใช่ตัวเลข เช่น เดือน
+   ② ไม่งั้นนับเป็นตัวเลขเฉพาะเมื่อ "ทั้งช่อง" เป็นตัวเลข (มีจุลภาค เครื่องหมาย ฿ % ได้)
+   ⚠ ของเดิมหยิบตัวเลขตัวแรกที่เจอ ที่ไหนก็ได้ในข้อความ ทำให้:
+       "ม.ค. 69" → 69   กดเรียงคอลัมน์เดือน = เรียงตามปี เดือนสลับมั่วอยู่ข้างใน
+       "ปูนซีเมนต์ ประเภท 1 (มอก. 15 …)" → 1   กดเรียงชื่อรายการ = เรียงตามเลขที่บังเอิญอยู่ในชื่อ
+     และมันขึ้นกับข้อมูลด้วย: ถ้าบังเอิญมีสักแถวที่ไม่มีตัวเลขเลย ทั้งคอลัมน์ถึงจะกลับไปเรียงแบบข้อความ
+     = พฤติกรรมเปลี่ยนตามข้อมูล ตรวจเจอยาก และบนจอไม่มีอะไรบอกว่ามันเรียงด้วยอะไร */
 function numOfCell(td){
-  const t=td.textContent.replace(/[, ]/g,'');
+  const ds=td.dataset?td.dataset.sort:undefined;
+  if(ds!=null&&ds!==''){ const n=parseFloat(ds); return isFinite(n)?n:null; }
+  const t=td.textContent.replace(/[,\s​฿%]/g,'').replace(/^−/,'-');
   if(!t||t==='—'||t==='-') return null;
-  const m=t.match(/-?\d+(\.\d+)?/);
-  return m?parseFloat(m[0]):null;
+  return /^[+-]?\d+(\.\d+)?$/.test(t) ? parseFloat(t) : null;
 }
 function makeSortable(tbl){
   if(!tbl||tbl._srt) return; tbl._srt=1;
@@ -6575,7 +6602,7 @@ function sysInit(){
   let h='<thead><tr><th>เดือน</th><th class="num">แถวราคา</th><th class="num">รายการวัสดุ</th><th class="num">แหล่ง</th></tr></thead><tbody>';
   P.months.forEach((m,i)=>{
     const rs=P.series.filter(s=>s[4][i]!=null);
-    h+=`<tr><td>${mLabI(i)}</td><td class="num">${rs.length.toLocaleString()}</td>
+    h+=`<tr><td data-sort="${mKeyI(i)}">${mLabI(i)}</td><td class="num">${rs.length.toLocaleString()}</td>
       <td class="num">${new Set(rs.map(s=>s[0])).size.toLocaleString()}</td>
       <td class="num">${new Set(rs.map(s=>s[1])).size}</td></tr>`;});
   $('tblSysStat').innerHTML=h+'</tbody>';
