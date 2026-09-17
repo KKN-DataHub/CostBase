@@ -507,6 +507,11 @@ input.cfglocked{background:var(--paper2);color:var(--ink2);cursor:not-allowed}
 .page.active{animation:pgin .26s ease}
 @keyframes pgin{from{opacity:0}to{opacity:1}}
 @keyframes cdin{from{opacity:0;transform:translateY(14px)}to{opacity:1;transform:none}}
+/* หน้าแรกการ์ดเยอะสุด — การ์ดที่ยังอยู่ใต้จอไม่ต้องจัดหน้าจนกว่าจะเลื่อนถึง (เปิดหน้าเร็วขึ้น · ไม่กระทบข้อมูล)
+   ตอนพิมพ์ปิดไว้ ไม่งั้นการ์ดใต้จอจะพิมพ์ออกมาเป็นช่องว่าง */
+#pg-sum > .card{content-visibility:auto;contain-intrinsic-size:auto 320px}
+@media print{#pg-sum > .card{content-visibility:visible;contain-intrinsic-size:none}}
+.page.active .card.stg{animation:cdin .34s cubic-bezier(.2,.8,.3,1) backwards}
 /* แถบนำทาง */
 .nav button{position:relative;overflow:hidden;transition:background .18s,color .18s,padding-left .18s}
 .nav button::before{content:'';position:absolute;left:0;top:8px;bottom:8px;width:3px;border-radius:0 3px 3px 0;
@@ -756,7 +761,6 @@ canvas{max-width:100%}
     <h1><span class="blogo" aria-hidden="true"></span>CostBase</h1>
     <div class="sub">ฐานข้อมูลราคาวัสดุ · แขวงทางหลวงชนบทขอนแก่น</div>
     <div class="chips"><span class="chip" id="bLatest">—</span><span class="chip" id="bVer">v—</span><span class="chip warn" id="bCfg" style="display:none"></span></div>
-    <div class="themesw" id="themeSw"></div>
     <button class="instbtn" id="installBtn" style="display:none" title="เพิ่ม CostBase ลงหน้าจอโฮม เปิดใช้เหมือนแอป">⤓ ติดตั้งลงหน้าจอโฮม</button>
   </div>
   <!-- ⚠ ปุ่มเมนูไม่ได้พิมพ์ไว้ตรงนี้แล้ว — สร้างจากทะเบียน PAGES ตอนเปิดไฟล์ (กฎ R13)
@@ -1699,7 +1703,7 @@ const SELFCHK={missing:new Set(),ok:false};
 const $ = id => { const el=document.getElementById(id);
   if(!el) SELFCHK.missing.add(id);
   return el; };
-const APPVER='8.42';        /* เลขรุ่นที่เดียว — ที่อื่นดึงจากตัวนี้ */
+const APPVER='8.43';        /* เลขรุ่นที่เดียว — ที่อื่นดึงจากตัวนี้ */
 const APPDATE='16 ก.ย. 2569';   /* วันที่ของรุ่นนี้ ที่เดียวเหมือนกัน */
 /* ⚠ ป้ายรุ่นบนแถบข้างเคยเป็นข้อความตายตัวใน HTML (v6.2) พอขึ้นรุ่นใหม่แล้วลืมแก้
    ผู้ใช้เลยเห็นเลขรุ่นเก่าทั้งที่โค้ดใหม่หมดแล้ว — ต่อไปนี้เขียนจาก APPVER เสมอ */
@@ -2796,12 +2800,14 @@ document.addEventListener('click',e=>{
   s.style.cssText=`width:${d}px;height:${d}px;left:${e.clientX-r.left-d/2}px;top:${e.clientY-r.top-d/2}px`;
   b.appendChild(s); setTimeout(()=>s.remove(),560);
 });
+/* การ์ดทยอยโผล่ตอนเปิดหน้า — ของเดิมรีเซ็ตอนิเมชันด้วยการบังคับจัดหน้าใหม่ (void offsetWidth) ทีละการ์ด 8 รอบ
+   = จัดหน้าทั้งหน้าใหม่ 8 ครั้งทันทีที่หน้าเพิ่งโผล่ → KORN 16 ก.ย. 69: "สลับมาหน้าแรกมีความช้า" (หน้าแรกการ์ดเยอะสุด)
+   ตอนนี้แค่ติดคลาส+หน่วงเวลา แล้วปล่อยให้เบราว์เซอร์เริ่มอนิเมชันเองตอนหน้าเปลี่ยนจากซ่อนเป็นโชว์ — ไม่มีการจัดหน้าซ้ำแม้แต่ครั้งเดียว */
 function stagger(pg){
   if(!pg) return;
   [...pg.querySelectorAll('.card')].slice(0,8).forEach((c,i)=>{
     if(c.querySelector('#map')) return;
-    c.style.animation='none'; void c.offsetWidth;
-    c.style.animation=`cdin .34s cubic-bezier(.2,.8,.3,1) ${i*45}ms backwards`;
+    c.classList.add('stg'); c.style.animationDelay=(i*45)+'ms';
   });
 }
 function countUp(el,txt){
@@ -7497,17 +7503,17 @@ window.ROADS=[{"c":"ขก.1001","n":"แยกทางหลวงหมาย
    ⚠ เปลี่ยนชุดสีแล้ว "ตัวเลขบนจอต้องเท่าเดิมทุกตัว" — ชุดสีแตะแค่สีโครง
       สีที่มีความหมายกับข้อมูล (เขียว/แดง/ทอง/ซีรีส์กราฟ) ไม่ผูกกับชุดสี  (t_ui พิสูจน์ข้อนี้) */
 const THEMES=[
-  {id:'default', name:'น้ำเงินขอนแก่น', sw:'#1B2A4A'},
-  {id:'sunset', name:'ตะวัน', sw:'#e2622a'},
-  {id:'afterrain', name:'หลังฝน', sw:'#0f766e'},
-  {id:'winter', name:'ปลายหนาว', sw:'#3d6fa8'},
-  {id:'bloom', name:'ทุ่งดอกไม้', sw:'#a83a86'},
-  {id:'forest', name:'โซนป่า', sw:'#2f7d4f'},
-  {id:'sundown', name:'พระอาทิตย์ตก', sw:'#d1622a', night:true, slot:'18:00–19:30'},
-  {id:'dusk', name:'หัวค่ำ', sw:'#b5561f', night:true, slot:'19:30–21:30'},
-  {id:'midnight', name:'เที่ยงคืน', sw:'#2f7fc4', night:true, slot:'21:30–01:00'},
-  {id:'moonset', name:'ดวงตก', sw:'#3c8f8a', night:true, slot:'01:00–04:00'},
-  {id:'dawn', name:'รุ่งเช้า', sw:'#c2603c', night:true, slot:'04:00–06:00'},
+  {id:'default', name:'น้ำเงินขอนแก่น', sw:'#1B2A4A', sw2:'#0d9488'},
+  {id:'sunset', name:'ตะวัน', sw:'#e2622a', sw2:'#d63f6b'},
+  {id:'afterrain', name:'หลังฝน', sw:'#0f766e', sw2:'#2e8b8f'},
+  {id:'winter', name:'ปลายหนาว', sw:'#3d6fa8', sw2:'#6b7fae'},
+  {id:'bloom', name:'ทุ่งดอกไม้', sw:'#a83a86', sw2:'#e2734f'},
+  {id:'forest', name:'โซนป่า', sw:'#2f7d4f', sw2:'#79a83a'},
+  {id:'sundown', name:'พระอาทิตย์ตก', sw:'#2c1526', sw2:'#d1622a', night:true, slot:'18:00–19:30'},
+  {id:'dusk', name:'หัวค่ำ', sw:'#1b1430', sw2:'#b5561f', night:true, slot:'19:30–21:30'},
+  {id:'midnight', name:'เที่ยงคืน', sw:'#0c1220', sw2:'#2f7fc4', night:true, slot:'21:30–01:00'},
+  {id:'moonset', name:'ดวงตก', sw:'#0d1518', sw2:'#3c8f8a', night:true, slot:'01:00–04:00'},
+  {id:'dawn', name:'รุ่งเช้า', sw:'#22243f', sw2:'#c2603c', night:true, slot:'04:00–06:00'},
 ];
 const THEME_KEY='costbase_theme';
 function curTheme(){ return document.documentElement.dataset.theme || 'default'; }
@@ -7571,7 +7577,10 @@ function applyTheme(id, opt){
   }
   if(id==='default') delete document.documentElement.dataset.theme;
   else document.documentElement.dataset.theme=id;
-  try{ localStorage.setItem(THEME_KEY,id); }catch(e){}
+  /* จำแยกกัน: ชุดกลางวันที่เลือก · ชุดกลางคืนที่เลือกเอง (ถ้าระบบเปลี่ยนให้เองตามช่วงเวลา ไม่นับเป็นการเลือก) */
+  try{ const t=THEMES.find(x=>x.id===id);
+       if(t&&t.night){ if(!opt.auto) localStorage.setItem(THEME_NIGHT_KEY,id); }
+       else { localStorage.setItem(THEME_KEY,id); if(!opt.auto) localStorage.removeItem(THEME_NIGHT_KEY); } }catch(e){}
   themeChartColors();
   try{ const cs=getComputedStyle(document.documentElement);
        const mc=document.querySelector('meta[name="theme-color"]');
@@ -7583,37 +7592,86 @@ function applyTheme(id, opt){
   if(!opt.silent) themeRepaint();
   return true;
 }
-/* จุดสลับสี: จุดที่เลือกไม่ได้ตอนนี้ต้องดูเป็นเลือกไม่ได้จริง (disabled) ไม่ใช่กดแล้วเงียบ */
-function themePaintSwatches(now){
-  const cur=curTheme();
-  document.querySelectorAll('.themesw button[data-theme]').forEach(b=>{
-    const t=THEMES.find(x=>x.id===b.dataset.theme)||{};
-    const ok=themeAllowed(b.dataset.theme, now);
-    b.disabled=!ok;
-    b.title=t.name+(t.night?' · กลางคืน '+(t.slot||'')+(ok?'':' (เลือกได้ 18:00–06:00)'):'');
-    b.classList.toggle('on', b.dataset.theme===cur);
-  });
+/* ชุดกลางคืนตามช่วงเวลา (ตารางเดียวกับ Big Data): 18:00–19:30 พระอาทิตย์ตก · –21:30 หัวค่ำ · –01:00 เที่ยงคืน · –04:00 ดวงตก · –06:00 รุ่งเช้า */
+function themeSlot(d){
+  d=d||new Date(); const m=d.getHours()*60+d.getMinutes();
+  if(m>=18*60 && m<19*60+30) return 'sundown';
+  if(m>=19*60+30 && m<21*60+30) return 'dusk';
+  if(m>=21*60+30 || m<60) return 'midnight';
+  if(m>=60 && m<4*60) return 'moonset';
+  if(m>=4*60 && m<6*60) return 'dawn';
+  return null;
 }
-/* นาฬิกาเดินข้ามหกโมงเช้าโดยที่หน้ายังเปิดอยู่ → ชุดกลางคืนที่ใช้อยู่ต้องถอยกลับเอง (R32: จอ = สถานะจริง) */
+const THEME_NIGHT_KEY='costbase_theme_night';   /* ชุดกลางคืนที่ผู้ใช้เลือกเอง · ว่าง = ให้ระบบเปลี่ยนตามช่วงเวลา */
+function themeSaved(){ let d='default', n=''; try{ d=localStorage.getItem(THEME_KEY)||'default'; n=localStorage.getItem(THEME_NIGHT_KEY)||''; }catch(e){} return {day:d, night:n}; }
+/* ชุดที่ "ควร" ใช้ ณ เวลานี้: กลางวัน = ชุดกลางวันที่เลือกไว้ · กลางคืน = ชุดกลางคืนที่เลือกไว้ หรือชุดตามช่วงเวลา (ระบบเปลี่ยนให้เอง) */
+function themeWanted(now){
+  const sv=themeSaved();
+  const dayOk=id=>THEMES.some(t=>t.id===id && !t.night);
+  const day=dayOk(sv.day)?sv.day:'default';
+  if(!themeIsNight(now)) return day;
+  if(sv.night && THEMES.some(t=>t.id===sv.night && t.night)) return sv.night;
+  return themeSlot(now)||day;
+}
+/* ปุ่มบนหัวทุกหน้า + แผงเลือก: ตัวเลือกที่เลือกไม่ได้ตอนนี้ต้องดูเป็นเลือกไม่ได้จริง (disabled) ไม่ใช่กดแล้วเงียบ (R32) */
+function themePaintSwatches(now){
+  const cur=curTheme(), t=THEMES.find(x=>x.id===cur)||THEMES[0];
+  document.querySelectorAll('.themebtn').forEach(b=>{
+    b.style.setProperty('--sw',t.sw); b.style.setProperty('--sw2',t.sw2||t.sw);
+    b.querySelector('.tn').textContent=t.name; b.setAttribute('aria-expanded', String(!document.getElementById('themePanel').hidden));
+  });
+  const night=themeIsNight(now);
+  document.querySelectorAll('.themepanel .themeopt').forEach(b=>{
+    const x=THEMES.find(y=>y.id===b.dataset.theme)||{};
+    const ok=themeAllowed(b.dataset.theme, now);
+    b.disabled=!ok; b.classList.toggle('on', b.dataset.theme===cur);
+    b.title=x.night?('กลางคืน '+(x.slot||'')):'';
+  });
+  const note=document.querySelector('.themepanel .tp-note');
+  if(note) note.textContent = night
+    ? 'ตอนนี้ช่วงกลางคืน · ระบบเปลี่ยนชุดตามช่วงเวลาให้เอง เลือกเองได้ถ้าอยากล็อกชุดไว้ทั้งคืน · หกโมงเช้ากลับชุดกลางวันเอง'
+    : 'ตอนนี้ช่วงกลางวัน · ชุดกลางคืนจะเลือกได้ตอนหกโมงเย็น ระบบเปลี่ยนให้เอง';
+}
+/* นาฬิกาเดิน: ข้ามหกโมงเย็น → เข้าชุดกลางคืนตามช่วงเวลา · ข้ามหกโมงเช้า → กลับชุดกลางวันที่เลือกไว้ (R32: จอ = สถานะจริง) */
 function themeTick(now){
-  const cur=curTheme();
-  if(!themeAllowed(cur, now)){ applyTheme('default',{now}); try{ toast('สว่างแล้ว — กลับมาใช้ชุดสีกลางวัน'); }catch(e){} }
+  if(!themeIsNight(now)){ try{ localStorage.removeItem(THEME_NIGHT_KEY); }catch(e){} }   /* คืนใหม่เริ่มจากโหมดตามช่วงเวลา */
+  const want=themeWanted(now);
+  if(want!==curTheme()){ applyTheme(want,{now, auto:true}); try{ toast(themeIsNight(now)?'ค่ำแล้ว — เปลี่ยนเป็นชุดสี '+(THEMES.find(t=>t.id===want)||{}).name:'สว่างแล้ว — กลับมาใช้ชุดสีกลางวัน'); }catch(e){} }
   else themePaintSwatches(now);
 }
+function themeOpenPanel(btn){
+  const pn=document.getElementById('themePanel'); if(!pn) return;
+  const r=btn.getBoundingClientRect();
+  pn.hidden=false;
+  pn.style.top=(r.bottom+6)+'px';
+  pn.style.left=Math.max(8, Math.min(window.innerWidth-278, r.right-270))+'px';
+  themePaintSwatches();
+}
+function themeClosePanel(){ const pn=document.getElementById('themePanel'); if(pn && !pn.hidden){ pn.hidden=true; themePaintSwatches(); } }
 function themeInit(){
-  const box=document.getElementById('themeSw');
-  if(box && !box.dataset.built){
-    box.dataset.built='1';
-    const day=THEMES.filter(t=>!t.night), night=THEMES.filter(t=>t.night);
-    const btn=t=>`<button data-theme="${t.id}" style="--sw:${t.sw}" title="${esc(t.name)}" aria-label="ชุดสี ${esc(t.name)}"></button>`;
-    box.innerHTML='<span class="tl">ชุดสี</span>'+day.map(btn).join('')+'<span class="tn" title="ชุดกลางคืน 18:00–06:00"></span>'+night.map(btn).join('');
-    box.addEventListener('click',e=>{ const b=e.target.closest('button[data-theme]'); if(b&&!b.disabled) applyTheme(b.dataset.theme); });
+  if(!document.getElementById('themePanel')){
+    /* ปุ่มบนหัวทุกหน้า (ทะเบียนเดียว: วนใส่ทุก .pghead ไม่ต้องพิมพ์มือทีละหน้า) */
+    document.querySelectorAll('.pghead').forEach(h=>{
+      let act=h.querySelector('.ph-act'); if(!act){ act=document.createElement('div'); act.className='ph-act'; h.appendChild(act); }
+      const b=document.createElement('button'); b.type='button'; b.className='themebtn no-print'; b.title='เลือกชุดสี';
+      b.innerHTML='<i class="sw"></i><span class="tn"></span><span class="ar">▾</span>';
+      b.addEventListener('click',e=>{ e.stopPropagation(); const pn=document.getElementById('themePanel'); if(pn.hidden) themeOpenPanel(b); else themeClosePanel(); });
+      act.appendChild(b);
+    });
+    const pn=document.createElement('div'); pn.id='themePanel'; pn.className='themepanel no-print'; pn.hidden=true;
+    const opt=t=>`<button type="button" class="themeopt" data-theme="${t.id}" style="--sw:${t.sw};--sw2:${t.sw2||t.sw}"><i class="sw"></i><span>${esc(t.name)}</span><b class="ck">✓</b></button>`;
+    pn.innerHTML='<div class="tp-g">กลางวัน (หกโมงเช้า–หกโมงเย็น)</div>'+THEMES.filter(t=>!t.night).map(opt).join('')
+      +'<div class="tp-g">กลางคืน (หกโมงเย็น–หกโมงเช้า)</div>'+THEMES.filter(t=>t.night).map(opt).join('')
+      +'<div class="tp-note"></div>';
+    pn.addEventListener('click',e=>{ e.stopPropagation(); const b=e.target.closest('.themeopt'); if(b&&!b.disabled){ applyTheme(b.dataset.theme); themeClosePanel(); } });
+    document.body.appendChild(pn);
+    document.addEventListener('click',e=>{ if(!e.target.closest('#themePanel')) themeClosePanel(); });
+    document.addEventListener('keydown',e=>{ if(e.key==='Escape') themeClosePanel(); });
+    window.addEventListener('resize',themeClosePanel);
     setInterval(()=>{ try{ themeTick(); }catch(e){} }, 60000);
   }
-  let saved='default';
-  try{ saved=localStorage.getItem(THEME_KEY)||'default'; }catch(e){}
-  /* ชื่อชุดจากรุ่นก่อน (isan/asphalt/indigo) ไม่มีแล้ว → กลับค่าตั้งต้น · ชุดกลางคืนที่จำไว้แต่ตอนนี้กลางวัน → กลับค่าตั้งต้น */
-  if(!applyTheme(saved,{silent:true})) applyTheme('default',{silent:true});
+  /* ชื่อชุดจากรุ่นก่อน (isan/asphalt/indigo) ไม่มีแล้ว → กลับค่าตั้งต้น · กลางคืนเข้าชุดกลางคืนตามช่วงเวลาให้เอง */
+  if(!applyTheme(themeWanted(),{silent:true})) applyTheme('default',{silent:true});
 }
 
 /* ══════════════════════════════════════════════════════════════════════
@@ -9485,15 +9543,27 @@ html[data-theme="dawn"]{
   color-scheme:dark;
 }
 
-/* ── จุดสลับชุดสีใต้ป้ายรุ่นบนแถบข้าง ── */
-.themesw{display:flex;gap:7px;margin-top:10px;align-items:center;flex-wrap:wrap}
-.themesw .tl{font-size:10px;color:var(--navsub);margin-right:1px}
-.themesw button{width:16px;height:16px;border-radius:50%;padding:0;cursor:pointer;
-  border:2px solid rgba(255,255,255,.35);background:var(--sw);transition:transform .15s}
-.themesw button:hover{transform:scale(1.18)}
-.themesw button.on{border-color:#fff;box-shadow:0 0 0 2px var(--navy),0 0 0 3.5px #fff}
-.themesw button[disabled]{opacity:.28;cursor:not-allowed;transform:none!important}
-.themesw .tn{width:1px;height:14px;background:rgba(255,255,255,.28);margin:0 2px}
+/* ── ปุ่มเลือกชุดสีบนหัวทุกหน้า + แผงเลือก — ทรงเดียวกับแดชบอร์ด Big Data (KORN 16 ก.ย. 69) ── */
+.themebtn{display:inline-flex;align-items:center;gap:8px;padding:6px 12px 6px 8px;border-radius:999px;
+  background:rgba(255,255,255,.12);border:1px solid rgba(255,255,255,.4);color:#fff;font:inherit;font-size:12.5px;font-weight:600;cursor:pointer;white-space:nowrap}
+.themebtn:hover{background:rgba(255,255,255,.22)}
+.themebtn .sw{width:16px;height:16px;border-radius:50%;background:linear-gradient(135deg,var(--sw),var(--sw2));border:2px solid rgba(255,255,255,.85);flex:none}
+.themebtn .ar{font-size:10px;opacity:.85}
+.themepanel{position:fixed;z-index:1500;width:270px;background:var(--card);color:var(--ink);border:1px solid var(--grid);border-radius:14px;
+  box-shadow:var(--sh-pop);padding:8px;font-size:13px}
+.themepanel[hidden]{display:none}
+.themepanel .tp-g{font-size:11px;color:var(--muted);padding:8px 10px 4px}
+.themepanel .themeopt{display:flex;align-items:center;gap:10px;width:100%;padding:7px 10px;border:none;background:none;border-radius:9px;
+  font:inherit;font-size:13px;color:var(--ink);cursor:pointer;text-align:left}
+.themepanel .themeopt:hover{background:var(--teal-soft)}
+.themepanel .themeopt.on{background:var(--teal-soft);font-weight:700}
+.themepanel .themeopt .sw{width:48px;height:22px;border-radius:7px;background:linear-gradient(135deg,var(--sw),var(--sw2));flex:none;box-shadow:inset 0 0 0 1px rgba(0,0,0,.08)}
+.themepanel .themeopt .ck{margin-left:auto;color:var(--teal);font-weight:700;visibility:hidden}
+.themepanel .themeopt.on .ck{visibility:visible}
+.themepanel .themeopt[disabled]{opacity:.42;cursor:not-allowed}
+.themepanel .themeopt[disabled]:hover{background:none}
+.themepanel .tp-note{font-size:11px;color:var(--muted);padding:8px 10px 4px;line-height:1.5;border-top:1px solid var(--grid);margin-top:4px}
+@media print{.themebtn,.themepanel{display:none!important}}
 
 /* ── KPI แคปซูล ทรงเดียวกับสไลด์ ทช. ── */
 .kpill{border-radius:18px;padding:13px 16px;gap:13px;border:1.6px solid var(--kpi-bd)}
