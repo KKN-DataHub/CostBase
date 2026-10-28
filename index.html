@@ -1703,8 +1703,8 @@ const SELFCHK={missing:new Set(),ok:false};
 const $ = id => { const el=document.getElementById(id);
   if(!el) SELFCHK.missing.add(id);
   return el; };
-const APPVER='8.43';        /* เลขรุ่นที่เดียว — ที่อื่นดึงจากตัวนี้ */
-const APPDATE='16 ก.ย. 2569';   /* วันที่ของรุ่นนี้ ที่เดียวเหมือนกัน */
+const APPVER='8.45';        /* เลขรุ่นที่เดียว — ที่อื่นดึงจากตัวนี้ */
+const APPDATE='28 ต.ค. 2569';   /* วันที่ของรุ่นนี้ ที่เดียวเหมือนกัน */
 /* ⚠ ป้ายรุ่นบนแถบข้างเคยเป็นข้อความตายตัวใน HTML (v6.2) พอขึ้นรุ่นใหม่แล้วลืมแก้
    ผู้ใช้เลยเห็นเลขรุ่นเก่าทั้งที่โค้ดใหม่หมดแล้ว — ต่อไปนี้เขียนจาก APPVER เสมอ */
 try{ setTimeout(()=>{ try{ drawCfgChip(); }catch(e){} },0); }catch(e){}
@@ -2298,6 +2298,9 @@ function drawCfgChip(){
   c.title=d.length?d.map(k=>k+': '+cfgNow(k)).join('\n'):'';
 }
 let CONN={sheet:null, web:null, ver:0, prices:0, reg:0, src:0, oil:null, at:''};
+/* รุ่น Code.gs ขั้นต่ำที่หน้านี้ต้องการ — แหล่งเดียว (R3) · ต่ำกว่านี้ = ชีทยังไม่ได้ Deploy รุ่นที่คู่กับหน้านี้
+   (เดิมเทียบ ≥9 ตายตัว ชีทรุ่น 33 ก็ขึ้นว่า "รุ่นล่าสุด") */
+const GS_MIN=35;
 function drawConn(){
   const el=$('tblConn'); if(!el) return;
   const ok=(b,t)=>`<span class="pill ${b?'ok':'bad'}">${b?'✓ '+t:'✕ '+t}</span>`;
@@ -2305,7 +2308,8 @@ function drawConn(){
     ['ชีทคลังข้อมูล (อ่าน)', CONN.sheet===null?'<span class="pill warn">ยังไม่ได้ตรวจ</span>':ok(CONN.sheet,CONN.sheet?'อ่านได้':'อ่านไม่ได้ — ตรวจการแชร์ชีท'),
       CONN.sheet?`แท็บ PRICES ${CONN.prices.toLocaleString()} แถว`:'—'],
     ['ตัวรับข้อมูล (Apps Script)', CONN.web===null?'<span class="pill warn">ยังไม่ได้ตรวจ</span>':ok(CONN.web,CONN.web?('เชื่อมได้ · รุ่น '+CONN.ver):'เชื่อมไม่ได้'),
-      CONN.web?(CONN.ver>=9?'รุ่นล่าสุด':'ควรอัปเป็นรุ่น 9 — รุ่นเก่ายังไม่มีระบบสำรอง/ล้างข้อมูล'):'ตรวจ URL ในช่องด้านบน'],
+      CONN.web?(CONN.ver>=GS_MIN?'ตรงกับหน้านี้ (ต้องรุ่น '+GS_MIN+' ขึ้นไป)'
+        :'<span class="up">ชีทยังเป็นรุ่น '+CONN.ver+' · หน้านี้ต้องรุ่น '+GS_MIN+'</span> — วาง Code.gs ใหม่ แล้ว Deploy → New version'):'ตรวจ URL ในช่องด้านบน'],
     ['บัญชีคุม (แท็บ REGISTRY)', CONN.reg?ok(true,'อัปโหลดแล้ว'):'<span class="pill warn">ยังไม่มีข้อมูล</span>',
       CONN.reg?`${CONN.reg.toLocaleString()} ชื่อเดิม → ${P.mats.length?P.mats.length.toLocaleString():'—'} ชื่อมาตรฐาน`:'อัปโหลดจากกล่องด้านล่าง'],
     ['พิกัดแหล่งวัสดุ (แท็บ SOURCES)', CONN.src?ok(true,'อัปโหลดแล้ว'):'<span class="pill warn">ยังไม่มีข้อมูล</span>',
@@ -2476,8 +2480,9 @@ async function loadLive(){
   if(st) st.textContent='กำลังอ่านคลัง…';
   /* ตรวจตัวรับข้อมูลคู่ขนาน */
   (async()=>{ const url=($('cfgUrl').value||'').trim(); if(!url){ CONN.web=false; drawConn(); return; }
-    try{ const g=await (await fetch(url)).json(); CONN.web=!!g.ok; CONN.ver=g.ver||0; }
-    catch(e){ CONN.web=false; } drawConn(); })();
+    try{ const g=await (await fetch(url,{signal:AbortSignal.timeout(20000)})).json(); CONN.web=!!g.ok; CONN.ver=g.ver||0; }
+    catch(e){ CONN.web=false; } drawConn();
+    const hi=$('hcImp'); if(hi) hi.innerHTML=impChips(); })();
   try{
     /* ⚡ ยิงทั้ง 4 แท็บพร้อมกัน — ของเดิมยิงทีละแท็บต่อคิวกัน รอรวมกันเป็นสิบวินาที
        PRICES เป็นก้อนใหญ่สุด (หลายเมกะไบต์) อีก 3 แท็บเล็ก โหลดคู่ขนานไปเลยไม่เสียเวลาเพิ่ม */
@@ -3570,9 +3575,9 @@ async function fetchOil(silent){
   if(url){
     st.textContent='ชีทยังไม่มีราคาวันนี้ — กำลังดึงสดจาก ปตท. (~5-10 วิ) …';
     try{
-      const r=await fetch(url,{method:'POST',headers:{'Content-Type':'text/plain;charset=utf-8'},
-        body:JSON.stringify({token:WTOKEN,action:'oil_now',prov})});
-      const res=await r.json();
+      let res;
+      try{ res=await gsPost(url,{action:'oil_now',prov},45000); }
+      catch(e){ if(e.unknown) throw e; res={ok:false,error:e.message}; }   /* ตกแบบรู้ผล → แสดงข้อความของชีทตามเดิม */
       if(res.ok&&res.price>=20&&res.price<70){
         useHit(res.date,res.prov,res.price,'สดจาก ปตท.',res.ref||(res.location?'อ.'+res.location:''));
         st.innerHTML+= res.added? ' บันทึกเข้าชีท OIL แล้ว — ครั้งต่อไปจะเร็วทันที'
@@ -3583,13 +3588,13 @@ async function fetchOil(silent){
         return;
       }
       if(res.ok&&res.price===undefined){
-        st.innerHTML='<span class="pill bad">ชีทยังใช้ Code.gs รุ่นเก่า</span> วาง Code.gs รุ่นล่าสุดจากโฟลเดอร์ 01.ระบบ'
+        st.innerHTML='<span class="pill bad">ชีทยังใช้ Code.gs รุ่นเก่า</span> วาง Code.gs รุ่นล่าสุดจากโฟลเดอร์ 04. การเชื่อมต่อข้อมูล'
           +' → Deploy → Manage deployments → ✏ → <b>New version</b>';
       } else if(res.error){
         st.innerHTML='<span class="pill bad">ดึงจาก ปตท. ไม่สำเร็จ</span> '+esc(res.error)
           +' — เมนู ระบบวัสดุ ในชีท → ทดสอบดึงราคาน้ำมัน เพื่อดูรายละเอียด';
       }
-    }catch(e){ st.innerHTML='<span class="pill warn">ต่อ WebApp ไม่ได้ — ตรวจ URL ที่หน้า ระบบ</span>'; }
+    }catch(e){ st.innerHTML='<span class="pill warn">ดึงสดไม่ได้</span> '+esc(e.message)+' — ตรวจ URL ที่หน้า ระบบ'; }
   }
   if(hit){ st.innerHTML+=`<br><span class="pill warn">ใช้ราคาล่าสุดที่มีในชีทไปก่อน · ${esc(hit.pv)} · ${esc(hit.dt)}</span>`;
     $('dDiesel').value=hit.pr.toFixed(2); oilMeta={date:hit.dt,prov:hit.pv,ref:hit.ref}; dieselIdx(); renderAll(); return; }
@@ -4282,12 +4287,10 @@ $('dOilSave').onclick=async()=>{
   const dt=String(d.getDate()).padStart(2,'0')+'/'+String(d.getMonth()+1).padStart(2,'0')+'/'+(d.getFullYear()+543);
   st.textContent='กำลังบันทึกขึ้นชีท OIL …';
   try{
-    const r=await fetch(url,{method:'POST',headers:{'Content-Type':'text/plain;charset=utf-8'},
-      body:JSON.stringify({token:WTOKEN,action:'oil',rows:[[dt,prov,pr,'กรอกจากหน้าคำนวณ']]})});
-    const res=await r.json(); if(!res.ok) throw new Error(res.error||'ไม่สำเร็จ');
+    const res=await gsPost(url,{action:'oil',rows:[[dt,prov,pr,'กรอกจากหน้าคำนวณ']]});   /* ชีทกันวันซ้ำให้ — ส่งซ้ำได้ */
     st.innerHTML='<span class="pill ok">บันทึกขึ้นชีท OIL แล้ว · '+esc(prov)+' · '+dt+(res.added?'':' (วันนี้มีแล้ว ระบบข้ามให้)')+'</span>';
     oilMeta={date:dt,prov};
-  }catch(e){ st.innerHTML='<span class="pill warn">บันทึกไม่ได้: '+esc(e.message)+'</span>'; }
+  }catch(e){ st.innerHTML='บันทึกราคาน้ำมัน: '+gsErr(e,'บันทึก'); }
 };
 $('dDiesel').onchange=()=>{oilMeta=null;dieselIdx();renderAll();};
 $('dDate').onchange=()=>buildCalcSheet();
@@ -5285,9 +5288,7 @@ async function probeRow(i){
   if(btn) btn.disabled=true;
   out.innerHTML='<span class="hint">บรรทัด '+(i+1)+' — กำลังให้ชีทวิ่งอ่านหน้านี้… (หน้าหมวดอาจใช้เวลาสัก 10–20 วินาที)</span>';
   try{
-    const r=await (await fetch(wurl,{method:'POST',headers:{'Content-Type':'text/plain;charset=utf-8'},
-      body:JSON.stringify({token:WTOKEN,action:'webprobe',url,mat})})).json();
-    if(!r.ok) throw new Error(r.error||'เรียกไม่สำเร็จ');
+    const r=await gsPost(wurl,{action:'webprobe',url,mat},60000);   /* อ่านอย่างเดียว ไม่เขียนชีท */
     const d=r.result||{};
     const fac=Math.max(0,parseFloat(MROWS[i].fac)||1);
     let h='';
@@ -5867,15 +5868,31 @@ function impInit(){
     if(priced.length){
       try{
         const rows=priced.map(q=>[q.y,q.mo,q.mat,q.unit,q.price,q.src,q.typ,(q.chan||'กรอกเอง')+(q.ref?' · '+q.ref:'')]);
-        const res=await (await fetch(url,{method:'POST',headers:{'Content-Type':'text/plain;charset=utf-8'},
-          body:JSON.stringify({token:WTOKEN,action:'submit',rows,by})})).json();
-        if(!res.ok) throw new Error(res.error||'ส่งไม่สำเร็จ');
+        /* 8.45: รหัสชุดตั้งที่หน้าเว็บ — ส่งซ้ำ "ของชุดเดิมเป๊ะ" ใช้รหัสเดิม ชีทรุ่น 35 ตอบ dup ไม่บันทึกซ้ำ
+           คิวเปลี่ยนเมื่อไรได้รหัสใหม่ (ไม่งั้นแถวที่เพิ่มทีหลังจะถูกตีว่าซ้ำแล้วหายเงียบ) */
+        const sig=JSON.stringify([rows,by]);
+        if(!SUBB||SUBB.sig!==sig) SUBB={sig, batch:newBatchId()};
+        const batch=SUBB.batch;
+        let res;
+        try{ res=await gsPost(url,{action:'submit',rows,by,batch,seq:0,of:1}); }
+        catch(e){
+          if(!e.unknown) throw e;
+          st.innerHTML='<span class="pill warn">ไม่ทราบผล</span> '+esc(e.message)+' · กำลังตรวจคิวว่าชุด '+esc(batch)+' เข้าแล้วหรือยัง…';
+          let s=''; for(let k=0;k<4&&!s;k++){ try{ const x=await pendBatchState(batch); if(x&&x!=='none') s=x; }catch(_){}
+            if(!s) await new Promise(r=>setTimeout(r,GS_POLL_MS)); }
+          if(!s) throw e;                                   /* ยังไม่เห็นในคิว = ไม่รู้จริง ๆ · คิวยังอยู่ กดซ้ำได้ (รหัสเดิม กันซ้ำ) */
+          res={batch, added:rows.length, mailed:null, seen:true};
+        }
         if(res.batch===undefined) throw new Error('ชีทยังใช้ Code.gs รุ่นเก่า — ต้องรุ่น 22 ขึ้นไป');
-        okPrice=true;
+        okPrice=true; SUBB=null;
         out+='<span class="pill ok">ส่งขออนุมัติแล้ว</span> ชุด <b>'+esc(res.batch)+'</b> · '+res.added+' รายการ'
-          +(res.mailed?' · แจ้งอีเมลผู้อนุมัติแล้ว':' · <span class="up">ส่งอีเมลไม่ผ่าน (ดูสิทธิ์ใน Apps Script)</span>')
+          +(res.seen?' · ยืนยันจากคิวรออนุมัติ':res.dup?' · ชีทรับชุดนี้ไว้แล้วจากรอบก่อน':
+            res.mailed?' · แจ้งอีเมลผู้อนุมัติแล้ว':' · <span class="up">ส่งอีเมลไม่ผ่าน (ดูสิทธิ์ใน Apps Script)</span>')
           +'<br>ราคายังไม่เข้าคลัง รอผู้ดูแลกดอนุมัติที่การ์ด "รายการรออนุมัติ"';
-      }catch(e){ out+='<span class="up">ส่งราคาไม่สำเร็จ: '+esc(e.message)+'</span>'; }
+      }catch(e){ out+='ส่งราคา: '+gsErr(e,'ส่ง')+(!e.unknown?''
+        /* กันส่งซ้ำมีจริงเฉพาะชีทรุ่น 35 ขึ้นไป — รุ่นเก่ากว่านั้นห้ามบอกว่าปลอดภัย */
+        : CONN.ver>=GS_MIN?' · รายการยังอยู่ในคิว กดส่งซ้ำได้ ชีทกันบันทึกซ้ำให้'
+        : ' · ชีทยังเป็น Code.gs รุ่น '+(CONN.ver||'?')+' ซึ่งไม่กันส่งซ้ำ — ดูแท็บ PENDING ก่อนกดซ้ำ'); }
     }
     /* จดลิงก์สินค้าไว้ในชีท (แท็บ WEBITEMS) — สคริปต์ฝั่ง Google จะวิ่งอ่านลิงก์เองทุกเดือน
        แล้วส่งราคาที่ดึงได้เข้าคิวรออนุมัติให้ ไม่ต้องมานั่งเปิดเว็บทีละร้าน
@@ -5884,29 +5901,25 @@ function impInit(){
       try{
         const lrows=links.map(q=>[q.mat,q.unit,q.fac||1,q.src,q.url,
           'จดจากแดชบอร์ด '+by+(q.webUnit?' · เว็บขายเป็น '+q.webUnit:'')]);
-        const lr=await (await fetch(url,{method:'POST',headers:{'Content-Type':'text/plain;charset=utf-8'},
-          body:JSON.stringify({token:WTOKEN,action:'weblink',rows:lrows})})).json();
-        if(!lr.ok) throw new Error(lr.error||'จดลิงก์ไม่สำเร็จ');
+        await gsPost(url,{action:'weblink',rows:lrows});      /* จดซ้ำได้ปลอดภัย — ชีทแทนที่ตามคีย์ */
         okLink=true;
         out+=(out?'<br>':'')+'<span class="pill ok">จดลิงก์สินค้าแล้ว '+links.length+' รายการ</span> '
           +'เดือนหน้าระบบจะดึงราคาจากลิงก์เองแล้วเข้าคิวรออนุมัติให้';
-      }catch(e){ out+=(out?'<br>':'')+'<span class="up">จดลิงก์ไม่สำเร็จ: '+esc(e.message)
-        +' — ชีทอาจยังใช้ Code.gs ก่อนรุ่น 26</span>'; }
+      }catch(e){ out+=(out?'<br>':'')+'จดลิงก์: '+gsErr(e,'จด')
+        +(e.unknown?'':' <span class="hint">— ชีทอาจยังใช้ Code.gs ก่อนรุ่น 26</span>'); }
     }
     /* พิกัดแหล่ง — ส่งแยกจากราคา พังอย่างหนึ่งต้องไม่ลากอีกอย่างล้มตาม
        ใช้คำสั่ง sources/upsert ตัวเดียวกับแท็บ "พิกัดแหล่ง" ไม่สร้างช่องทางที่สองให้เพี้ยนกันทีหลัง */
     if(geoRows.length){
       try{
-        const gr=await (await fetch(url,{method:'POST',headers:{'Content-Type':'text/plain;charset=utf-8'},
-          body:JSON.stringify({token:WTOKEN,action:'sources',mode:'upsert',rows:geoRows})})).json();
-        if(!gr.ok) throw new Error(gr.error||'บันทึกพิกัดไม่สำเร็จ');
+        await gsPost(url,{action:'sources',mode:'upsert',rows:geoRows});   /* upsert — ส่งซ้ำได้ */
         out+=(out?'<br>':'')+'<span class="pill ok">บันทึกพิกัดแล้ว '+geoRows.length+' แหล่ง</span> '
           +'ใช้คำนวณระยะขนส่งได้ทันที'
           +'<br><span class="hint">อย่าลืมเติมพิกัดชุดนี้ลงชีต "แหล่งวัสดุ" ในไฟล์บัญชีคุมด้วย '
           +'ไม่งั้นครั้งหน้าที่อัปโหลดบัญชีคุมทับ พิกัดจะหาย</span>';
         try{ await loadLive(); drawNoGeo(); }catch(e){}
-      }catch(e){ out+=(out?'<br>':'')+'<span class="up">บันทึกพิกัดไม่สำเร็จ: '+esc(e.message)
-        +'</span> — ราคายังส่งได้ตามปกติ ไปเติมพิกัดที่แท็บ "พิกัดแหล่ง" ได้'; }
+      }catch(e){ out+=(out?'<br>':'')+'บันทึกพิกัด: '+gsErr(e,'บันทึก')
+        +' — ราคายังส่งได้ตามปกติ ไปเติมพิกัดที่แท็บ "พิกัดแหล่ง" ได้'; }
     }
     /* เอาออกจากคิวเฉพาะส่วนที่ส่งผ่าน — ส่วนที่พังยังอยู่ให้กดส่งซ้ำได้ */
     for(let i=queue.length-1;i>=0;i--){
@@ -5933,13 +5946,12 @@ function impInit(){
     if(!confirm('ให้ชีทวิ่งอ่านทุกลิงก์ในทะเบียนเดี๋ยวนี้?\n\nลิงก์เยอะจะใช้เวลาหลายสิบวินาที\nราคาที่ได้จะเข้าคิวรออนุมัติ ไม่เข้าคลังเอง')) return;
     $('wiRun').disabled=true; box.innerHTML='<div class="hint">กำลังดึง… อย่าปิดหน้านี้</div>';
     try{
-      const r=await (await fetch(wurl,{method:'POST',headers:{'Content-Type':'text/plain;charset=utf-8'},
-        body:JSON.stringify({token:WTOKEN,action:'webfetch',only:''})})).json();
-      if(!r.ok) throw new Error(r.error||'ดึงไม่สำเร็จ');
+      /* ลิงก์เยอะใช้เวลาเป็นนาที — เพดานยาวกว่าคำสั่งอื่น (Apps Script ตัดที่ 6 นาทีอยู่แล้ว) */
+      const r=await gsPost(wurl,{action:'webfetch',only:''},380000);
       const d=r.result||{};
       toast('อ่านลิงก์ '+d.read+' · ได้ราคา '+d.got+' · ไม่สำเร็จ '+d.fail+' · เข้าคิว '+d.queued);
       loadWebItems(); loadPending();
-    }catch(e){ box.innerHTML='<div class="hint"><span class="up">'+esc(e.message)+'</span></div>'; }
+    }catch(e){ box.innerHTML='<div class="hint">'+gsErr(e,'ดึง')+'</div>'; if(e.unknown){ loadWebItems(); loadPending(); } }
     $('wiRun').disabled=false;
   };
   /* ═══ สลับแท็บระดับหน้า — โหลดข้อมูลของแท็บตอนเปิดครั้งแรกเท่านั้น ═══
@@ -5953,8 +5965,10 @@ function impInit(){
       p.style.display = p.id==='ip-'+b.dataset.ip ? '' : 'none'; });
     if(!IPDONE[b.dataset.ip] && IPLOAD[b.dataset.ip]){ IPDONE[b.dataset.ip]=1; IPLOAD[b.dataset.ip](); }
   });
-  /* ป้ายจำนวนบนหัวแท็บ อ่านแบบเงียบ ๆ ได้ เพราะเบา (แค่ขนาดคิว/จำนวนลิงก์) */
-  loadPending(true); loadWebItems(true);
+  /* ป้ายจำนวนบนหัวแท็บ อ่านแบบเงียบ ๆ ได้ เพราะเบา (แค่ขนาดคิว/จำนวนลิงก์)
+     8.45: ครั้งเดียวต่อการเปิดหน้า — impInit ถูกเรียกทุกครั้งที่คลังโหลดใหม่ เดิมจึงยิงอ่าน 2 แท็บซ้ำทุกรอบ
+     หลังส่งคิว/อนุมัติ/ดึงเว็บ โค้ดตรงนั้นเรียก loadPending/loadWebItems เองอยู่แล้ว */
+  if(!impInit._badge){ impInit._badge=1; loadPending(true); loadWebItems(true); }
   $('mCopy').onclick=()=>{
     /* คัดลอกเฉพาะแถวราคา — แถวจดลิงก์ไม่มีราคาและไม่ผูกเดือน วางลงตารางราคาไม่ได้ */
     const qp=queue.filter(q=>!q.linkOnly);
@@ -6034,17 +6048,14 @@ function noGeoInit(){
     if(!rows.length){ msg.textContent='ยังไม่ได้กรอกพิกัดสักแหล่ง'; return; }
     $('noGeoSave').disabled=true; msg.textContent='กำลังส่งพิกัด '+rows.length+' แหล่งขึ้นแท็บ SOURCES…';
     try{
-      const r=await fetch(url,{method:'POST',headers:{'Content-Type':'text/plain;charset=utf-8'},
-        body:JSON.stringify({token:WTOKEN,action:'sources',mode:'upsert',rows})});
-      const res=await r.json();
-      if(!res.ok) throw new Error(res.error||'ส่งไม่สำเร็จ');
+      const res=await gsPost(url,{action:'sources',mode:'upsert',rows});
       if(res.added===undefined) throw new Error('ชีทยังใช้ Code.gs รุ่นเก่า — ต้องรุ่น 22 ขึ้นไป');
       msg.innerHTML='<span class="pill ok">บันทึกแล้ว</span> '+rows.length+' แหล่งขึ้นแท็บ SOURCES · กำลังโหลดคลังใหม่…';
       GEOQ=GEOQ.filter(g=>!rows.some(x=>x[0]===g.name));
       await loadLive(); drawNoGeo();
       msg.innerHTML='<span class="pill ok">บันทึกแล้ว</span> '+rows.length+' แหล่ง — ใช้คำนวณระยะขนส่งได้ทันที'
         +'<br><span class="hint">อย่าลืมเติมพิกัดชุดนี้ลงชีต "แหล่งวัสดุ" ในไฟล์บัญชีคุมด้วย ไม่งั้นครั้งหน้าที่อัปโหลดบัญชีคุมทับ พิกัดจะหาย</span>';
-    }catch(e){ msg.textContent='ไม่สำเร็จ: '+e.message; }
+    }catch(e){ msg.innerHTML='บันทึกพิกัด: '+gsErr(e,'บันทึก'); }
     $('noGeoSave').disabled=false;
   };
   drawNoGeo();
@@ -6126,6 +6137,7 @@ async function loadPending(silent){
         ${body}
         </tbody></table></div>
         <div class="ap-act">
+          <input class="ap-by" placeholder="ชื่อผู้อนุมัติ (ลงปูม)" autocomplete="off" style="max-width:150px">
           <input type="password" class="ap-pass" placeholder="รหัสผู้ดูแล" autocomplete="new-password">
           <button class="btn" data-ok="${esc(g.batch)}">✓ อนุมัติเข้าคลัง</button>
           <button class="btn ghost" data-no="${esc(g.batch)}" style="color:var(--neg-ink);border-color:var(--bad-bd)">✕ ไม่อนุมัติ</button>
@@ -6181,11 +6193,12 @@ async function loadWebItems(silent){
         +'\n\nเดือนหน้าระบบจะไม่ดึงราคาของคู่นี้อีก (ราคาที่เคยอนุมัติไปแล้วยังอยู่ในคลังตามเดิม)')) return;
       b.disabled=true;
       try{
-        const r=await (await fetch(url,{method:'POST',headers:{'Content-Type':'text/plain;charset=utf-8'},
-          body:JSON.stringify({token:WTOKEN,action:'weblink_del',mat,src,unit})})).json();
-        if(!r.ok) throw new Error(r.error||'ยกเลิกไม่สำเร็จ');
+        const r=await gsPost(url,{action:'weblink_del',mat,src,unit});
         toast('ยกเลิกลิงก์แล้ว '+(r.removed||0)+' รายการ'); loadWebItems();
-      }catch(e){ toast('ยกเลิกไม่สำเร็จ: '+e.message+' — ชีทอาจยังใช้ Code.gs ก่อนรุ่น 30'); b.disabled=false; }
+      }catch(e){
+        if(e.unknown){ toast('ไม่ทราบผล: '+e.message+' — กำลังอ่านทะเบียนลิงก์ใหม่ให้ดู'); loadWebItems(); }
+        else toast('ยกเลิกไม่สำเร็จ: '+e.message+' — ชีทอาจยังใช้ Code.gs ก่อนรุ่น 30');
+        b.disabled=false; }
     });
   }catch(e){ if(!silent) box.innerHTML='<div class="hint">อ่านทะเบียนลิงก์ไม่ได้ — ต้องวาง Code.gs รุ่น 25 ขึ้นไป แล้วรัน ตั้งค่าแท็บให้ครบ หนึ่งครั้ง</div>'; }
 }
@@ -6259,12 +6272,10 @@ async function loadNewItems(silent){
       if(!confirm('เอาชื่อที่จับคู่บัญชีคุมได้แล้วออกจากคิว?\n\nชีทจะสำรองแท็บ NEW_ITEMS ไว้ก่อนเสมอ')) return;
       pg.disabled=true; st2.textContent='กำลังเก็บกวาด…';
       try{
-        const r=await (await fetch(url,{method:'POST',headers:{'Content-Type':'text/plain;charset=utf-8'},
-          body:JSON.stringify({token:WTOKEN,action:'newclean'})})).json();
-        if(!r.ok) throw new Error(r.error||'เก็บกวาดไม่สำเร็จ');
+        const r=await gsPost(url,{action:'newclean'},180000);   /* เก็บกวาดซ้ำได้ปลอดภัย */
         st2.innerHTML=`<span class="pill ok">เก็บกวาดแล้ว</span> เอาออก ${r.removed||0} ชื่อ · เหลือรอจับคู่จริง ${r.left||0} ชื่อ`;
         loadNewItems();
-      }catch(e){ st2.textContent='ไม่สำเร็จ: '+e.message+' — ชีทอาจยังใช้ Code.gs ก่อนรุ่น 31'; pg.disabled=false; }
+      }catch(e){ st2.innerHTML='เก็บกวาด: '+gsErr(e,'กด')+(e.unknown?'':' — ชีทอาจยังใช้ Code.gs ก่อนรุ่น 31'); pg.disabled=false; }
     };
   }catch(e){ if(!silent) box.innerHTML='<div class="hint">อ่านแท็บ NEW_ITEMS ไม่ได้ — ตรวจว่าแชร์ชีทแบบอ่านได้แล้ว</div>'; }
 }
@@ -6280,38 +6291,112 @@ async function sendNewItemMatches(){
   try{
     /* mode append — ห้ามใช้ replace เด็ดขาด จะล้างบัญชีคุมทั้งแท็บทิ้ง */
     const rows=pick.map(r=>['', r.nm, regCat(r.std)||'', r.unit||REG.unit[r.std]||'', r.std]);
-    const res=await (await fetch(url,{method:'POST',headers:{'Content-Type':'text/plain;charset=utf-8'},
-      body:JSON.stringify({token:WTOKEN,action:'registry',mode:'append',pass,rows})})).json();
-    if(!res.ok) throw new Error(res.error||'ส่งไม่สำเร็จ');
+    const res=await gsPost(url,{action:'registry',mode:'append',pass,rows},180000);
     st.innerHTML='<span class="pill ok">เพิ่มแล้ว '+res.added+' คู่</span> ชีทเก็บกวาดคิวชื่อใหม่ให้เองแล้ว';
     setTimeout(()=>{ loadLive(); loadNewItems(); },1200);
-  }catch(e){ st.innerHTML='<span class="up">'+esc(e.message)+'</span>'; }
+  }catch(e){ st.innerHTML=gsErr(e,'ส่ง')+(e.unknown?' · ส่งซ้ำจะได้คู่ชื่อซ้ำในบัญชีคุม — ดูแท็บ REGISTRY ก่อน':''); }
   $('niSend').disabled=false;
 }
 
+/* ส่งคำสั่งเขียนไป Apps Script แบบมีเพดานเวลา (8.44)
+   เดิม fetch เปล่า: ชีทช้าหรือเน็ตแขวน จอค้าง "กำลังอนุมัติ…" ได้ถึง 6 นาที แล้วจบด้วย "Failed to fetch"
+   e.unknown=true แปลว่า "ไม่รู้ผล" — คำขออาจไปถึงชีทแล้วก็ได้ ห้ามบอกผู้ใช้ว่าล้มเหลว */
+var GS_TIMEOUT_MS=90000, GS_POLL_MS=15000, GS_POLL_MAX_MS=300000;   /* var = ชุดทดสอบย่อเวลาได้ */
+async function gsPost(url, body, ms=GS_TIMEOUT_MS){
+  const ac=new AbortController(), tm=setTimeout(()=>ac.abort(), ms);
+  let r;
+  try{
+    r=await fetch(url,{method:'POST',headers:{'Content-Type':'text/plain;charset=utf-8'},
+      body:JSON.stringify(Object.assign({token:WTOKEN},body)),signal:ac.signal});
+  }catch(e){
+    const x=new Error(ac.signal.aborted?'ชีทไม่ตอบภายใน '+Math.round(ms/1000)+' วินาที':'ติดต่อชีทไม่ได้ ('+e.message+')');
+    x.unknown=true; throw x;
+  }finally{ clearTimeout(tm); }
+  let res;
+  try{ res=await r.json(); }
+  catch(e){ const x=new Error('ชีทตอบกลับมาไม่ใช่ผลลัพธ์ (HTTP '+r.status+') — มักเป็นสคริปต์เกินเวลา'); x.unknown=true; throw x; }
+  if(!res.ok) throw new Error(String(res.error||'ไม่สำเร็จ').replace(/^Error: /,''));
+  return res;
+}
+/* ข้อความผิดพลาดของคำสั่งเขียน — ไม่รู้ผล ต้องไม่บอกว่าล้มเหลว (8.45 ใช้ทุกปุ่มที่เขียนเข้าชีท) */
+function gsErr(e, act){
+  return e&&e.unknown
+    ? '<span class="pill warn">ไม่ทราบผล</span> '+esc(e.message)+' — ดูในชีทก่อน'+(act?' แล้วค่อย'+act+'ซ้ำ':'กดซ้ำ')
+    : '<span class="up">'+esc(String(e&&e.message||e))+'</span>';
+}
+/* รหัสชุดที่หน้าเว็บตั้งเอง — ส่งซ้ำด้วยรหัสเดิม ชีทรุ่น 35 จะไม่บันทึกซ้ำ */
+let SUBB=null;          /* {sig, batch} ของการส่งที่ยังไม่รู้ผล — ผูกกับเนื้อหาที่ส่งเป๊ะ ๆ */
+function newBatchId(){
+  const d=new Date(), p=n=>String(n).padStart(2,'0');
+  return 'B'+String(d.getFullYear()).slice(2)+p(d.getMonth()+1)+p(d.getDate())+'-'+p(d.getHours())+p(d.getMinutes())+p(d.getSeconds())
+    +'-W'+Math.random().toString(36).slice(2,5).toUpperCase();
+}
+/* อ่านสถานะจริงของชุดจากแท็บ PENDING — ใช้ตอบว่า "สรุปแล้วเข้าคลังหรือยัง" เมื่อไม่รู้ผลจากคำขอ */
+async function pendBatchState(batch){
+  const id=($('cfgSheet').value||'').trim();
+  const r=await fetch(`https://docs.google.com/spreadsheets/d/${id}/gviz/tq?tqx=out:csv&sheet=PENDING&nocache=${Date.now()}`);
+  if(!r.ok) throw new Error('HTTP '+r.status);
+  const st=csvParse(await r.text()).slice(1).filter(c=>c[0]===batch).map(c=>String(c[11]||'').trim());
+  if(!st.length) return 'none';
+  if(st.some(s=>s==='รออนุมัติ')) return 'wait';
+  if(st.every(s=>s==='อนุมัติแล้ว')) return 'approved';
+  if(st.every(s=>s==='ไม่อนุมัติ')) return 'rejected';
+  return 'odd';                  /* ช่องว่าง/ค่าแปลก/ปนกัน — อ่านคิวได้ แต่ตีความไม่ได้ ไม่เดาว่าอนุมัติแล้ว */
+}
 async function decidePend(batch, ok, btn){
   const grp=btn.closest('.apgrp'), pass=grp.querySelector('.ap-pass').value;
-  const st=grp.querySelector('[data-st]'); const url=($('cfgUrl').value||'').trim();
-  if(!pass){ st.innerHTML='<span class="up">ใส่รหัสผู้ดูแลก่อน</span>'; return; }
+  const by=((grp.querySelector('.ap-by')||{}).value||'').trim();   /* ชื่อผู้กด ลงปูม LOG · ไม่จำข้ามครั้ง (R2) */
+  const url=($('cfgUrl').value||'').trim();
+  /* หาช่องสถานะใหม่ทุกครั้ง — ระหว่างรอ หน้าอาจวาดการ์ดใหม่ ตัวเดิมหลุดจากจอไปแล้ว */
+  const say=h=>{ const el=document.querySelector(`.apgrp [data-st="${CSS.escape(batch)}"]`)||grp.querySelector('[data-st]'); el.innerHTML=h; };
+  const lock=on=>document.querySelectorAll(`.apgrp [data-ok="${CSS.escape(batch)}"],.apgrp [data-no="${CSS.escape(batch)}"]`)
+    .forEach(b=>b.disabled=on);
+  if(!pass){ say('<span class="up">ใส่รหัสผู้ดูแลก่อน</span>'); return; }
+  if(!url){ say('<span class="up">ยังไม่ตั้ง WebApp URL (หน้า ระบบ)</span>'); return; }
   if(!ok && !confirm('ยืนยันไม่อนุมัติชุด '+batch+' ?')) return;
-  grp.querySelectorAll('button').forEach(b=>b.disabled=true);
-  st.textContent=ok?'กำลังอนุมัติ…':'กำลังบันทึกผล…';
+  lock(true);
+  say(ok?'กำลังอนุมัติ…':'กำลังบันทึกผล…');
+  const done=(m)=>{ say(m); setTimeout(()=>{ loadPending(); if(ok) loadLive(); },900); };
   try{
-    const r=await fetch(url,{method:'POST',headers:{'Content-Type':'text/plain;charset=utf-8'},
-      body:JSON.stringify({token:WTOKEN,action:ok?'approve':'reject',pass,batch})});
-    const res=await r.json();
-    if(!res.ok) throw new Error(res.error||'ไม่สำเร็จ');
-    st.innerHTML=ok?`<span class="pill ok">อนุมัติแล้ว</span> เข้าคลัง ${res.result?res.result.moved:0} แถว`
-                   :'<span class="pill">บันทึกว่าไม่อนุมัติแล้ว</span>';
-    setTimeout(()=>{ loadPending(); if(ok) loadLive(); },900);
+    const res=await gsPost(url,{action:ok?'approve':'reject',pass,batch,by});
+    const R=res.result||{};
+    done(ok?`<span class="pill ok">อนุมัติแล้ว</span> เข้าคลัง ${R.moved||0} แถว`
+             +(R.newNamesError?' <span class="hint">· จดชื่อใหม่ไม่สำเร็จ ('+esc(String(R.newNamesError).slice(0,60))+')</span>':'')
+           :'<span class="pill">บันทึกว่าไม่อนุมัติแล้ว</span>');
   }catch(e){
-    st.innerHTML='<span class="up">'+esc(String(e.message).replace('Error: ',''))+'</span>';
-    grp.querySelectorAll('button').forEach(b=>b.disabled=false);
+    if(!e.unknown && !/ถูกตัดสินไปแล้ว/.test(e.message)){ say('<span class="up">'+esc(e.message)+'</span>'); lock(false); return; }
+    /* ไม่รู้ผล หรือชีทบอกว่าตัดสินไปแล้ว — ไปดูคิวจริง ไม่เดา (เซิร์ฟเวอร์อาจยังทำงานต่อจนจบ) */
+    const t0=Date.now(); let readOk=false, odd=false;
+    for(;;){
+      const sec=Math.round((Date.now()-t0)/1000);
+      say('<span class="pill warn">ไม่ทราบผล</span> '+esc(e.message)+' · กำลังตรวจคิวจริง '+sec+' วิ…');
+      let s=''; try{ s=await pendBatchState(batch); }catch(x){}
+      readOk=(s!==''); odd=(s==='odd');
+      if(s==='approved'){ done('<span class="pill ok">อนุมัติแล้ว</span> ยืนยันจากคิวรออนุมัติ'); return; }
+      if(s==='rejected'){ done('<span class="pill">ชุดนี้ถูกบันทึกว่าไม่อนุมัติแล้ว</span>'); return; }
+      if(s==='none'){ done('<span class="up">ไม่พบชุดนี้ในคิวแล้ว</span>'); return; }
+      if(Date.now()-t0>GS_POLL_MAX_MS){
+        const lim=GS_POLL_MAX_MS>=60000?Math.round(GS_POLL_MAX_MS/60000)+' นาที':Math.round(GS_POLL_MAX_MS/1000)+' วินาที';
+        /* อ่านคิวไม่ได้ ≠ ยังไม่เข้าคลัง — ต้องบอกตามที่รู้จริง */
+        say(odd
+          ? '<span class="pill warn">ไม่ทราบผล</span> ช่องสถานะของชุดนี้ในคิวว่าง/ปนกัน — เปิดแท็บ PENDING ในชีทดูก่อนกดซ้ำ'
+          : readOk
+          ? '<span class="up">ยังไม่เข้าคลัง</span> ชีทยังไม่บันทึกผลชุดนี้ภายใน '+lim+' — กดใหม่ได้ ระบบกันบันทึกซ้ำให้'
+          : '<span class="pill warn">ไม่ทราบผล</span> อ่านคิวรออนุมัติไม่ได้ — เปิดแท็บ PENDING ในชีทดูก่อนกดซ้ำ');
+        lock(false); return;
+      }
+      await new Promise(r=>setTimeout(r,GS_POLL_MS));
+    }
   }
 }
 function impChips(){
+  /* 8.45: แยก "อ่านคลังได้" กับ "ส่งเข้าคลังได้" — เดิมขึ้น "เชื่อมคลังแล้ว" จากภาพในเครื่อง
+     ทั้งที่ยังไม่รู้ว่าอ่านคลังจริงได้ และไม่ได้บอกเลยว่าตัวรับข้อมูล (Apps Script) ตอบไหม */
+  const rd=CONN.sheet===true?'☁ อ่านคลังได้':(LIVE.on?'☁ แสดงจากภาพในเครื่อง':'⚠ ยังอ่านคลังไม่ได้');
+  const wr=CONN.web===null?'⏳ กำลังตรวจตัวรับข้อมูล':(!CONN.web?'⚠ ส่งเข้าคลังไม่ได้'
+    :(CONN.ver<GS_MIN?'⚠ ชีทใช้ Code.gs รุ่น '+CONN.ver+' (ต้อง '+GS_MIN+')':'✓ ส่งเข้าคลังได้'));
   return `<span class="ph-chip">📋 คิว <b>${queue.length}</b> รายการ</span>
-    <span class="ph-chip">${LIVE.on?'☁ เชื่อมคลังแล้ว':'⚠ ยังไม่เชื่อมคลัง'}</span>`;
+    <span class="ph-chip">${rd}</span> <span class="ph-chip">${wr}</span>`;
 }
 function renderQueue(){
   $('qStat').textContent=queue.length+' รายการ';
@@ -6690,7 +6775,7 @@ function regInit(){
     btn.disabled=true;
     try{
       st.textContent='ตรวจรุ่นตัวรับข้อมูล…';
-      const g=await (await fetch(url)).json();
+      const g=await (await fetch(url,{signal:AbortSignal.timeout(20000)})).json();
       if(!(g&&g.ok&&(g.ver||0)>=4)) throw new Error('Code.gs ในชีทยังเป็นรุ่นเก่า — วางโค้ดรุ่น 4 แล้ว Deploy → Manage deployments → New version ก่อน');
       st.textContent='กำลังอ่านไฟล์…';
       const wb=XLSX.read(await f.arrayBuffer(),{type:'array'});
@@ -6712,10 +6797,7 @@ function regInit(){
       const CH=500; let done=0;
       for(let i=0;i<rows.length;i+=CH){
         st.textContent='กำลังส่ง '+Math.min(i+CH,rows.length)+' / '+rows.length+' แถว…';
-        const r=await fetch(url,{method:'POST',headers:{'Content-Type':'text/plain;charset=utf-8'},
-          body:JSON.stringify({token:WTOKEN,action:'registry',mode:i===0?'replace':'append',pass:_pw,rows:rows.slice(i,i+CH)})});
-        const res=await r.json();
-        if(!res.ok) throw new Error(res.error||'ส่งไม่สำเร็จ');
+        const res=await gsPost(url,{action:'registry',mode:i===0?'replace':'append',pass:_pw,rows:rows.slice(i,i+CH)},180000);
         done+=res.added||0;
       }
       let srcTxt='';
@@ -6730,10 +6812,7 @@ function regInit(){
             +gs.why+' · ต้องมีคอลัมน์ "ชื่อแหล่ง" (หรือ "แหล่งวัสดุ") กับ "ละติจูด"+"ลองจิจูด" หรือคอลัมน์ "พิกัด"');
           if(rowsS.length){
             st.textContent='กำลังส่งพิกัดแหล่งวัสดุ '+rowsS.length+' แหล่ง…';
-            const rS=await fetch(url,{method:'POST',headers:{'Content-Type':'text/plain;charset=utf-8'},
-              body:JSON.stringify({token:WTOKEN,action:'sources',mode:'replace',pass:_pw,rows:rowsS})});
-            const resS=await rS.json();
-            if(!resS.ok) throw new Error(resS.error||'ส่งพิกัดไม่สำเร็จ');
+            await gsPost(url,{action:'sources',mode:'replace',pass:_pw,rows:rowsS},180000);
             srcTxt=' · พิกัดแหล่งวัสดุ '+rowsS.length+' แหล่งขึ้นแท็บ SOURCES แล้ว'
               +(gs.skipped?' (ข้าม '+gs.skipped+' แถวที่พิกัดว่าง/อ่านไม่ออก)':'');
           }
@@ -6741,7 +6820,9 @@ function regInit(){
       }
       st.textContent='อัปโหลดบัญชีคุมสำเร็จ · '+done.toLocaleString()+' แถวอยู่บนแท็บ REGISTRY แล้ว'+srcTxt+' — ชื่อใหม่ที่ไม่ตรงบัญชีคุมจะเข้าแท็บ NEW_ITEMS ให้ตามจับคู่';
       loadLive();
-    }catch(e){ st.textContent='ไม่สำเร็จ: '+e.message; }
+    }catch(e){ st.innerHTML=e.unknown
+      ? gsErr(e,'อัป')+' · อัปทั้งไฟล์ซ้ำได้ปลอดภัย (ก้อนแรกล้างแล้วเขียนใหม่)'
+      : esc('ไม่สำเร็จ: '+e.message); }
     btn.disabled=false;
   };
 }
@@ -6769,7 +6850,8 @@ function clearInit(){
   sc.onchange=opts; opts();
   $('clGo').onclick=async()=>{
     const url=($('cfgUrl').value||'').trim(), st=$('clStat');
-    if($('clYes').value!=='Drrkk1146'){ st.innerHTML='<span class="up">รหัสผู้ดูแลไม่ถูกต้อง</span>'; $('clYes').value=''; return; }
+    /* 8.44: รหัสผู้ดูแลตรวจที่ชีทเท่านั้น — เดิมเทียบรหัสตรง ๆ ในซอร์สหน้าเว็บสาธารณะ ใครเปิดซอร์สก็อ่านได้ */
+    if(!$('clYes').value){ st.innerHTML='<span class="up">ใส่รหัสผู้ดูแลก่อน</span>'; return; }
     if(!url){ st.innerHTML='<span class="up">ยังไม่ตั้ง WebApp URL</span>'; return; }
     const scope=sc.value; const opt={};
     if(scope==='prices_month'){ opt.be=+$('clY').value; opt.mo=+$('clM').value; }
@@ -6780,16 +6862,16 @@ function clearInit(){
     if(!confirm('ยืนยันล้าง: '+label+'\n\nระบบจะสำรองแท็บนั้นไว้ก่อนอัตโนมัติ กู้คืนได้ภายหลัง')) return;
     $('clGo').disabled=true; st.textContent='กำลังล้าง…';
     try{
-      const r=await fetch(url,{method:'POST',headers:{'Content-Type':'text/plain;charset=utf-8'},
-        body:JSON.stringify({token:WTOKEN,action:'clear',scope,opt,pass:$('clYes').value})});
-      const res=await r.json();
-      if(!res.ok) throw new Error(res.error||'ไม่สำเร็จ');
+      const res=await gsPost(url,{action:'clear',scope,opt,pass:$('clYes').value});
       st.innerHTML='<span class="pill ok">ล้างแล้ว</span> '+label+' · เอาออก <b>'+(res.removed||0).toLocaleString()
         +'</b> แถว · สำรองไว้ที่แท็บ <b>'+(res.backup||'—')+'</b>';
       $('clYes').value='';
       loadLive();                       /* อ่านคลังใหม่ ไม่ต้องรีโหลดหน้า สถานะยังอยู่ให้อ่าน */
     }catch(e){
       const m=String(e.message);
+      /* หมดเวลา ≠ ล้มเหลว — ชีทอาจล้างเสร็จแล้ว (ล้าง+สำรองแท็บใหญ่ใช้เวลานาน) */
+      if(e.unknown){ st.innerHTML='<span class="pill warn">ไม่ทราบผล</span> '+esc(m)+' — ชีทอาจล้างเสร็จแล้ว ดูแท็บสำรองก่อนกดซ้ำ';
+        loadLive(); $('clGo').disabled=false; return; }
       st.innerHTML='<span class="up">ล้างไม่สำเร็จ: '+esc(m)+'</span>'
         +(/scope|action/i.test(m)?' — ต้องใช้ Code.gs รุ่น 9 ขึ้นไป':'');
     }
