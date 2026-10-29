@@ -62,14 +62,14 @@
   --muted:#898781;       /* tertiary / captions   */
   --grid:#e1e0d9;        /* borders, table rules  */
   --hairline:rgba(11,11,11,.10);
-  --card:#ffffff;        /* พื้นการ์ด (ชุดมืดเปลี่ยน)              */
+  --card:var(--surface);        /* พื้นการ์ด (ชุดมืดเปลี่ยน)              */
   --strong:var(--navy);  /* ตัวหนังสือเด่น/ตัวเลข KPI (ชุดมืดเป็นสีสว่าง) */
-  --teal-ink:var(--teal-ink); --pos-ink:#0d7a4a; --neg-ink:#c0392b; --warn-ink:var(--warn-ink);
+  --teal-ink:#0b6b63; --pos-ink:#0d7a4a; --neg-ink:#c0392b; --warn-ink:#8a6413;
   --hero2:#23406B; --hero3:#0E5F57;            /* ไล่เฉดแถบหัวเรื่อง */
   --navtxt:#c8d2e4; --navsub:#9fb0cc; --navver:#cdd9f0; --bar-bg:rgba(27,42,74,.93);
-  --card-art:linear-gradient(158deg,rgba(255,255,255,.93) 0%,rgba(227,242,241,.85) 55%,rgba(225,224,217,.9) 100%);
-  --card-line:rgba(13,148,136,.15); --card-shadow:0 2px 10px rgba(27,42,74,.07);
-  --page-art:radial-gradient(900px 560px at 0% 0%,rgba(27,42,74,.14),transparent 62%),radial-gradient(760px 520px at 100% 0%,rgba(13,148,136,.15),transparent 60%),radial-gradient(760px 520px at 0% 100%,rgba(217,164,65,.14),transparent 60%),radial-gradient(900px 560px at 100% 100%,rgba(13,148,136,.19),transparent 62%);
+  --card-art:none;
+  --card-line:var(--hairline); --card-shadow:0 1px 2px rgba(16,24,40,.04);
+  --page-art:radial-gradient(36rem 26rem at 2% -4%, rgba(35,64,107,.19), transparent 60%), radial-gradient(32rem 24rem at 99% 4%, rgba(14,95,87,.16), transparent 58%), radial-gradient(34rem 26rem at 6% 102%, rgba(120,160,220,.14), transparent 60%), radial-gradient(36rem 26rem at 98% 98%, rgba(60,150,160,.16), transparent 60%);
   --kpi-bd:#bcd3ee; --kpi-ring:#d6e4f5;
   /* ---- พื้นอ่อนของกล่องสถานะ (ชุดสว่างทุกชุดใช้ค่าเดียวกัน · ชุดมืดเปลี่ยนทั้งกลุ่ม) ---- */
   --ok-bg:#e7f6e7; --ok-bd:#bfe3bf; --ok-ink:#0a6b0a; --ok-chip:#dcefdd;
@@ -147,7 +147,8 @@ a{color:var(--teal)}
 
 /* ============ CARD ============ */
 .card{
-  background:var(--surface);border:1px solid var(--hairline);
+  background-color:var(--surface);background-image:var(--card-art);   /* 8.46: เหมือน BIG DATA — การ์ดไล่เฉดตามธีม */
+  border:1px solid var(--card-line,var(--hairline));
   border-radius:var(--r-card);padding:14px 16px;box-shadow:var(--sh-card);
 }
 .card h2{margin:0 0 10px;font-size:15px;font-weight:700;color:var(--strong)}
@@ -182,7 +183,7 @@ tbody tr:hover{background:var(--teal-soft)}
   font-size:12.5px;font-weight:600;padding:7px 14px;
   border-radius:var(--r-btn);cursor:pointer;
 }
-.btn:hover{background:var(--teal-ink)}
+.btn:hover{filter:brightness(.9)}   /* 8.46: --teal-ink ตรง BIG DATA (เขียวเข้มคงที่ทุกชุดสว่าง) จึงไม่ใช้เป็นสีตอนชี้ปุ่มของทุกชุดแล้ว */
 .btn.ghost{background:var(--card);color:var(--strong);border:1px solid var(--grid)}
 .btn.gold{background:var(--gold);color:#3a2a06}
 
@@ -247,25 +248,63 @@ tbody tr:hover{background:var(--teal-soft)}
 .newsitem .nd{font-size:11px;color:var(--muted)}
 .matchip{display:inline-flex;align-items:center;gap:6px;font-size:12px;background:var(--teal-soft);border:1px solid var(--teal);color:var(--teal-ink);border-radius:99px;padding:3px 6px 3px 12px;font-weight:600}
 .matchip b{cursor:pointer;background:var(--card);border-radius:50%;width:17px;height:17px;display:grid;place-items:center;font-weight:700;color:var(--crit);font-size:11px}
-/* ---- page header (BIG DATA style) ---- */
-.pghead{display:flex;gap:14px;align-items:flex-start;background:linear-gradient(120deg,var(--navy) 0%,var(--hero2) 58%,var(--hero3) 100%);
-  color:#fff;border-radius:14px;padding:16px 18px;margin-bottom:14px;box-shadow:var(--sh-kpi)}
-.pghead .ph-ico{width:44px;height:44px;border-radius:12px;background:rgba(255,255,255,.12);
-  border:1px solid rgba(255,255,255,.22);display:grid;place-items:center;font-size:20px;flex:none}
-.pghead h1{margin:0;font-size:18px;font-weight:700;letter-spacing:.2px}
-.pghead .ph-sub{font-size:12px;color:#b9c4d8;margin-top:2px}
-.pghead .ph-chips{display:flex;gap:7px;flex-wrap:wrap;margin-top:8px}
-.pghead .ph-chip{font-size:11.5px;padding:3px 11px;border-radius:20px;background:rgba(255,255,255,.13);
-  border:1px solid rgba(255,255,255,.24);color:#fff;white-space:nowrap;
+/* ---- page header (8.46: การ์ดไล่สีแบบเดียวกับหัวเพจ BIG DATA v31.95 — .pghero) ----
+   โครง DOM เดิมคงไว้ (ไอคอน · ชื่อ/คำอธิบาย/ชิป · ปุ่ม) ปุ่มและข้อมูลของ CostBase ไม่ถูกตัด
+   สีทั้งหมดมาจากตัวแปรธีม: พื้นไล่ navy → hero2 → hero3 + ลายเส้นถนนจาง (ตัวแปร --drr-road-pattern)
+   8.47: เหมือน .pghero ของ BIG DATA ทุกอย่าง (KORN 28 ต.ค. 69 "Match Big Data") — ไม่มีเงาดำเพิ่ม · contrast ชิป/ปุ่มบนธีมโซนป่า/ทุ่งดอกไม้ต่ำเท่า BIG DATA (~3:1) ยอมแล้ว */
+:root{--drr-road-pattern:url("data:image/svg+xml,%3Csvg%20xmlns%3D%22http%3A%2F%2Fwww.w3.org%2F2000%2Fsvg%22%20width%3D%22680%22%20height%3D%22240%22%20viewBox%3D%220%200%20680%20240%22%20fill%3D%22none%22%3E%3Cg%20stroke%3D%22white%22%3E%3Cpath%20opacity%3D%22.10%22%20d%3D%22M-60%20246C128%20216%20165%2020%20360%2058S540%20254%20740%2092%22%2F%3E%3Cpath%20opacity%3D%22.10%22%20d%3D%22M-60%20270C139%20239%20174%2045%20359%2082S551%20278%20740%20116%22%2F%3E%3Cpath%20opacity%3D%22.13%22%20stroke-dasharray%3D%229%2014%22%20d%3D%22M-60%20258C134%20228%20170%2032%20360%2070S546%20266%20740%20104%22%2F%3E%3Cpath%20opacity%3D%22.04%22%20d%3D%22M0%2040H680M0%20120H680M0%20200H680M80%200V240M240%200V240M400%200V240M560%200V240%22%2F%3E%3Cpath%20opacity%3D%22.06%22%20d%3D%22M234%2040h12m-6-6v12M394%20120h12m-6-6v12M554%20200h12m-6-6v12%22%2F%3E%3C%2Fg%3E%3C%2Fsvg%3E")}
+.pghead{position:relative;overflow:hidden;display:flex;justify-content:flex-start;align-items:flex-start;flex-wrap:wrap;gap:14px;
+  background-image:var(--drr-road-pattern),linear-gradient(118deg,var(--navy) 0%,var(--hero2) 58%,var(--hero3) 135%);
+  background-size:680px 240px,100% 100%;background-position:right center,0 0;background-repeat:repeat-x,no-repeat;
+  color:#fff;border-radius:14px;padding:16px 20px 15px;margin-bottom:16px;
+  box-shadow:inset 0 1px 0 rgba(255,255,255,.12),0 3px 10px rgba(16,24,40,.13)}
+.pghead .ph-ico{width:46px;height:46px;border-radius:12px;background:linear-gradient(145deg,rgba(255,255,255,.17),rgba(255,255,255,.065));
+  border:1px solid rgba(255,255,255,.18);box-shadow:inset 0 1px 0 rgba(255,255,255,.1);display:grid;place-items:center;font-size:22px;flex:none}
+.pghead>div:not(.ph-ico):not(.ph-act){flex:1 1 320px;min-width:0}
+.pghead h1{margin:0;font-size:20px;font-weight:700;line-height:1.25;color:#fff}
+.pghead .ph-sub{font-size:11.8px;color:var(--navtxt);margin-top:2px;max-width:660px}
+.pghead .ph-chips{display:flex;gap:7px;flex-wrap:wrap;margin-top:10px;position:relative;z-index:2}
+.pghead .ph-chip{display:inline-flex;align-items:center;gap:6px;font-size:11.5px;font-weight:600;padding:4px 12px;border-radius:99px;
+  background:rgba(255,255,255,.13);border:1px solid rgba(255,255,255,.22);color:#fff;white-space:nowrap;
   max-width:100%;overflow-wrap:anywhere}
-@media(max-width:620px){.pghead .ph-chip{white-space:normal}}
+@media(max-width:620px){.pghead .ph-chip{white-space:normal;line-height:1.3}}
 .pghead .ph-chip b{color:#ffd98a}
-.pghead .ph-act{margin-left:auto;display:flex;gap:8px;flex-wrap:wrap;justify-content:flex-end;align-self:center}
-.pghead .btn.ghost{background:rgba(255,255,255,.10);color:#fff;border:1px solid rgba(255,255,255,.35)}
-.pghead .btn.ghost:hover{background:rgba(255,255,255,.2)}
-@media(max-width:860px){.pghead{flex-wrap:wrap}.pghead .ph-act{margin-left:0;width:100%}}
+.pghead .ph-act{flex:none;margin-left:auto;display:flex;gap:8px;flex-wrap:wrap;justify-content:flex-end;align-items:flex-start;position:relative;z-index:2}
+.pghead .btn.ghost{background:rgba(255,255,255,.14);color:#fff;border:1px solid rgba(255,255,255,.32);border-radius:9px;padding:8px 14px;
+  background-image:linear-gradient(145deg,rgba(255,255,255,.035),transparent);box-shadow:inset 0 1px 0 rgba(255,255,255,.06)}
+.pghead .btn.ghost:hover{background-color:rgba(255,255,255,.26);filter:none}
+@media(max-width:860px){
+  .pghead{flex-wrap:wrap;padding:12px 13px}
+  .pghead .ph-ico{display:none}
+  .pghead h1{font-size:17px;overflow-wrap:anywhere}
+  .pghead .ph-sub{font-size:11.5px;overflow-wrap:anywhere}
+  .pghead .ph-act{margin-left:0;width:100%;margin-top:9px}
+  .pghead .ph-act>*{flex:1 1 auto;justify-content:center;font-size:11.5px;padding:7px 10px}
+}
 @media print{.pghead{display:none!important}}
-/* ---- custom base switch (ถนน/ดาวเทียม) ---- */
+/* ══ 8.46 แถบอัปเดตวิ่ง (KORN สั่ง 28 ต.ค. 69 · สเปกเดียวกับธรรมนูญ BIG DATA ข้อ 87 / แดชบอร์ด v31.95)
+   บนสุดของเนื้อหา เหนือหัวเพจ · เมาส์/คีย์บอร์ดชี้ = หยุด · ✕ ปิด (จำต่อรุ่น) · สีมาจากตัวแปรธีมทั้งหมด
+   ป้ายทอง = --gold + ตัวอักษรกรมท่าคงที่ ให้ชัดทั้งกลางวันกลางคืน ══ */
+.updtick{display:flex;align-items:stretch;height:30px;margin-bottom:10px;border-radius:8px;overflow:hidden;
+  background:var(--card);color:var(--ink);border:1px solid var(--grid);font-size:12px;line-height:28px}
+.updtick[hidden]{display:none}
+.updtick .tk-tag{flex:none;display:flex;align-items:center;padding:0 11px;background:var(--gold);color:#1B2A4A;font-weight:800;font-size:11.5px;letter-spacing:.02em}
+.updtick .tk-win{flex:1;min-width:0;overflow:hidden;position:relative}
+.updtick .tk-track{display:inline-flex;white-space:nowrap;width:max-content;will-change:transform;
+  animation:tkScroll var(--tk-dur,40s) linear infinite}
+.updtick .tk-txt{padding:0 48px 0 14px}
+.updtick:hover .tk-track,.updtick:focus-within .tk-track{animation-play-state:paused}
+.updtick .tk-x{flex:none;width:30px;border:0;border-left:1px solid var(--grid);background:transparent;color:var(--muted);
+  font-family:inherit;font-size:13px;cursor:pointer}
+.updtick .tk-x:hover,.updtick .tk-x:focus-visible{background:var(--teal-soft);color:var(--ink);outline:none}
+@keyframes tkScroll{from{transform:translateX(0)}to{transform:translateX(-50%)}}
+@media(prefers-reduced-motion:reduce){
+  .updtick{height:auto;min-height:30px}
+  .updtick .tk-track{animation:none;white-space:normal;width:auto;display:block}
+  .updtick .tk-txt{padding:3px 12px;display:block;line-height:1.45}
+  .updtick .tk-txt+.tk-txt{display:none}
+}
+@media print{ .updtick{display:none!important} }/* ---- custom base switch (ถนน/ดาวเทียม) ---- */
 .basectl{background:var(--navy);border-radius:9px;padding:3px;display:flex;gap:2px;box-shadow:0 1px 6px rgba(16,24,40,.3)}
 .tilewarn{position:absolute;left:50%;top:12px;transform:translateX(-50%);z-index:900;
   background:var(--navy);color:#fff;font-size:12px;padding:7px 14px;border-radius:8px;
@@ -771,6 +810,12 @@ canvas{max-width:100%}
 </aside>
 
 <main class="main">
+<!-- 8.46 แถบอัปเดตวิ่ง — ข้อความมาจาก UPDATE_NOTES + APPVER/APPDATE ที่เดียว (ดูใกล้ const APPVER) ห้ามพิมพ์เลขรุ่นตรงนี้ -->
+<div class="updtick no-print" id="updTick" role="region" aria-label="อัปเดตล่าสุด" hidden>
+  <span class="tk-tag">อัปเดต</span>
+  <div class="tk-win"><div class="tk-track" id="tkTrack"></div></div>
+  <button type="button" class="tk-x" id="tkClose" aria-label="ปิดแถบอัปเดต" title="ปิด">✕</button>
+</div>
 
 <!-- ================= หน้าแรก (ภาพรวมราคาวัสดุ) ================= -->
 <section class="page active" id="pg-sum">
@@ -793,12 +838,16 @@ canvas{max-width:100%}
   <h2 class="sec" data-ic="tag" id="secKey">สรุปราคาวัสดุหลักประจำเดือน — เอาแหล่งที่ถูกสุดขึ้นก่อน</h2>
   <div id="keyCards"></div>
   <div class="card" style="margin-top:14px" id="secNews">
-    <h2>ข่าวและประกาศที่เกี่ยวข้อง <span class="pill info">ชุดข่าว ณ 16 ส.ค. 69</span></h2>
-    <div class="newsitem"><span class="nd">26 มิ.ย. 69 · กรมบัญชีกลาง</span><br>ประกาศใช้ <b>ตารางค่าขนส่งวัสดุก่อสร้างฉบับใหม่</b> (กค 0433.2/ว 477) — ระบบนี้ใช้ตารางฉบับนี้แล้วทั้งระบบ</div>
-    <div class="newsitem"><span class="nd">พ.ค. 69 · สนค. กระทรวงพาณิชย์</span><br><a href="https://ดัชนีราคา.com/ดัชนีราคาวัสดุก่อส-11/" target="_blank">ดัชนีราคาวัสดุก่อสร้างปรับสูงขึ้นต่อเนื่อง</a> จากแรงกดดันด้านพลังงานและอุปทานโลกตึงตัว</div>
-    <div class="newsitem"><span class="nd">ก.พ. 69 · สนค. กระทรวงพาณิชย์</span><br><a href="https://www.tpso.go.th/news/2603-0000000009" target="_blank">ดัชนีวัสดุก่อสร้าง +0.3%</a> แรงหนุนจากโครงการภาครัฐและต้นทุนวัตถุดิบเพิ่ม</div>
-    <div class="newsitem"><span class="nd">ม.ค. 69 · สนค. กระทรวงพาณิชย์</span><br><a href="https://www.tpso.go.th/news/2602-0000000007" target="_blank">ดัชนีสูงขึ้นเล็กน้อย</a> ราคาสินค้าวัสดุก่อสร้างเคลื่อนไหวในกรอบจำกัด</div>
-    <div class="cap">ชุดข่าวอัปเดตพร้อมรอบข้อมูลรายเดือน · แหล่งข่าวหลัก: tpso.go.th (แถลงดัชนีทุกต้นเดือน) และหนังสือเวียนกรมบัญชีกลาง gprocurement.go.th</div>
+    <h2>ข่าวและประกาศที่เกี่ยวข้อง <span class="pill info">ชุดข่าว ณ 28 ต.ค. 69</span></h2>
+    <div class="newsitem"><span class="nd">16 ต.ค. 69 · สนค. กระทรวงพาณิชย์</span><br><a href="https://tpso.go.th/news/2610-0000000013" target="_blank" rel="noopener">ดัชนีราคาวัสดุก่อสร้าง ก.ย. 69 = 113.7 สูงขึ้น 6.8% (YoY)</a> หมวดวัสดุก่อสร้างอื่น ๆ +19.8% จากยางมะตอยที่ขึ้นตามราคาปิโตรเลียม · เหล็กหมวดเดียวที่ลด (−0.8%)</div>
+    <div class="newsitem"><span class="nd">15 ต.ค. 69 · สนค. กระทรวงพาณิชย์</span><br><a href="https://tpso.go.th/news/2610-0000000012" target="_blank" rel="noopener">ดัชนีค่าบริการขนส่งสินค้าทางถนน ไตรมาส 3/69 สูงขึ้น 11.1% (YoY)</a> จากราคาดีเซลที่แพงขึ้น</div>
+    <div class="newsitem"><span class="nd">10 ก.ย. 69 · สนค. กระทรวงพาณิชย์</span><br><a href="https://tpso.go.th/news/2609-0000000004" target="_blank" rel="noopener">ดัชนี ส.ค. 69 = 113.1 สูงขึ้น 6.1% (YoY)</a></div>
+    <div class="newsitem"><span class="nd">13 ส.ค. 69 · สนค. กระทรวงพาณิชย์</span><br><a href="https://tpso.go.th/news/2608-0000000007" target="_blank" rel="noopener">ดัชนี ก.ค. 69 = 112.8 สูงขึ้น 5.8% (YoY)</a></div>
+    <div class="newsitem"><span class="nd">20 ก.ค. 69 · สนค. กระทรวงพาณิชย์</span><br><a href="https://tpso.go.th/news/2607-0000000012" target="_blank" rel="noopener">ดัชนี มิ.ย. 69 = 113.3 สูงขึ้น 6.3% (YoY)</a> ขึ้นทุกหมวด</div>
+    <div class="newsitem"><span class="nd">26 มิ.ย. 69 · กรมบัญชีกลาง</span><br>ชุดหนังสือเวียนราคากลางงานก่อสร้าง: <b>ตารางค่าขนส่งวัสดุก่อสร้างฉบับใหม่</b> (กค 0433.2/ว 477 — ระบบนี้ใช้ตารางฉบับนี้แล้วทั้งระบบ) · ว 475 ตารางค่าดำเนินการและค่าเสื่อมราคา งานทาง สะพาน ท่อเหลี่ยม · ว 480 บัญชีค่าแรงงาน · ว 481 อัตราดอกเบี้ยเงินกู้ 6% และตาราง Factor F (ตรวจฉบับจริงที่กรมบัญชีกลาง)</div>
+    <div class="newsitem"><span class="nd">15 มิ.ย. 69 · สนค. กระทรวงพาณิชย์</span><br><a href="https://www.tpso.go.th/news/2606-0000000004" target="_blank" rel="noopener">ดัชนี พ.ค. 69 = 113.8 สูงขึ้น 7.2% (YoY)</a> แรงกดดันด้านพลังงานและอุปทานโลกตึงตัว</div>
+    <div class="newsitem"><span class="nd">8 มิ.ย. 69 · ราชกิจจานุเบกษา</span><br><a href="https://www.moc.go.th/th/content/category/detail/id/347/cid/36/iid/10162" target="_blank" rel="noopener">ประกาศหลักเกณฑ์และวิธีการกำหนดราคากลางงานก่อสร้าง พ.ศ. 2569</a> (เล่ม 143 ตอนพิเศษ 140 ง) ยกเลิกฉบับ 2560–2565</div>
+    <div class="cap">ชุดข่าวอัปเดตพร้อมรอบข้อมูลรายเดือน · แหล่งข่าวหลัก: tpso.go.th (แถลงดัชนีทุกต้นเดือน) และหนังสือเวียนกรมบัญชีกลาง gprocurement.go.th · ดัชนี สนค. ใช้ปีฐาน 2564 = 100 · แถลงเฉพาะเทียบปีก่อน (YoY)</div>
   </div>
   <div class="grid2" style="margin-top:14px" id="secCheck">
     <div class="card">
@@ -1703,13 +1752,34 @@ const SELFCHK={missing:new Set(),ok:false};
 const $ = id => { const el=document.getElementById(id);
   if(!el) SELFCHK.missing.add(id);
   return el; };
-const APPVER='8.45';        /* เลขรุ่นที่เดียว — ที่อื่นดึงจากตัวนี้ */
+const APPVER='8.48';        /* เลขรุ่นที่เดียว — ที่อื่นดึงจากตัวนี้ */
 const APPDATE='28 ต.ค. 2569';   /* วันที่ของรุ่นนี้ ที่เดียวเหมือนกัน */
+/* 8.46 ข้อความบนแถบอัปเดตวิ่ง — รุ่นถัดไปแก้เฉพาะอาร์เรย์นี้ (เลขรุ่น/วันที่ต่อหน้าให้เองจาก APPVER/APPDATE) */
+const UPDATE_NOTES=['อัปเดตชุดข่าวและประกาศ ณ 28 ต.ค. 69'];   /* รายการสั้น ๆ ขึ้นต้นด้วย เพิ่ม/แก้/ปรับ */
+const APPVER_TXT='v'+APPVER+' · '+APPDATE;
 /* ⚠ ป้ายรุ่นบนแถบข้างเคยเป็นข้อความตายตัวใน HTML (v6.2) พอขึ้นรุ่นใหม่แล้วลืมแก้
    ผู้ใช้เลยเห็นเลขรุ่นเก่าทั้งที่โค้ดใหม่หมดแล้ว — ต่อไปนี้เขียนจาก APPVER เสมอ */
 try{ setTimeout(()=>{ try{ drawCfgChip(); }catch(e){} },0); }catch(e){}
 try{ const _bv=document.getElementById('bVer'); if(_bv) _bv.textContent='v'+APPVER;
      document.title='CostBase v'+APPVER+' — ฐานข้อมูลราคาวัสดุ ขทช.ขอนแก่น'; }catch(e){}
+/* 8.46 แถบอัปเดตวิ่ง — ปิดแล้วจำต่อรุ่น (localStorage ครอบ try/catch · ใช้ไม่ได้ = ขึ้นใหม่ทุกครั้ง ไม่พัง) */
+try{
+  const bar=document.getElementById('updTick'), tr=document.getElementById('tkTrack'), xb=document.getElementById('tkClose');
+  if(bar&&tr&&xb){
+    const KEY='costbase_updtick_closed';
+    let closed=''; try{ closed=localStorage.getItem(KEY)||''; }catch(e){}
+    if(closed!==APPVER){
+      const txt=APPVER_TXT+' — '+UPDATE_NOTES.join(' · ');
+      tr.innerHTML=[0,1].map(i=>`<span class="tk-txt"${i?' aria-hidden="true"':''}></span>`).join('');
+      tr.querySelectorAll('.tk-txt').forEach(s=>s.textContent=txt);
+      bar.hidden=false;
+      /* ความเร็วคงที่ ~55 px/วินาที ไม่ว่าข้อความสั้นยาว */
+      const one=tr.firstElementChild.getBoundingClientRect().width;
+      if(one>0) bar.style.setProperty('--tk-dur',Math.max(12,Math.round(one/55))+'s');
+      xb.addEventListener('click',()=>{ bar.hidden=true; try{ localStorage.setItem(KEY,APPVER); }catch(e){} });
+    }
+  }
+}catch(e){ console.warn('แถบอัปเดตวิ่งเริ่มไม่สำเร็จ', e); }
 /* ต้อง escape ทั้ง " และ ' ด้วย — ชื่อวัสดุในบัญชีคุมมีเครื่องหมายนิ้ว (") 1,687 ชื่อ และฟุต (') 71 ชื่อ
    ถ้าไม่ escape ค่าใน value="..." จะถูกตัดกลางคัน แล้วชื่อที่โดนตัดจะไหลเข้าคลังเป็นวัสดุใหม่ปลอม ๆ */
 const esc = s => String(s).replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;')
@@ -7585,17 +7655,17 @@ window.ROADS=[{"c":"ขก.1001","n":"แยกทางหลวงหมาย
    ⚠ เปลี่ยนชุดสีแล้ว "ตัวเลขบนจอต้องเท่าเดิมทุกตัว" — ชุดสีแตะแค่สีโครง
       สีที่มีความหมายกับข้อมูล (เขียว/แดง/ทอง/ซีรีส์กราฟ) ไม่ผูกกับชุดสี  (t_ui พิสูจน์ข้อนี้) */
 const THEMES=[
-  {id:'default', name:'น้ำเงินขอนแก่น', sw:'#1B2A4A', sw2:'#0d9488'},
-  {id:'sunset', name:'ตะวัน', sw:'#e2622a', sw2:'#d63f6b'},
-  {id:'afterrain', name:'หลังฝน', sw:'#0f766e', sw2:'#2e8b8f'},
-  {id:'winter', name:'ปลายหนาว', sw:'#3d6fa8', sw2:'#6b7fae'},
-  {id:'bloom', name:'ทุ่งดอกไม้', sw:'#a83a86', sw2:'#e2734f'},
-  {id:'forest', name:'โซนป่า', sw:'#2f7d4f', sw2:'#79a83a'},
-  {id:'sundown', name:'พระอาทิตย์ตก', sw:'#2c1526', sw2:'#d1622a', night:true, slot:'18:00–19:30'},
-  {id:'dusk', name:'หัวค่ำ', sw:'#1b1430', sw2:'#b5561f', night:true, slot:'19:30–21:30'},
-  {id:'midnight', name:'เที่ยงคืน', sw:'#0c1220', sw2:'#2f7fc4', night:true, slot:'21:30–01:00'},
-  {id:'moonset', name:'ดวงตก', sw:'#0d1518', sw2:'#3c8f8a', night:true, slot:'01:00–04:00'},
-  {id:'dawn', name:'รุ่งเช้า', sw:'#22243f', sw2:'#c2603c', night:true, slot:'04:00–06:00'},
+  {id:'default', name:'น้ำเงินขอนแก่น', sw:'#1B2A4A'},
+  {id:'sunset', name:'ตะวัน', sw:'#e2622a'},
+  {id:'afterrain', name:'หลังฝน', sw:'#0f766e'},
+  {id:'winter', name:'ปลายหนาว', sw:'#3d6fa8'},
+  {id:'bloom', name:'ทุ่งดอกไม้', sw:'#a83a86'},
+  {id:'forest', name:'โซนป่า', sw:'#2f7d4f'},
+  {id:'sundown', name:'พระอาทิตย์ตก', sw:'#d1622a', night:true, from:18, to:19.5, slot:'18:00–19:30'},
+  {id:'dusk', name:'หัวค่ำ', sw:'#b5561f', night:true, from:19.5, to:21.5, slot:'19:30–21:30'},
+  {id:'midnight', name:'เที่ยงคืน', sw:'#2f7fc4', night:true, from:21.5, to:25, slot:'21:30–01:00'},
+  {id:'moonset', name:'ดวงตก', sw:'#3c8f8a', night:true, from:1, to:4, slot:'01:00–04:00'},
+  {id:'dawn', name:'รุ่งเช้า', sw:'#c2603c', night:true, from:4, to:6, slot:'04:00–06:00'},
 ];
 const THEME_KEY='costbase_theme';
 function curTheme(){ return document.documentElement.dataset.theme || 'default'; }
@@ -7676,15 +7746,11 @@ function applyTheme(id, opt){
 }
 /* ชุดกลางคืนตามช่วงเวลา (ตารางเดียวกับ Big Data): 18:00–19:30 พระอาทิตย์ตก · –21:30 หัวค่ำ · –01:00 เที่ยงคืน · –04:00 ดวงตก · –06:00 รุ่งเช้า */
 function themeSlot(d){
-  d=d||new Date(); const m=d.getHours()*60+d.getMinutes();
-  if(m>=18*60 && m<19*60+30) return 'sundown';
-  if(m>=19*60+30 && m<21*60+30) return 'dusk';
-  if(m>=21*60+30 || m<60) return 'midnight';
-  if(m>=60 && m<4*60) return 'moonset';
-  if(m>=4*60 && m<6*60) return 'dawn';
-  return null;
-}
-const THEME_NIGHT_KEY='costbase_theme_night';   /* ชุดกลางคืนที่ผู้ใช้เลือกเอง · ว่าง = ให้ระบบเปลี่ยนตามช่วงเวลา */
+  /* ช่วงเวลาอ่านจาก THEMES.from/to (ตารางเดียวกับ nightTheme() ของ BIG DATA) — ข้ามเที่ยงคืนให้เป็นเส้นตรงเดียว */
+  d=d||new Date(); const h=d.getHours()+d.getMinutes()/60, tt=h<6?h+24:h;
+  const hit=THEMES.find(x=>x.night&&x.from!=null&&(()=>{ const a=x.from<6?x.from+24:x.from, b2=x.to<=6?x.to+24:x.to; return tt>=a&&tt<b2; })());
+  return hit?hit.id:null;
+}const THEME_NIGHT_KEY='costbase_theme_night';   /* ชุดกลางคืนที่ผู้ใช้เลือกเอง · ว่าง = ให้ระบบเปลี่ยนตามช่วงเวลา */
 function themeSaved(){ let d='default', n=''; try{ d=localStorage.getItem(THEME_KEY)||'default'; n=localStorage.getItem(THEME_NIGHT_KEY)||''; }catch(e){} return {day:d, night:n}; }
 /* ชุดที่ "ควร" ใช้ ณ เวลานี้: กลางวัน = ชุดกลางวันที่เลือกไว้ · กลางคืน = ชุดกลางคืนที่เลือกไว้ หรือชุดตามช่วงเวลา (ระบบเปลี่ยนให้เอง) */
 function themeWanted(now){
@@ -7695,16 +7761,35 @@ function themeWanted(now){
   if(sv.night && THEMES.some(t=>t.id===sv.night && t.night)) return sv.night;
   return themeSlot(now)||day;
 }
-/* ปุ่มบนหัวทุกหน้า + แผงเลือก: ตัวเลือกที่เลือกไม่ได้ตอนนี้ต้องดูเป็นเลือกไม่ได้จริง (disabled) ไม่ใช่กดแล้วเงียบ (R32) */
+/* แถบตัวอย่างเฉดของแต่ละชุด (ชิปในเมนู + จุดบนปุ่ม) — แบบเดียวกับ themeStrip() ของ BIG DATA:
+   ดึงค่า --navy --hero2 --hero3 จริงจากกฎ CSS ของชุดนั้น (ความจริงชุดเดียว ไม่พิมพ์สีซ้ำ)
+   หมายเหตุ: ใช้ตอนวาดภายหลังเท่านั้น (CSS ชุดสีอยู่ท้ายไฟล์ ยังไม่ถูกอ่านตอน themeInit รอบแรก) */
+function themeVars(id){
+  const want=id==='default'?':root':`html[data-theme="${id}"]`, out={};
+  for(const sheet of document.styleSheets){
+    let rules; try{ rules=sheet.cssRules; }catch(e){ continue; }
+    for(const r of rules||[]){
+      if(!r.selectorText||r.selectorText.split(',').map(x=>x.trim()).indexOf(want)<0) continue;
+      ['--navy','--hero2','--hero3','--teal'].forEach(k=>{ const v=r.style.getPropertyValue(k).trim(); if(v) out[k]=v; });
+    }
+  }
+  return out;
+}
+function themeStrip(id){
+  const v=themeVars(id), t=THEMES.find(x=>x.id===id)||{};
+  const a=v['--navy']||t.sw||'#1B2A4A', b=v['--hero2']||a, c=v['--hero3']||v['--teal']||b;
+  return `linear-gradient(115deg, ${a} 0%, ${b} 52%, ${c} 100%)`;
+}/* ปุ่มบนหัวทุกหน้า + แผงเลือก: ตัวเลือกที่เลือกไม่ได้ตอนนี้ต้องดูเป็นเลือกไม่ได้จริง (disabled) ไม่ใช่กดแล้วเงียบ (R32) */
 function themePaintSwatches(now){
   const cur=curTheme(), t=THEMES.find(x=>x.id===cur)||THEMES[0];
   document.querySelectorAll('.themebtn').forEach(b=>{
-    b.style.setProperty('--sw',t.sw); b.style.setProperty('--sw2',t.sw2||t.sw);
+    b.style.setProperty('--strip',themeStrip(cur));
     b.querySelector('.tn').textContent=t.name; b.setAttribute('aria-expanded', String(!document.getElementById('themePanel').hidden));
   });
   const night=themeIsNight(now);
   document.querySelectorAll('.themepanel .themeopt').forEach(b=>{
     const x=THEMES.find(y=>y.id===b.dataset.theme)||{};
+    b.style.setProperty('--strip',themeStrip(b.dataset.theme));
     const ok=themeAllowed(b.dataset.theme, now);
     b.disabled=!ok; b.classList.toggle('on', b.dataset.theme===cur);
     b.title=x.night?('กลางคืน '+(x.slot||'')):'';
@@ -7741,7 +7826,7 @@ function themeInit(){
       act.appendChild(b);
     });
     const pn=document.createElement('div'); pn.id='themePanel'; pn.className='themepanel no-print'; pn.hidden=true;
-    const opt=t=>`<button type="button" class="themeopt" data-theme="${t.id}" style="--sw:${t.sw};--sw2:${t.sw2||t.sw}"><i class="sw"></i><span>${esc(t.name)}</span><b class="ck">✓</b></button>`;
+    const opt=t=>`<button type="button" class="themeopt" data-theme="${t.id}" style="--strip:${themeStrip(t.id)}"><i class="sw"></i><span>${esc(t.name)}</span><b class="ck">✓</b></button>`;
     pn.innerHTML='<div class="tp-g">กลางวัน (หกโมงเช้า–หกโมงเย็น)</div>'+THEMES.filter(t=>!t.night).map(opt).join('')
       +'<div class="tp-g">กลางคืน (หกโมงเย็น–หกโมงเช้า)</div>'+THEMES.filter(t=>t.night).map(opt).join('')
       +'<div class="tp-note"></div>';
@@ -9463,173 +9548,173 @@ document.addEventListener('click',e=>{
 });
 </script>
 <style>
-/* ══ ชุดสี 10 ชุด — ตารางเดียวกับแดชบอร์ด Big Data (เฉดสี_DRR_KK.md · DRR_KK_Dashboard v31.54) ══
-   สร้างจาก scripts/gen-themes.py — แก้ที่ตารางในสคริปต์แล้วสร้างใหม่ ห้ามแก้ตัวเลขตรงนี้มือ (ทะเบียนเดียว · R13)
+/* ══ ชุดสี 10 ชุด — คัดจากแดชบอร์ด Big Data v31.95 ตรง ๆ (CB-008 · 8.46) ══
+   สร้างจาก scripts/sync-themes.mjs — ห้ามแก้ตัวเลขตรงนี้มือ · ด่าน t_theme อ่านไฟล์ BIG DATA จริงมาเทียบทุกตัวแปรทุกธีม
    CSS เป็นคนถือค่าสี · JS แค่สลับชื่อชุด · เปลี่ยนได้เฉพาะ "สีโครง" (ธรรมนูญ R18)
    สีข้อมูล (--good --crit --s1..3 · สีซีรีส์กราฟ · สีหมวด) คงที่ทุกชุด ห้ามผูกกับชุดสี
-   ชุดกลางคืน 5 ชุด เลือกได้เฉพาะ 18:00–06:00 · ชุดมืดต้องมี --card-line + เงา ให้การ์ดแยกจากพื้น (กติกา 3) */
+   ชุดสว่างไม่ตั้ง --card/--strong/--teal-ink เอง (สืบจาก :root เหมือน BIG DATA) · ชุดมืดต้องมี --card-line + เงา ให้การ์ดแยกจากพื้น */
 html[data-theme="sunset"]{
-  --navy:#7d2646; --navy-d:#5e1b34; --teal:#c2410c; --teal-soft:#ffe7db; --gold:#e0913a;
-  --page:#fdf3ec; --surface:#fffaf7; --card:#ffffff; --strong:#7d2646;
-  --ink:#2b1714; --ink2:#5e4038; --muted:#95837c; --grid:#f0e0d5; --hairline:rgba(125,38,70,.12);
-  --hero2:#c2410c; --hero3:#d63f6b; --navtxt:#ffe2ec; --navsub:#e9b8c6; --navver:#fff0f4;
-  --bar-bg:rgba(125,38,70,.93); --teal-ink:#973309;
-  --card-art:linear-gradient(158deg,rgba(255,255,255,.93) 0%,rgba(255,231,219,.85) 55%,rgba(240,224,213,.9) 100%);
-  --card-line:rgba(194,65,12,.16); --card-shadow:0 2px 10px rgba(125,38,70,.08);
-  --sh-card:var(--card-shadow); --sh-kpi:0 2px 8px rgba(125,38,70,.09);
-  --page-art:radial-gradient(900px 560px at 0% 0%,rgba(125,38,70,.14),transparent 62%),radial-gradient(760px 520px at 100% 0%,rgba(194,65,12,.15),transparent 60%),radial-gradient(760px 520px at 0% 100%,rgba(224,145,58,.14),transparent 60%),radial-gradient(900px 560px at 100% 100%,rgba(194,65,12,.19),transparent 62%);
-  --kpi-bd:rgba(194,65,12,.32); --kpi-ring:#ffe7db;
+  --card-art: linear-gradient(158deg,rgba(255,255,255,.92) 0%,rgba(255,241,231,.85) 55%,rgba(255,228,214,.9) 100%); --card-line: rgba(194,65,12,.16); --card-shadow: 0 2px 10px rgba(125,38,70,.07);
+  --navy: #7d2646; --navy-d: #5e1b34; --teal: #c2410c;
+  --teal-soft: #ffe7db; --gold: #e0913a; --surface: #fffaf7;
+  --page: #fdf3ec; --ink: #2b1714; --ink2: #5e4038;
+  --muted: #95837c; --grid: #f0e0d5; --hairline: rgba(60,26,20,.13);
+  --hero2: #c2410c; --hero3: #d63f6b; --navtxt: #ffe2ec;
+  --navsub: #e9b8c6; --navver: #fff0f4; --bar-bg: rgba(125,38,70,.93);
+  --page-art: radial-gradient(36rem 26rem at 2% -4%, rgba(255,138,61,.23), transparent 60%), radial-gradient(32rem 24rem at 99% 4%, rgba(255,190,110,.20), transparent 60%), radial-gradient(34rem 26rem at 6% 102%, rgba(168,140,255,.16), transparent 60%), radial-gradient(36rem 26rem at 98% 98%, rgba(255,90,140,.19), transparent 60%);
+  --sh-card:var(--card-shadow); --sh-kpi:0 2px 8px rgba(125,38,70,.09); --kpi-bd:rgba(194,65,12,.32); --kpi-ring:#ffe7db;
 }
 html[data-theme="afterrain"]{
-  --navy:#14504f; --navy-d:#0e3c3b; --teal:#0f766e; --teal-soft:#dff2ef; --gold:#c99a3c;
-  --page:#eff6f6; --surface:#f9fdfd; --card:#ffffff; --strong:#14504f;
-  --ink:#0c1a1a; --ink2:#41565a; --muted:#7d9295; --grid:#dbe8e7; --hairline:rgba(20,80,79,.12);
-  --hero2:#1c6f6a; --hero3:#2e8b8f; --navtxt:#cfeceb; --navsub:#9dc7c5; --navver:#e3f5f4;
-  --bar-bg:rgba(20,80,79,.93); --teal-ink:#0c5c56;
-  --card-art:linear-gradient(158deg,rgba(255,255,255,.93) 0%,rgba(223,242,239,.85) 55%,rgba(219,232,231,.9) 100%);
-  --card-line:rgba(15,118,110,.16); --card-shadow:0 2px 10px rgba(20,80,79,.08);
-  --sh-card:var(--card-shadow); --sh-kpi:0 2px 8px rgba(20,80,79,.09);
-  --page-art:radial-gradient(900px 560px at 0% 0%,rgba(20,80,79,.14),transparent 62%),radial-gradient(760px 520px at 100% 0%,rgba(15,118,110,.15),transparent 60%),radial-gradient(760px 520px at 0% 100%,rgba(201,154,60,.14),transparent 60%),radial-gradient(900px 560px at 100% 100%,rgba(15,118,110,.19),transparent 62%);
-  --kpi-bd:rgba(15,118,110,.32); --kpi-ring:#dff2ef;
+  --card-art: linear-gradient(158deg,rgba(255,255,255,.94) 0%,rgba(230,246,244,.85) 55%,rgba(214,240,236,.9) 100%); --card-line: rgba(15,118,110,.16); --card-shadow: 0 2px 10px rgba(20,80,79,.07);
+  --navy: #14504f; --navy-d: #0e3c3b; --teal: #0f766e;
+  --teal-soft: #dff2ef; --gold: #c99a3c; --surface: #f9fdfd;
+  --page: #eff6f6; --ink: #0c1a1a; --ink2: #41565a;
+  --muted: #7d9295; --grid: #dbe8e7; --hairline: rgba(12,26,26,.12);
+  --hero2: #1c6f6a; --hero3: #2e8b8f; --navtxt: #cfeceb;
+  --navsub: #9dc7c5; --navver: #e3f5f4; --bar-bg: rgba(20,80,79,.93);
+  --page-art: radial-gradient(36rem 26rem at 2% -4%, rgba(20,150,140,.20), transparent 60%), radial-gradient(32rem 24rem at 99% 4%, rgba(120,200,190,.19), transparent 60%), radial-gradient(34rem 26rem at 6% 102%, rgba(90,140,190,.14), transparent 60%), radial-gradient(36rem 26rem at 98% 98%, rgba(60,180,160,.16), transparent 60%);
+  --sh-card:var(--card-shadow); --sh-kpi:0 2px 8px rgba(20,80,79,.09); --kpi-bd:rgba(15,118,110,.32); --kpi-ring:#dff2ef;
 }
 html[data-theme="winter"]{
-  --navy:#2f3f5e; --navy-d:#233049; --teal:#3d6fa8; --teal-soft:#e6eef8; --gold:#b9a25f;
-  --page:#f1f4f9; --surface:#fbfcfe; --card:#ffffff; --strong:#2f3f5e;
-  --ink:#111726; --ink2:#4c5670; --muted:#8790a3; --grid:#e0e5ee; --hairline:rgba(47,63,94,.12);
-  --hero2:#3f5b86; --hero3:#6b7fae; --navtxt:#dbe4f4; --navsub:#a9b6d0; --navver:#eaf0fb;
-  --bar-bg:rgba(47,63,94,.93); --teal-ink:#305783;
-  --card-art:linear-gradient(158deg,rgba(255,255,255,.93) 0%,rgba(230,238,248,.85) 55%,rgba(224,229,238,.9) 100%);
-  --card-line:rgba(61,111,168,.16); --card-shadow:0 2px 10px rgba(47,63,94,.08);
-  --sh-card:var(--card-shadow); --sh-kpi:0 2px 8px rgba(47,63,94,.09);
-  --page-art:radial-gradient(900px 560px at 0% 0%,rgba(47,63,94,.14),transparent 62%),radial-gradient(760px 520px at 100% 0%,rgba(61,111,168,.15),transparent 60%),radial-gradient(760px 520px at 0% 100%,rgba(185,162,95,.14),transparent 60%),radial-gradient(900px 560px at 100% 100%,rgba(61,111,168,.19),transparent 62%);
-  --kpi-bd:rgba(61,111,168,.32); --kpi-ring:#e6eef8;
+  --card-art: linear-gradient(158deg,rgba(255,255,255,.95) 0%,rgba(235,241,250,.85) 55%,rgba(223,232,246,.9) 100%); --card-line: rgba(61,111,168,.16); --card-shadow: 0 2px 10px rgba(47,63,94,.08);
+  --navy: #2f3f5e; --navy-d: #233049; --teal: #3d6fa8;
+  --teal-soft: #e6eef8; --gold: #b9a25f; --surface: #fbfcfe;
+  --page: #f1f4f9; --ink: #111726; --ink2: #4c5670;
+  --muted: #8790a3; --grid: #e0e5ee; --hairline: rgba(17,23,38,.12);
+  --hero2: #3f5b86; --hero3: #6b7fae; --navtxt: #dbe4f4;
+  --navsub: #a9b6d0; --navver: #eaf0fb; --bar-bg: rgba(47,63,94,.93);
+  --page-art: radial-gradient(36rem 26rem at 2% -4%, rgba(120,150,205,.20), transparent 60%), radial-gradient(32rem 24rem at 99% 4%, rgba(180,190,225,.19), transparent 60%), radial-gradient(34rem 26rem at 6% 102%, rgba(150,130,200,.14), transparent 60%), radial-gradient(36rem 26rem at 98% 98%, rgba(120,170,210,.16), transparent 60%);
+  --sh-card:var(--card-shadow); --sh-kpi:0 2px 8px rgba(47,63,94,.09); --kpi-bd:rgba(61,111,168,.32); --kpi-ring:#e6eef8;
 }
 html[data-theme="bloom"]{
-  --navy:#6d2f63; --navy-d:#52234b; --teal:#a83a86; --teal-soft:#fbe7f5; --gold:#d99a3f;
-  --page:#f9f0f7; --surface:#fffafd; --card:#ffffff; --strong:#6d2f63;
-  --ink:#241026; --ink2:#5b4058; --muted:#94809a; --grid:#eddced; --hairline:rgba(109,47,99,.12);
-  --hero2:#a83a86; --hero3:#e2734f; --navtxt:#fbdcf3; --navsub:#d5a8cd; --navver:#fdeefa;
-  --bar-bg:rgba(109,47,99,.93); --teal-ink:#832d69;
-  --card-art:linear-gradient(158deg,rgba(255,255,255,.93) 0%,rgba(251,231,245,.85) 55%,rgba(237,220,237,.9) 100%);
-  --card-line:rgba(168,58,134,.16); --card-shadow:0 2px 10px rgba(109,47,99,.08);
-  --sh-card:var(--card-shadow); --sh-kpi:0 2px 8px rgba(109,47,99,.09);
-  --page-art:radial-gradient(900px 560px at 0% 0%,rgba(109,47,99,.14),transparent 62%),radial-gradient(760px 520px at 100% 0%,rgba(168,58,134,.15),transparent 60%),radial-gradient(760px 520px at 0% 100%,rgba(217,154,63,.14),transparent 60%),radial-gradient(900px 560px at 100% 100%,rgba(168,58,134,.19),transparent 62%);
-  --kpi-bd:rgba(168,58,134,.32); --kpi-ring:#fbe7f5;
+  --card-art: linear-gradient(158deg,rgba(255,255,255,.94) 0%,rgba(253,235,247,.85) 55%,rgba(255,228,222,.9) 100%); --card-line: rgba(168,58,134,.15); --card-shadow: 0 2px 10px rgba(109,47,99,.08);
+  --navy: #6d2f63; --navy-d: #52234b; --teal: #a83a86;
+  --teal-soft: #fbe7f5; --gold: #d99a3f; --surface: #fffafd;
+  --page: #f9f0f7; --ink: #241026; --ink2: #5b4058;
+  --muted: #94809a; --grid: #eddced; --hairline: rgba(36,16,38,.13);
+  --hero2: #a83a86; --hero3: #e2734f; --navtxt: #fbdcf3;
+  --navsub: #d5a8cd; --navver: #fdeefa; --bar-bg: rgba(109,47,99,.93);
+  --page-art: radial-gradient(36rem 26rem at 2% -4%, rgba(230,110,180,.20), transparent 60%), radial-gradient(32rem 24rem at 99% 4%, rgba(255,180,150,.18), transparent 60%), radial-gradient(34rem 26rem at 6% 102%, rgba(150,200,120,.15), transparent 60%), radial-gradient(36rem 26rem at 98% 98%, rgba(190,120,230,.17), transparent 60%);
+  --sh-card:var(--card-shadow); --sh-kpi:0 2px 8px rgba(109,47,99,.09); --kpi-bd:rgba(168,58,134,.32); --kpi-ring:#fbe7f5;
 }
 html[data-theme="forest"]{
-  --navy:#1e4232; --navy-d:#153124; --teal:#2f7d4f; --teal-soft:#e0f2e6; --gold:#c79a3c;
-  --page:#eef5ef; --surface:#fafdfa; --card:#ffffff; --strong:#1e4232;
-  --ink:#0d1a12; --ink2:#405449; --muted:#7d9184; --grid:#dbe8de; --hairline:rgba(30,66,50,.12);
-  --hero2:#2f7d4f; --hero3:#79a83a; --navtxt:#d4eddc; --navsub:#a2c7ae; --navver:#e8f7ec;
-  --bar-bg:rgba(30,66,50,.93); --teal-ink:#25623e;
-  --card-art:linear-gradient(158deg,rgba(255,255,255,.93) 0%,rgba(224,242,230,.85) 55%,rgba(219,232,222,.9) 100%);
-  --card-line:rgba(47,125,79,.16); --card-shadow:0 2px 10px rgba(30,66,50,.08);
-  --sh-card:var(--card-shadow); --sh-kpi:0 2px 8px rgba(30,66,50,.09);
-  --page-art:radial-gradient(900px 560px at 0% 0%,rgba(30,66,50,.14),transparent 62%),radial-gradient(760px 520px at 100% 0%,rgba(47,125,79,.15),transparent 60%),radial-gradient(760px 520px at 0% 100%,rgba(199,154,60,.14),transparent 60%),radial-gradient(900px 560px at 100% 100%,rgba(47,125,79,.19),transparent 62%);
-  --kpi-bd:rgba(47,125,79,.32); --kpi-ring:#e0f2e6;
+  --card-art: linear-gradient(158deg,rgba(255,255,255,.94) 0%,rgba(232,245,235,.85) 55%,rgba(224,241,214,.9) 100%); --card-line: rgba(47,125,79,.16); --card-shadow: 0 2px 10px rgba(30,66,50,.08);
+  --navy: #1e4232; --navy-d: #153124; --teal: #2f7d4f;
+  --teal-soft: #e0f2e6; --gold: #c79a3c; --surface: #fafdfa;
+  --page: #eef5ef; --ink: #0d1a12; --ink2: #405449;
+  --muted: #7d9184; --grid: #dbe8de; --hairline: rgba(13,26,18,.12);
+  --hero2: #2f7d4f; --hero3: #79a83a; --navtxt: #d4eddc;
+  --navsub: #a2c7ae; --navver: #e8f7ec; --bar-bg: rgba(30,66,50,.93);
+  --page-art: radial-gradient(36rem 26rem at 2% -4%, rgba(60,150,80,.20), transparent 60%), radial-gradient(32rem 24rem at 99% 4%, rgba(150,200,90,.18), transparent 60%), radial-gradient(34rem 26rem at 6% 102%, rgba(30,120,110,.15), transparent 60%), radial-gradient(36rem 26rem at 98% 98%, rgba(200,190,90,.15), transparent 60%);
+  --sh-card:var(--card-shadow); --sh-kpi:0 2px 8px rgba(30,66,50,.09); --kpi-bd:rgba(47,125,79,.32); --kpi-ring:#e0f2e6;
 }
 /* ── ชุดกลางคืน (18:00–06:00) ── */
 html[data-theme="sundown"]{
-  --navy:#2c1526; --navy-d:#200f1b; --teal:#c2571f; --teal-soft:#33202b; --gold:#e3a44a;
-  --page:#241220; --surface:#301826; --card:#301826; --strong:#fbeadf;
-  --ink:#f8ece4; --ink2:#cbb0a8; --muted:#a08d92; --grid:#472a3a; --hairline:rgba(255,255,255,.10);
-  --hero2:#8f2f4a; --hero3:#d1622a; --navtxt:#cbb0a8; --navsub:#a08d92; --navver:#f8ece4;
-  --bar-bg:rgba(44,21,38,.93);
-  --card-art:linear-gradient(158deg,rgba(227,164,74,.14) 0%,rgba(255,255,255,.03) 42%,rgba(194,87,31,.17) 100%);
-  --card-line:rgba(194,87,31,.38); --card-shadow:0 6px 20px rgba(0,0,0,.35),inset 0 1px 0 rgba(255,255,255,.08);
-  --sh-card:var(--card-shadow); --sh-kpi:var(--card-shadow);
-  --page-art:radial-gradient(900px 560px at 0% 0%,rgba(143,47,74,.14),transparent 62%),radial-gradient(760px 520px at 100% 0%,rgba(194,87,31,.15),transparent 60%),radial-gradient(760px 520px at 0% 100%,rgba(227,164,74,.14),transparent 60%),radial-gradient(900px 560px at 100% 100%,rgba(194,87,31,.19),transparent 62%);
-  --kpi-bd:rgba(194,87,31,.45); --kpi-ring:#33202b;
-  --ok-bg:#173226; --ok-bd:#2f6047; --ok-ink:#86e3ad; --ok-chip:#1e4230;
-  --bad-bg:#3a1d20; --bad-bd:#75373d; --bad-ink:#ffa3a3; --bad-chip:#4d2429;
-  --warn-bg:#332a16; --warn-bd:#6f5a29; --warn-chip:#4c3d1b; --wait-bg:#3a2f14; --wait-ink:#f2c86f;
-  --gold-soft:#332a16; --track:#2c3448; --soft:#1c2434; --neutral:#242c3c; --grp-bg:#202a44; --cat-bg:#2d2b1f;
-  --teal-ink:#7fd8cf; --warn-ink:#f0c96a; --pos-ink:#5cd39a; --neg-ink:#ff8f8f;
-  --sh-pop:0 8px 24px rgba(0,0,0,.55); --sh-rail:2px 0 10px rgba(0,0,0,.5);
+  --card-art: linear-gradient(158deg,rgba(255,170,110,.16) 0%,rgba(255,255,255,.03) 42%,rgba(150,40,80,.16) 100%); --card-line: rgba(255,190,150,.20); --card-shadow: 0 6px 20px rgba(0,0,0,.34),inset 0 1px 0 rgba(255,255,255,.09);
+  --navy: #2c1526; --navy-d: #1e0e1a; --teal: #c2571f;
+  --teal-soft: #33202b; --gold: #e3a44a; --surface: #301826;
+  --card: #301826; --strong: #fbeadf; --page: #241220;
+  --ink: #f8ece4; --ink2: #cbb0a8; --muted: #a08d92;
+  --grid: #472a3a; --hairline: rgba(255,255,255,.10); --hero2: #8f2f4a;
+  --hero3: #d1622a; --navtxt: #ffe0d2; --navsub: #d6aaa6;
+  --navver: #fff0e8; --bar-bg: rgba(44,21,38,.94); --page-art: radial-gradient(36rem 26rem at 2% -4%, rgba(240,120,40,.30), transparent 60%), radial-gradient(32rem 24rem at 99% 4%, rgba(200,60,90,.26), transparent 60%), radial-gradient(34rem 26rem at 6% 102%, rgba(120,40,90,.24), transparent 60%), radial-gradient(36rem 26rem at 98% 98%, rgba(240,150,70,.22), transparent 60%);
+  --ok-bg: #173226; --ok-bd: #2f6047; --ok-ink: #86e3ad;
+  --ok-chip: #1e4230; --bad-bg: #3a1d20; --bad-bd: #75373d;
+  --bad-ink: #ffa3a3; --bad-chip: #4d2429; --warn-bg: #332a16;
+  --warn-bd: #6f5a29; --warn-chip: #4c3d1b; --wait-bg: #3a2f14;
+  --wait-ink: #f2c86f; --track: #2c3448; --soft: #1c2434;
+  --grp-bg: #202a44; --cat-bg: #2d2b1f; --neutral: #242c3c;
+  --teal-ink: #7fd8cf; --warn-ink: #f0c96a; --pos-ink: #5cd39a;
+  --neg-ink: #ff8f8f;
+  --sh-card:var(--card-shadow); --sh-kpi:var(--card-shadow); --kpi-bd:rgba(194,87,31,.45); --kpi-ring:#33202b; --gold-soft:#332a16; --sh-pop:0 8px 24px rgba(0,0,0,.55); --sh-rail:2px 0 10px rgba(0,0,0,.5);
   color-scheme:dark;
 }
 html[data-theme="dusk"]{
-  --navy:#1b1430; --navy-d:#130e23; --teal:#b5561f; --teal-soft:#2a1e33; --gold:#e3a44a;
-  --page:#171128; --surface:#221a35; --card:#221a35; --strong:#f7edf6;
-  --ink:#f3e9f2; --ink2:#c4b2c9; --muted:#b6a4bd; --grid:#372a48; --hairline:rgba(255,255,255,.10);
-  --hero2:#6b2f4e; --hero3:#b5561f; --navtxt:#c4b2c9; --navsub:#b6a4bd; --navver:#f3e9f2;
-  --bar-bg:rgba(27,20,48,.93);
-  --card-art:linear-gradient(158deg,rgba(227,164,74,.14) 0%,rgba(255,255,255,.03) 42%,rgba(181,86,31,.17) 100%);
-  --card-line:rgba(181,86,31,.38); --card-shadow:0 6px 20px rgba(0,0,0,.35),inset 0 1px 0 rgba(255,255,255,.08);
-  --sh-card:var(--card-shadow); --sh-kpi:var(--card-shadow);
-  --page-art:radial-gradient(900px 560px at 0% 0%,rgba(107,47,78,.14),transparent 62%),radial-gradient(760px 520px at 100% 0%,rgba(181,86,31,.15),transparent 60%),radial-gradient(760px 520px at 0% 100%,rgba(227,164,74,.14),transparent 60%),radial-gradient(900px 560px at 100% 100%,rgba(181,86,31,.19),transparent 62%);
-  --kpi-bd:rgba(181,86,31,.45); --kpi-ring:#2a1e33;
-  --ok-bg:#173226; --ok-bd:#2f6047; --ok-ink:#86e3ad; --ok-chip:#1e4230;
-  --bad-bg:#3a1d20; --bad-bd:#75373d; --bad-ink:#ffa3a3; --bad-chip:#4d2429;
-  --warn-bg:#332a16; --warn-bd:#6f5a29; --warn-chip:#4c3d1b; --wait-bg:#3a2f14; --wait-ink:#f2c86f;
-  --gold-soft:#332a16; --track:#2c3448; --soft:#1c2434; --neutral:#242c3c; --grp-bg:#202a44; --cat-bg:#2d2b1f;
-  --teal-ink:#7fd8cf; --warn-ink:#f0c96a; --pos-ink:#5cd39a; --neg-ink:#ff8f8f;
-  --sh-pop:0 8px 24px rgba(0,0,0,.55); --sh-rail:2px 0 10px rgba(0,0,0,.5);
+  --card-art: linear-gradient(158deg,rgba(255,150,90,.13) 0%,rgba(255,255,255,.03) 42%,rgba(120,60,160,.18) 100%); --card-line: rgba(233,180,215,.18); --card-shadow: 0 6px 20px rgba(0,0,0,.34),inset 0 1px 0 rgba(255,255,255,.09);
+  --navy: #1b1430; --navy-d: #120d22; --teal: #b5561f;
+  --teal-soft: #2a1e33; --gold: #e3a44a; --surface: #221a35;
+  --card: #221a35; --strong: #f7edf6; --page: #171128;
+  --ink: #f3e9f2; --ink2: #c4b2c9; --muted: #b6a4bd;
+  --grid: #372a48; --hairline: rgba(255,255,255,.10); --hero2: #6b2f4e;
+  --hero3: #b5561f; --navtxt: #f0dcea; --navsub: #c3a4bd;
+  --navver: #fbeaf5; --bar-bg: rgba(27,20,48,.94); --page-art: radial-gradient(36rem 26rem at 2% -4%, rgba(230,110,40,.26), transparent 60%), radial-gradient(32rem 24rem at 99% 4%, rgba(150,50,110,.26), transparent 60%), radial-gradient(34rem 26rem at 6% 102%, rgba(90,45,130,.24), transparent 60%), radial-gradient(36rem 26rem at 98% 98%, rgba(200,70,90,.22), transparent 60%);
+  --ok-bg: #173226; --ok-bd: #2f6047; --ok-ink: #86e3ad;
+  --ok-chip: #1e4230; --bad-bg: #3a1d20; --bad-bd: #75373d;
+  --bad-ink: #ffa3a3; --bad-chip: #4d2429; --warn-bg: #332a16;
+  --warn-bd: #6f5a29; --warn-chip: #4c3d1b; --wait-bg: #3a2f14;
+  --wait-ink: #f2c86f; --track: #2c3448; --soft: #1c2434;
+  --grp-bg: #202a44; --cat-bg: #2d2b1f; --neutral: #242c3c;
+  --teal-ink: #7fd8cf; --warn-ink: #f0c96a; --pos-ink: #5cd39a;
+  --neg-ink: #ff8f8f;
+  --sh-card:var(--card-shadow); --sh-kpi:var(--card-shadow); --kpi-bd:rgba(181,86,31,.45); --kpi-ring:#2a1e33; --gold-soft:#332a16; --sh-pop:0 8px 24px rgba(0,0,0,.55); --sh-rail:2px 0 10px rgba(0,0,0,.5);
   color-scheme:dark;
 }
 html[data-theme="midnight"]{
-  --navy:#0c1220; --navy-d:#090d17; --teal:#2f7fc4; --teal-soft:#16233b; --gold:#e0b04a;
-  --page:#0a0f1b; --surface:#131c2e; --card:#131c2e; --strong:#eaf0fd;
-  --ink:#e9eefb; --ink2:#a8b6d2; --muted:#9aa8c4; --grid:#26314a; --hairline:rgba(255,255,255,.10);
-  --hero2:#1c3a6b; --hero3:#43286e; --navtxt:#a8b6d2; --navsub:#9aa8c4; --navver:#e9eefb;
-  --bar-bg:rgba(12,18,32,.93);
-  --card-art:linear-gradient(158deg,rgba(224,176,74,.14) 0%,rgba(255,255,255,.03) 42%,rgba(47,127,196,.17) 100%);
-  --card-line:rgba(47,127,196,.38); --card-shadow:0 6px 20px rgba(0,0,0,.35),inset 0 1px 0 rgba(255,255,255,.08);
-  --sh-card:var(--card-shadow); --sh-kpi:var(--card-shadow);
-  --page-art:radial-gradient(900px 560px at 0% 0%,rgba(28,58,107,.14),transparent 62%),radial-gradient(760px 520px at 100% 0%,rgba(47,127,196,.15),transparent 60%),radial-gradient(760px 520px at 0% 100%,rgba(224,176,74,.14),transparent 60%),radial-gradient(900px 560px at 100% 100%,rgba(47,127,196,.19),transparent 62%);
-  --kpi-bd:rgba(47,127,196,.45); --kpi-ring:#16233b;
-  --ok-bg:#173226; --ok-bd:#2f6047; --ok-ink:#86e3ad; --ok-chip:#1e4230;
-  --bad-bg:#3a1d20; --bad-bd:#75373d; --bad-ink:#ffa3a3; --bad-chip:#4d2429;
-  --warn-bg:#332a16; --warn-bd:#6f5a29; --warn-chip:#4c3d1b; --wait-bg:#3a2f14; --wait-ink:#f2c86f;
-  --gold-soft:#332a16; --track:#2c3448; --soft:#1c2434; --neutral:#242c3c; --grp-bg:#202a44; --cat-bg:#2d2b1f;
-  --teal-ink:#7fd8cf; --warn-ink:#f0c96a; --pos-ink:#5cd39a; --neg-ink:#ff8f8f;
-  --sh-pop:0 8px 24px rgba(0,0,0,.55); --sh-rail:2px 0 10px rgba(0,0,0,.5);
+  --card-art: linear-gradient(158deg,rgba(90,140,255,.14) 0%,rgba(255,255,255,.03) 42%,rgba(120,60,190,.16) 100%); --card-line: rgba(150,180,240,.18); --card-shadow: 0 6px 20px rgba(0,0,0,.38),inset 0 1px 0 rgba(255,255,255,.08);
+  --navy: #0c1220; --navy-d: #070c16; --teal: #2f7fc4;
+  --teal-soft: #16233b; --gold: #e0b04a; --surface: #131c2e;
+  --card: #131c2e; --strong: #eaf0fd; --page: #0a0f1b;
+  --ink: #e9eefb; --ink2: #a8b6d2; --muted: #9aa8c4;
+  --grid: #26314a; --hairline: rgba(255,255,255,.10); --hero2: #1c3a6b;
+  --hero3: #43286e; --navtxt: #dbe6ff; --navsub: #93a4c8;
+  --navver: #eaf1ff; --bar-bg: rgba(12,18,32,.94); --page-art: radial-gradient(36rem 26rem at 2% -4%, rgba(45,90,190,.30), transparent 60%), radial-gradient(32rem 24rem at 99% 4%, rgba(90,60,180,.26), transparent 60%), radial-gradient(34rem 26rem at 6% 102%, rgba(20,80,120,.24), transparent 60%), radial-gradient(36rem 26rem at 98% 98%, rgba(120,60,170,.26), transparent 60%);
+  --ok-bg: #173226; --ok-bd: #2f6047; --ok-ink: #86e3ad;
+  --ok-chip: #1e4230; --bad-bg: #3a1d20; --bad-bd: #75373d;
+  --bad-ink: #ffa3a3; --bad-chip: #4d2429; --warn-bg: #332a16;
+  --warn-bd: #6f5a29; --warn-chip: #4c3d1b; --wait-bg: #3a2f14;
+  --wait-ink: #f2c86f; --track: #2c3448; --soft: #1c2434;
+  --grp-bg: #202a44; --cat-bg: #2d2b1f; --neutral: #242c3c;
+  --teal-ink: #7fd8cf; --warn-ink: #f0c96a; --pos-ink: #5cd39a;
+  --neg-ink: #ff8f8f;
+  --sh-card:var(--card-shadow); --sh-kpi:var(--card-shadow); --kpi-bd:rgba(47,127,196,.45); --kpi-ring:#16233b; --gold-soft:#332a16; --sh-pop:0 8px 24px rgba(0,0,0,.55); --sh-rail:2px 0 10px rgba(0,0,0,.5);
   color-scheme:dark;
 }
 html[data-theme="moonset"]{
-  --navy:#0d1518; --navy-d:#090f11; --teal:#3c8f8a; --teal-soft:#152528; --gold:#c9a95e;
-  --page:#0b1416; --surface:#14201f; --card:#14201f; --strong:#e6f1ee;
-  --ink:#e4efec; --ink2:#a5bcb7; --muted:#8fa6a2; --grid:#26383a; --hairline:rgba(255,255,255,.10);
-  --hero2:#1d4a4d; --hero3:#2f6f63; --navtxt:#a5bcb7; --navsub:#8fa6a2; --navver:#e4efec;
-  --bar-bg:rgba(13,21,24,.93);
-  --card-art:linear-gradient(158deg,rgba(201,169,94,.14) 0%,rgba(255,255,255,.03) 42%,rgba(60,143,138,.17) 100%);
-  --card-line:rgba(60,143,138,.38); --card-shadow:0 6px 20px rgba(0,0,0,.35),inset 0 1px 0 rgba(255,255,255,.08);
-  --sh-card:var(--card-shadow); --sh-kpi:var(--card-shadow);
-  --page-art:radial-gradient(900px 560px at 0% 0%,rgba(29,74,77,.14),transparent 62%),radial-gradient(760px 520px at 100% 0%,rgba(60,143,138,.15),transparent 60%),radial-gradient(760px 520px at 0% 100%,rgba(201,169,94,.14),transparent 60%),radial-gradient(900px 560px at 100% 100%,rgba(60,143,138,.19),transparent 62%);
-  --kpi-bd:rgba(60,143,138,.45); --kpi-ring:#152528;
-  --ok-bg:#173226; --ok-bd:#2f6047; --ok-ink:#86e3ad; --ok-chip:#1e4230;
-  --bad-bg:#3a1d20; --bad-bd:#75373d; --bad-ink:#ffa3a3; --bad-chip:#4d2429;
-  --warn-bg:#332a16; --warn-bd:#6f5a29; --warn-chip:#4c3d1b; --wait-bg:#3a2f14; --wait-ink:#f2c86f;
-  --gold-soft:#332a16; --track:#2c3448; --soft:#1c2434; --neutral:#242c3c; --grp-bg:#202a44; --cat-bg:#2d2b1f;
-  --teal-ink:#7fd8cf; --warn-ink:#f0c96a; --pos-ink:#5cd39a; --neg-ink:#ff8f8f;
-  --sh-pop:0 8px 24px rgba(0,0,0,.55); --sh-rail:2px 0 10px rgba(0,0,0,.5);
+  --card-art: linear-gradient(158deg,rgba(90,190,180,.13) 0%,rgba(255,255,255,.03) 42%,rgba(40,90,120,.18) 100%); --card-line: rgba(140,200,195,.18); --card-shadow: 0 6px 20px rgba(0,0,0,.38),inset 0 1px 0 rgba(255,255,255,.08);
+  --navy: #0d1518; --navy-d: #070d0f; --teal: #3c8f8a;
+  --teal-soft: #152528; --gold: #c9a95e; --surface: #14201f;
+  --card: #14201f; --strong: #e6f1ee; --page: #0b1416;
+  --ink: #e4efec; --ink2: #a5bcb7; --muted: #8fa6a2;
+  --grid: #26383a; --hairline: rgba(255,255,255,.10); --hero2: #1d4a4d;
+  --hero3: #2f6f63; --navtxt: #d5ecea; --navsub: #94b6b4;
+  --navver: #e7f6f4; --bar-bg: rgba(13,21,24,.94); --page-art: radial-gradient(36rem 26rem at 2% -4%, rgba(40,110,120,.26), transparent 60%), radial-gradient(32rem 24rem at 99% 4%, rgba(70,140,120,.22), transparent 60%), radial-gradient(34rem 26rem at 6% 102%, rgba(30,70,100,.24), transparent 60%), radial-gradient(36rem 26rem at 98% 98%, rgba(90,130,150,.20), transparent 60%);
+  --ok-bg: #173226; --ok-bd: #2f6047; --ok-ink: #86e3ad;
+  --ok-chip: #1e4230; --bad-bg: #3a1d20; --bad-bd: #75373d;
+  --bad-ink: #ffa3a3; --bad-chip: #4d2429; --warn-bg: #332a16;
+  --warn-bd: #6f5a29; --warn-chip: #4c3d1b; --wait-bg: #3a2f14;
+  --wait-ink: #f2c86f; --track: #2c3448; --soft: #1c2434;
+  --grp-bg: #202a44; --cat-bg: #2d2b1f; --neutral: #242c3c;
+  --teal-ink: #7fd8cf; --warn-ink: #f0c96a; --pos-ink: #5cd39a;
+  --neg-ink: #ff8f8f;
+  --sh-card:var(--card-shadow); --sh-kpi:var(--card-shadow); --kpi-bd:rgba(60,143,138,.45); --kpi-ring:#152528; --gold-soft:#332a16; --sh-pop:0 8px 24px rgba(0,0,0,.55); --sh-rail:2px 0 10px rgba(0,0,0,.5);
   color-scheme:dark;
 }
 html[data-theme="dawn"]{
-  --navy:#22243f; --navy-d:#181a2d; --teal:#c2603c; --teal-soft:#2b2740; --gold:#e6b95e;
-  --page:#191a30; --surface:#24253d; --card:#24253d; --strong:#f8f1f3;
-  --ink:#f5eef0; --ink2:#c5bccb; --muted:#b3a9bd; --grid:#3a3a58; --hairline:rgba(255,255,255,.10);
-  --hero2:#6e4468; --hero3:#d1795e; --navtxt:#c5bccb; --navsub:#b3a9bd; --navver:#f5eef0;
-  --bar-bg:rgba(34,36,63,.93);
-  --card-art:linear-gradient(158deg,rgba(230,185,94,.14) 0%,rgba(255,255,255,.03) 42%,rgba(194,96,60,.17) 100%);
-  --card-line:rgba(194,96,60,.38); --card-shadow:0 6px 20px rgba(0,0,0,.35),inset 0 1px 0 rgba(255,255,255,.08);
-  --sh-card:var(--card-shadow); --sh-kpi:var(--card-shadow);
-  --page-art:radial-gradient(900px 560px at 0% 0%,rgba(110,68,104,.14),transparent 62%),radial-gradient(760px 520px at 100% 0%,rgba(194,96,60,.15),transparent 60%),radial-gradient(760px 520px at 0% 100%,rgba(230,185,94,.14),transparent 60%),radial-gradient(900px 560px at 100% 100%,rgba(194,96,60,.19),transparent 62%);
-  --kpi-bd:rgba(194,96,60,.45); --kpi-ring:#2b2740;
-  --ok-bg:#173226; --ok-bd:#2f6047; --ok-ink:#86e3ad; --ok-chip:#1e4230;
-  --bad-bg:#3a1d20; --bad-bd:#75373d; --bad-ink:#ffa3a3; --bad-chip:#4d2429;
-  --warn-bg:#332a16; --warn-bd:#6f5a29; --warn-chip:#4c3d1b; --wait-bg:#3a2f14; --wait-ink:#f2c86f;
-  --gold-soft:#332a16; --track:#2c3448; --soft:#1c2434; --neutral:#242c3c; --grp-bg:#202a44; --cat-bg:#2d2b1f;
-  --teal-ink:#7fd8cf; --warn-ink:#f0c96a; --pos-ink:#5cd39a; --neg-ink:#ff8f8f;
-  --sh-pop:0 8px 24px rgba(0,0,0,.55); --sh-rail:2px 0 10px rgba(0,0,0,.5);
+  --card-art: linear-gradient(158deg,rgba(255,170,180,.15) 0%,rgba(255,255,255,.03) 42%,rgba(120,110,190,.17) 100%); --card-line: rgba(255,190,195,.18); --card-shadow: 0 6px 20px rgba(0,0,0,.32),inset 0 1px 0 rgba(255,255,255,.09);
+  --navy: #22243f; --navy-d: #171930; --teal: #c2603c;
+  --teal-soft: #2b2740; --gold: #e6b95e; --surface: #24253d;
+  --card: #24253d; --strong: #f8f1f3; --page: #191a30;
+  --ink: #f5eef0; --ink2: #c5bccb; --muted: #b3a9bd;
+  --grid: #3a3a58; --hairline: rgba(255,255,255,.10); --hero2: #6e4468;
+  --hero3: #d1795e; --navtxt: #f6e3e6; --navsub: #c9b3bd;
+  --navver: #fdeff1; --bar-bg: rgba(34,36,63,.94); --page-art: radial-gradient(36rem 26rem at 2% -4%, rgba(230,120,140,.26), transparent 60%), radial-gradient(32rem 24rem at 99% 4%, rgba(240,180,110,.24), transparent 60%), radial-gradient(34rem 26rem at 6% 102%, rgba(80,90,170,.24), transparent 60%), radial-gradient(36rem 26rem at 98% 98%, rgba(210,140,190,.22), transparent 60%);
+  --ok-bg: #173226; --ok-bd: #2f6047; --ok-ink: #86e3ad;
+  --ok-chip: #1e4230; --bad-bg: #3a1d20; --bad-bd: #75373d;
+  --bad-ink: #ffa3a3; --bad-chip: #4d2429; --warn-bg: #332a16;
+  --warn-bd: #6f5a29; --warn-chip: #4c3d1b; --wait-bg: #3a2f14;
+  --wait-ink: #f2c86f; --track: #2c3448; --soft: #1c2434;
+  --grp-bg: #202a44; --cat-bg: #2d2b1f; --neutral: #242c3c;
+  --teal-ink: #7fd8cf; --warn-ink: #f0c96a; --pos-ink: #5cd39a;
+  --neg-ink: #ff8f8f;
+  --sh-card:var(--card-shadow); --sh-kpi:var(--card-shadow); --kpi-bd:rgba(194,96,60,.45); --kpi-ring:#2b2740; --gold-soft:#332a16; --sh-pop:0 8px 24px rgba(0,0,0,.55); --sh-rail:2px 0 10px rgba(0,0,0,.5);
   color-scheme:dark;
 }
 
 /* ── ปุ่มเลือกชุดสีบนหัวทุกหน้า + แผงเลือก — ทรงเดียวกับแดชบอร์ด Big Data (KORN 16 ก.ย. 69) ── */
-.themebtn{display:inline-flex;align-items:center;gap:8px;padding:6px 12px 6px 8px;border-radius:999px;
-  background:rgba(255,255,255,.12);border:1px solid rgba(255,255,255,.4);color:#fff;font:inherit;font-size:12.5px;font-weight:600;cursor:pointer;white-space:nowrap}
-.themebtn:hover{background:rgba(255,255,255,.22)}
-.themebtn .sw{width:16px;height:16px;border-radius:50%;background:linear-gradient(135deg,var(--sw),var(--sw2));border:2px solid rgba(255,255,255,.85);flex:none}
+.themebtn{display:inline-flex;align-items:center;gap:7px;padding:8px 11px 8px 9px;border-radius:9px;
+  background:rgba(255,255,255,.14);border:1px solid rgba(255,255,255,.32);color:#fff;font:inherit;font-size:12.5px;font-weight:600;cursor:pointer;white-space:nowrap}
+.themebtn:hover{background:rgba(255,255,255,.26)}
+.themebtn .sw{width:15px;height:15px;border-radius:50%;background:var(--strip,#fff);border:2px solid rgba(255,255,255,.75);flex:none}
 .themebtn .ar{font-size:10px;opacity:.85}
 .themepanel{position:fixed;z-index:1500;width:270px;background:var(--card);color:var(--ink);border:1px solid var(--grid);border-radius:14px;
   box-shadow:var(--sh-pop);padding:8px;font-size:13px}
@@ -9639,7 +9724,7 @@ html[data-theme="dawn"]{
   font:inherit;font-size:13px;color:var(--ink);cursor:pointer;text-align:left}
 .themepanel .themeopt:hover{background:var(--teal-soft)}
 .themepanel .themeopt.on{background:var(--teal-soft);font-weight:700}
-.themepanel .themeopt .sw{width:48px;height:22px;border-radius:7px;background:linear-gradient(135deg,var(--sw),var(--sw2));flex:none;box-shadow:inset 0 0 0 1px rgba(0,0,0,.08)}
+.themepanel .themeopt .sw{width:52px;height:22px;border-radius:7px;background:var(--strip,#888);flex:none;border:1px solid var(--hairline)}
 .themepanel .themeopt .ck{margin-left:auto;color:var(--teal);font-weight:700;visibility:hidden}
 .themepanel .themeopt.on .ck{visibility:visible}
 .themepanel .themeopt[disabled]{opacity:.42;cursor:not-allowed}
